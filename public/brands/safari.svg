@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 64" role="img" aria-label="Safari Snorkel">
+  <ellipse cx="80" cy="32" rx="72" ry="26" fill="#1e5a9e"/>
+  <text x="80" y="38" text-anchor="middle" font-family="Georgia, serif" font-size="22" font-weight="700" fill="#fff">Safari</text>
+  <text x="80" y="52" text-anchor="middle" font-family="system-ui, sans-serif" font-size="8" font-weight="600" letter-spacing="0.15em" fill="#b8d4f0">SNORKEL</text>
+</svg>

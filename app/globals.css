@@ -2,26 +2,63 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
-body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
-}
-
 @layer utilities {
   .text-balance {
     text-wrap: balance;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@layer base {
+  :root {
+    --radius-md: var(--radius);
+    --destructive-foreground: oklch(0.985 0 0);
+    --background: oklch(0.985 0.004 85);
+    --foreground: oklch(0.22 0.018 260);
+    --card: oklch(1 0 0);
+    --card-foreground: oklch(0.22 0.018 260);
+    --popover: oklch(1 0 0);
+    --popover-foreground: oklch(0.22 0.018 260);
+    --primary: oklch(0.34 0.078 155);
+    --primary-foreground: oklch(0.99 0 0);
+    --secondary: oklch(0.94 0.02 85);
+    --secondary-foreground: oklch(0.28 0.02 260);
+    --muted: oklch(0.955 0.012 85);
+    --muted-foreground: oklch(0.46 0.02 260);
+    --accent: oklch(0.93 0.035 72);
+    --accent-foreground: oklch(0.28 0.04 72);
+    --destructive: oklch(0.55 0.2 25);
+    --border: oklch(0.9 0.012 85);
+    --input: oklch(0.9 0.012 85);
+    --ring: oklch(0.34 0.078 155);
+    --chart-1: oklch(0.34 0.078 155);
+    --chart-2: oklch(0.65 0.12 75);
+    --chart-3: oklch(0.55 0.08 260);
+    --chart-4: oklch(0.7 0.06 155);
+    --chart-5: oklch(0.45 0.05 260);
+    --radius: 0.75rem;
+    --sidebar: oklch(0.985 0.004 85);
+    --sidebar-foreground: oklch(0.22 0.018 260);
+    --sidebar-primary: oklch(0.34 0.078 155);
+    --sidebar-primary-foreground: oklch(0.99 0 0);
+    --sidebar-accent: oklch(0.93 0.035 72);
+    --sidebar-accent-foreground: oklch(0.28 0.04 72);
+    --sidebar-border: oklch(0.9 0.012 85);
+    --sidebar-ring: oklch(0.34 0.078 155);
+  }
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+  }
+  html {
+    @apply font-sans scroll-smooth;
   }
 }

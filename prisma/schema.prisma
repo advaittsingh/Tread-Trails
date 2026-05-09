@@ -1,0 +1,150 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  user
+  admin
+}
+
+enum OrderStatus {
+  pending
+  paid
+  shipped
+  cancelled
+}
+
+enum BookingStatus {
+  requested
+  confirmed
+  cancelled
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String
+  role         Role     @default(user)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  orders   Order[]
+  bookings Booking[]
+
+  @@index([role])
+}
+
+model Product {
+  id              String   @id @default(cuid())
+  legacyId        String?
+  slug            String   @unique
+  name            String
+  brand           String
+  category        String
+  price           Int?
+  currency        String   @default("INR")
+  images          String[]
+  description     String   @default("")
+  specs           Json     @default("[]")
+  variants        Json     @default("[]")
+  compatibleCars  String[]
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model Order {
+  id                     String      @id @default(cuid())
+  userId                 String?
+  user                   User?       @relation(fields: [userId], references: [id])
+  guestEmail             String?
+  customerName           String
+  customerPhone          String
+  customerEmail          String
+  shippingAddress        Json
+  items                  Json
+  total                  Int
+  currency               String      @default("INR")
+  status                 OrderStatus @default(pending)
+  paymentMethod          String      @default("stripe")
+  stripeCheckoutSessionId String?
+  stripePaymentIntentId  String?
+  createdAt              DateTime    @default(now())
+  updatedAt              DateTime    @updatedAt
+
+  @@index([userId])
+  @@index([status])
+}
+
+model Booking {
+  id           String        @id @default(cuid())
+  userId       String?
+  user         User?         @relation(fields: [userId], references: [id])
+  vehicleSlug  String
+  vehicleName  String
+  service      String
+  date         String
+  time         String
+  contactName  String
+  contactEmail String
+  contactPhone String
+  status       BookingStatus @default(requested)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  @@index([userId])
+  @@index([status])
+}
+
+model PageHit {
+  id        String   @id @default(cuid())
+  sessionId String
+  path      String
+  createdAt DateTime @default(now())
+
+  @@index([sessionId])
+  @@index([createdAt])
+}
+
+model PresenceSession {
+  id          String   @id @default(cuid())
+  sessionId   String   @unique
+  path        String   @default("/")
+  userAgent   String   @default("")
+  ipHash      String   @default("")
+  city        String?
+  country     String?
+  lat         Float?
+  lng         Float?
+  geoResolved Boolean  @default(false)
+  lastSeenAt  DateTime @default(now())
+}
+
+model CartTelemetry {
+  id           String   @id @default(cuid())
+  sessionId    String   @unique
+  lines        Json     @default("[]")
+  itemCount    Int      @default(0)
+  subtotalHint Int      @default(0)
+  userEmail    String?
+  lastPath     String   @default("")
+  updatedAt    DateTime @default(now())
+
+  @@index([updatedAt])
+}
+
+model AppErrorLog {
+  id        String   @id @default(cuid())
+  source    String
+  message   String
+  detail    String?
+  meta      Json?
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+}
+

@@ -1,101 +1,143 @@
-import Image from "next/image";
+import type { Metadata } from "next";
+import Link from "next/link";
 
-export default function Home() {
+import { builds, cars, getBrandEntries, products } from "@/data/index";
+import { absoluteUrl } from "@/lib/site";
+
+import { PrimaryCta, WhatsAppCta } from "@/components/marketing/cta-buttons";
+import { BuildCard } from "@/components/marketing/build-card";
+import { BrandCard } from "@/components/marketing/brand-card";
+import { CarCard } from "@/components/marketing/car-card";
+import { HomeHero } from "@/components/marketing/home-hero";
+import { ProductCard } from "@/components/marketing/product-card";
+import { SectionHeading } from "@/components/marketing/section-heading";
+
+export const metadata: Metadata = {
+  alternates: { canonical: absoluteUrl("/") },
+};
+
+export default function HomePage() {
+  const featuredBrands = getBrandEntries().slice(0, 6);
+  const featuredBuilds = builds.slice(0, 3);
+  const featuredProducts = products.slice(0, 4);
+
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="https://nextjs.org/icons/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+    <>
+      <HomeHero />
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="https://nextjs.org/icons/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+      <section className="mx-auto max-w-7xl space-y-12 overflow-x-hidden px-4 py-20 sm:px-6 lg:px-8">
+        <SectionHeading
+          eyebrow="Platforms"
+          title="Explore by vehicle"
+          description="Each architecture carries its own kinematic signature — we engineer kits that honor factory tolerances."
+        />
+        <div className="min-w-0">
+          <div className="flex max-w-full snap-x snap-mandatory gap-4 overflow-x-auto overflow-y-hidden pb-1 pt-0.5 scroll-px-0 [-ms-overflow-style:none] [scrollbar-width:thin] sm:gap-5 [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-border [&::-webkit-scrollbar-track]:bg-transparent">
+            {cars.map((car, i) => (
+              <CarCard key={car.id} car={car} index={i} variant="compact" />
+            ))}
+          </div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
+        <div className="flex justify-center pt-4">
+          <Link
+            href="/vehicles"
+            className="text-sm tracking-wide text-primary underline-offset-4 hover:underline"
+          >
+            View full vehicle index
+          </Link>
+        </div>
+      </section>
+
+      <section className="border-y border-border/60 bg-muted/10 py-20">
+        <div className="mx-auto max-w-7xl space-y-12 px-4 sm:px-6 lg:px-8">
+          <SectionHeading
+            eyebrow="Manufacturers"
+            title="Explore by brand"
+            description="Curated partner lines — filter by the badge that matches how you spec chassis, lighting, and recovery."
           />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
+          <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+            {featuredBrands.map((b, i) => (
+              <BrandCard key={b.slug} brand={b} index={i} />
+            ))}
+          </div>
+          <div className="flex justify-center">
+            <Link
+              href="/brands"
+              className="text-sm tracking-wide text-primary underline-offset-4 hover:underline"
+            >
+              View all brands
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      <section className="border-y border-border/60 bg-background py-20">
+        <div className="mx-auto max-w-7xl space-y-12 px-4 sm:px-6 lg:px-8">
+          <SectionHeading
+            eyebrow="Portfolio"
+            title="Featured builds"
+            description="Before and after discipline — parts lists stay traceable through to installation."
           />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
+          <div className="grid gap-10 lg:grid-cols-3">
+            {featuredBuilds.map((b, i) => {
+              const vehicleName = cars.find((c) => c.slug === b.vehicleSlug)?.name;
+              return (
+                <BuildCard key={b.id} build={b} vehicleName={vehicleName} index={i} />
+              );
+            })}
+          </div>
+          <div className="flex justify-center">
+            <Link
+              href="/builds"
+              className="text-sm tracking-wide text-primary underline-offset-4 hover:underline"
+            >
+              Explore builds by vehicle
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      <section className="mx-auto max-w-7xl space-y-12 px-4 py-20 sm:px-6 lg:px-8">
+        <SectionHeading
+          eyebrow="Catalog"
+          title="Featured products"
+          description="Modular upgrades with explicit vehicle compatibility — speak with our engineers before checkout."
+        />
+        <div className="grid gap-8 sm:grid-cols-2 xl:grid-cols-4">
+          {featuredProducts.map((p, i) => (
+            <ProductCard key={p.id} product={p} index={i} />
+          ))}
+        </div>
+        <div className="flex justify-center">
+          <Link
+            href="/products"
+            className="text-sm tracking-wide text-primary underline-offset-4 hover:underline"
+          >
+            Open full catalog
+          </Link>
+        </div>
+      </section>
+
+      <section className="border-t border-border/60 bg-gradient-to-br from-card/40 via-background to-background py-24">
+        <div className="mx-auto flex max-w-5xl flex-col items-center gap-8 px-4 text-center sm:px-6">
+          <SectionHeading
+            align="center"
+            eyebrow="Concierge"
+            title="Book a bay or reach us instantly."
+            description="Studio visits are limited — WhatsApp keeps your thread aligned with the technicians assigned to your chassis."
           />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+          <div className="flex flex-wrap justify-center gap-3">
+            <PrimaryCta href="/booking" className="h-11 px-8">
+              Schedule installation
+            </PrimaryCta>
+            <WhatsAppCta
+              message="Hi — I'd like to book time with Tread Trails."
+              label="WhatsApp"
+              className="h-11 px-8"
+            />
+          </div>
+        </div>
+      </section>
+    </>
   );
 }
