@@ -1,11 +1,16 @@
 import type { Product } from "./types";
 
+import { getVehicleSlugsForProductSlug } from "@/lib/compatibility/product-vehicle-map";
+
 /**
  * Catalog aligned with Advven’s public catalog and the six partner brands on
  * https://www.advven.com/brands (Method, Safari, Warn, Noco Genius, ARB, Old Man EMU).
  * Legacy API: https://api.advven.com/api/v1/allProducts — prices in whole INR.
+ *
+ * Vehicle ↔ product compatibility is **only** defined in `product-vehicle-compatibility-edges.ts`;
+ * `compatibleCars` on each `Product` is derived from that explicit mapping.
  */
-export const products: Product[] = [
+const rawProducts: Omit<Product, "compatibleCars">[] = [
   {
     id: "p5",
     slug: "old-man-emu-bp-51-hilux-57nqe2",
@@ -17,7 +22,6 @@ export const products: Product[] = [
     images: ["https://res.cloudinary.com/dmnijqmkz/image/upload/v1766215967/products/colors/d8etrgud3f5f1ayhqvyl.png"],
     description: "Internal Bypass technology delivers unmatched control across rough terrain and high-speed impacts. User-adjustable compression and rebound let you dial in performance for road, load, and off-road abuse. Large-bore monotube shocks with remote reservoirs eliminate fade under extreme heat and punishment. Vehicle-specific valving transforms the Hilux’s stability, handling, and ride confidence. Engineered to handle heavy accessories without sacrificing comfort or control. Built, tested, and proven in extreme Australian ",
     specs: [{"label":"Detail 1","value":"Internal Bypass technology delivers unmatched control across rough terrain and high-speed impacts."},{"label":"Detail 2","value":"User-adjustable compression and rebound let you dial in performance for road, load, and off-road abuse."},{"label":"Detail 3","value":"Large-bore monotube shocks with remote reservoirs eliminate fade under extreme heat and punishment."}],
-    compatibleCars: ["toyota-hilux"],
   },
   {
     id: "p6",
@@ -30,7 +34,6 @@ export const products: Product[] = [
     images: ["https://res.cloudinary.com/dmnijqmkz/image/upload/v1766216241/products/colors/btau47glcidoxtadx3um.png"],
     description: "• 64mm bore monotube shocks deliver high oil volume for superior control and consistency. • Monotube design improves heat dissipation, reducing fade during hard and repeated use. • Tuned specifically for the Hilux to balance comfort, load carrying, and off-road performance. • Offers sharper response and better body control than twin-tube shock designs. • Handles heavy accessories and constant loads with greater stability. • Built for demanding touring, high-speed dirt roads, and rough terrain. • Engineered and test",
     specs: [{"label":"Detail 1","value":"• 64mm bore monotube shocks deliver high oil volume for superior control and consistency."},{"label":"Detail 2","value":"• Monotube design improves heat dissipation, reducing fade during hard and repeated use."},{"label":"Detail 3","value":"• Tuned specifically for the Hilux to balance comfort, load carrying, and off-road performance."}],
-    compatibleCars: ["toyota-hilux"],
   },
   {
     id: "p7",
@@ -43,7 +46,6 @@ export const products: Product[] = [
     images: ["https://res.cloudinary.com/dmnijqmkz/image/upload/v1766216083/products/colors/ks65wisllglguldb1iga.png"],
     description: "• Nitrocharger Sport shocks deliver controlled damping tuned specifically for the Hilux. • Twin-tube design provides excellent ride comfort on broken roads and corrugations. • Vehicle-specific valving improves stability, body control, and load handling. • Engineered to work seamlessly with OME coil springs and leaf packs. • Proven reliability for daily driving, touring, and off-road use. • Handles added weight from accessories like bull bars and rear loads with confidence. • Built and tested under harsh Australian ",
     specs: [{"label":"Detail 1","value":"• Nitrocharger Sport shocks deliver controlled damping tuned specifically for the Hilux."},{"label":"Detail 2","value":"• Twin-tube design provides excellent ride comfort on broken roads and corrugations."},{"label":"Detail 3","value":"• Vehicle-specific valving improves stability, body control, and load handling."}],
-    compatibleCars: ["toyota-hilux"],
   },
   {
     id: "p8",
@@ -56,7 +58,6 @@ export const products: Product[] = [
     images: ["https://res.cloudinary.com/dmnijqmkz/image/upload/v1766216491/products/colors/yzs1rscg27cgt2amg8qq.png"],
     description: "• Nitrocharger Sport shocks are tuned specifically for the Fortuner’s weight and suspension geometry. • Twin-tube design delivers improved ride control on highways and rough roads. • Vehicle-specific valving reduces body roll, brake dive, and rear-end squat. • Engineered to work with OME springs for balanced lift and load handling. • Handles added accessories and passenger weight with confidence. • Improves stability and comfort over stock suspension. • Built and tested in extreme Australian conditions. • A proven ",
     specs: [{"label":"Detail 1","value":"• Nitrocharger Sport shocks are tuned specifically for the Fortuner’s weight and suspension geometry."},{"label":"Detail 2","value":"• Twin-tube design delivers improved ride control on highways and rough roads."},{"label":"Detail 3","value":"• Vehicle-specific valving reduces body roll, brake dive, and rear-end squat."}],
-    compatibleCars: ["toyota-fortuner"],
   },
   {
     id: "p9",
@@ -69,7 +70,6 @@ export const products: Product[] = [
     images: ["https://res.cloudinary.com/dmnijqmkz/image/upload/v1766216355/products/colors/nzsf3a2por9cwycej7xy.png"],
     description: "• Nitrocharger Sport shocks are tuned specifically for the Jimny’s lightweight chassis. • Twin-tube design delivers improved comfort on broken roads and trails. • Vehicle-specific valving controls body roll and instability from larger tyres. • Engineered to work with OME coil springs for balanced lift and articulation. • Improves ride confidence with accessories, passengers, and gear. • Durable construction proven in harsh off-road conditions. • Ideal upgrade for daily driving, touring, and weekend trails. • A reli",
     specs: [{"label":"Detail 1","value":"• Nitrocharger Sport shocks are tuned specifically for the Jimny’s lightweight chassis."},{"label":"Detail 2","value":"• Twin-tube design delivers improved comfort on broken roads and trails."},{"label":"Detail 3","value":"• Vehicle-specific valving controls body roll and instability from larger tyres."}],
-    compatibleCars: ["jeep-wrangler","mahindra-thar"],
   },
   {
     id: "p10",
@@ -82,7 +82,6 @@ export const products: Product[] = [
     images: ["https://res.cloudinary.com/dmnijqmkz/image/upload/v1766150133/products/colors/raj3qinfzou3j3bexqwq.png","https://res.cloudinary.com/dmnijqmkz/image/upload/v1766150132/products/colors/ljrjgmmzln8jdsp0snbx.webp","https://res.cloudinary.com/dmnijqmkz/image/upload/v1766150133/products/colors/ve1qv12lcnsjrwtyxbzp.webp"],
     description: "Solid A356 aluminum with T6 heat treatment construction. Legendary 12 spoke design with debossed METHOD logo. Street-Loc V.1 lip with undercut simulates true beadlock wheel. Push through center cap with embossed METHOD logo. Set of 4.",
     specs: [{"label":"Detail 1","value":"Solid A356 aluminum with T6 heat treatment construction."},{"label":"Detail 2","value":"Legendary 12 spoke design with debossed METHOD logo."},{"label":"Detail 3","value":"Street-Loc V.1 lip with undercut simulates true beadlock wheel."}],
-    compatibleCars: ["toyota-hilux"],
   },
   {
     id: "p11",
@@ -95,7 +94,6 @@ export const products: Product[] = [
     images: ["https://res.cloudinary.com/dmnijqmkz/image/upload/v1766150235/products/colors/fzhj5vi4xrpoxp2ol9gi.png","https://res.cloudinary.com/dmnijqmkz/image/upload/v1766150234/products/colors/h9jlevbmlwbemyhyapgk.jpg"],
     description: "Solid A356 aluminum with T6 heat treatment construction. Legendary 12 spoke design with debossed METHOD logo. Street-Loc V.1 lip with undercut simulates true beadlock wheel. Push through center cap with embossed METHOD logo. Set of 4.",
     specs: [{"label":"Detail 1","value":"Solid A356 aluminum with T6 heat treatment construction."},{"label":"Detail 2","value":"Legendary 12 spoke design with debossed METHOD logo."},{"label":"Detail 3","value":"Street-Loc V.1 lip with undercut simulates true beadlock wheel."}],
-    compatibleCars: ["toyota-hilux"],
   },
   {
     id: "p12",
@@ -108,7 +106,6 @@ export const products: Product[] = [
     images: ["https://res.cloudinary.com/dmnijqmkz/image/upload/v1766310044/products/colors/hnyz33gwktnums3xxftp.png","https://res.cloudinary.com/dmnijqmkz/image/upload/v1766310044/products/colors/j7rxdulisdanej1qnehx.webp","https://res.cloudinary.com/dmnijqmkz/image/upload/v1766310044/products/colors/uxzrrlvw70pisie4fz3l.webp","https://res.cloudinary.com/dmnijqmkz/image/upload/v1766310044/products/colors/g28eihqdzrurj32a1web.webp"],
     description: "The 305 NV Wheel features an iconic 12 window design with a debossed Method logo on either side of the center cap, The lip undercut simulates a true beadlock wheel.  Solid A356 aluminum with T6 heat treatment construction. Iconic 12 window design with debossed METHOD logos. Street-Loc V 1 lip with undercut simulates true beadlock wheel. Push through center cap with embossed METHOD logo. Strong 2650 lbs load rating per wheel. Supplied as a complete set of four wheels.",
     specs: [{"label":"Detail 1","value":"The 305 NV Wheel features an iconic 12 window design with a debossed Method logo on either side of the center cap, Th…"},{"label":"Detail 2","value":"Solid A356 aluminum with T6 heat treatment construction."},{"label":"Detail 3","value":"Iconic 12 window design with debossed METHOD logos."}],
-    compatibleCars: ["toyota-hilux"],
   },
   {
     id: "p13",
@@ -121,7 +118,6 @@ export const products: Product[] = [
     images: ["https://res.cloudinary.com/dmnijqmkz/image/upload/v1766308894/products/colors/knmskbc500smikmxilzn.png","https://res.cloudinary.com/dmnijqmkz/image/upload/v1766308894/products/colors/lm9bvbzbmb3egecrxt6d.webp","https://res.cloudinary.com/dmnijqmkz/image/upload/v1766308893/products/colors/im1fznlwcuiaiytfriqy.webp","https://res.cloudinary.com/dmnijqmkz/image/upload/v1766308893/products/colors/jktujvbwhd8bmlpttfbo.webp"],
     description: "The 305 NV Wheel features an iconic 12 window design with a debossed Method logo on either side of the center cap, The lip undercut simulates a true beadlock wheel.  Solid A356 aluminum with T6 heat treatment construction. Iconic 12 window design with debossed METHOD logos. Street-Loc V 1 lip with undercut simulates true beadlock wheel. Push through center cap with embossed METHOD logo. Strong 2650 lbs load rating per wheel. Supplied as a complete set of four wheels.",
     specs: [{"label":"Detail 1","value":"The 305 NV Wheel features an iconic 12 window design with a debossed Method logo on either side of the center cap, Th…"},{"label":"Detail 2","value":"Solid A356 aluminum with T6 heat treatment construction."},{"label":"Detail 3","value":"Iconic 12 window design with debossed METHOD logos."}],
-    compatibleCars: ["toyota-hilux"],
   },
   {
     id: "p14",
@@ -134,7 +130,6 @@ export const products: Product[] = [
     images: ["https://res.cloudinary.com/dmnijqmkz/image/upload/v1766310253/products/colors/hkxvdpivnh1faz2eu9wa.png","https://res.cloudinary.com/dmnijqmkz/image/upload/v1766310342/products/colors/xvjt2cou5w8xoebdf8ib.webp"],
     description: "The 305 NV Wheel features an iconic 12 window design with a debossed Method logo on either side of the center cap, The lip undercut simulates a true beadlock wheel.  Solid A356 aluminum with T6 heat treatment construction. Iconic 12 window design with debossed METHOD logos. Street-Loc V 1 lip with undercut simulates true beadlock wheel. Push through center cap with embossed METHOD logo. Strong 2650 lbs load rating per wheel. Supplied as a complete set of four wheels.",
     specs: [{"label":"Detail 1","value":"The 305 NV Wheel features an iconic 12 window design with a debossed Method logo on either side of the center cap, Th…"},{"label":"Detail 2","value":"Solid A356 aluminum with T6 heat treatment construction."},{"label":"Detail 3","value":"Iconic 12 window design with debossed METHOD logos."}],
-    compatibleCars: ["toyota-hilux"],
   },
   {
     id: "p15",
@@ -147,7 +142,6 @@ export const products: Product[] = [
     images: ["https://res.cloudinary.com/dmnijqmkz/image/upload/v1766228207/products/toery5zmweozxshrummn.png","https://res.cloudinary.com/dmnijqmkz/image/upload/v1766228209/products/colors/jdfmz9nufjzjc5hmhpal.png","https://res.cloudinary.com/dmnijqmkz/image/upload/v1766228209/products/colors/sb4z27xedjpatylevoer.webp","https://res.cloudinary.com/dmnijqmkz/image/upload/v1766228209/products/colors/q6gggyo0lc2wd8gvezt1.webp"],
     description: "Solid A356 aluminum with T6 heat treatment construction. Tough 6 windowed point design with debossed METHOD logos Street-Loc V 3 lip with undercut simulates true beadlock wheel. Push through cap with embossed METHOD logo Hub centric fitments for common applications. Strong 2650 lbs load rating per wheel. Set of 4.",
     specs: [{"label":"Detail 1","value":"Solid A356 aluminum with T6 heat treatment construction. Tough 6 windowed point design with debossed METHOD logos Str…"}],
-    compatibleCars: ["toyota-hilux"],
   },
   {
     id: "p16",
@@ -160,7 +154,6 @@ export const products: Product[] = [
     images: ["https://res.cloudinary.com/dmnijqmkz/image/upload/v1766227008/products/xttlelytbz2y5mffw0uu.png","https://res.cloudinary.com/dmnijqmkz/image/upload/v1766227011/products/colors/ona7vejsmkaoxmqzaou9.png","https://res.cloudinary.com/dmnijqmkz/image/upload/v1766227010/products/colors/cc3mtiuhmw3mpgiohvie.webp","https://res.cloudinary.com/dmnijqmkz/image/upload/v1766227010/products/colors/bwmuzoze5d3vmwx1m53g.webp"],
     description: "Solid A356 aluminum with T6 heat treatment construction. Tough 6 windowed point design with debossed METHOD logos. Street-Loc V 3 lip with undercut simulates true beadlock wheel. Push through cap with embossed METHOD logo. Hub centric fitments for common applications. Strong 2650 lbs load rating per wheel. Set of 4",
     specs: [{"label":"Detail 1","value":"Solid A356 aluminum with T6 heat treatment construction."},{"label":"Detail 2","value":"Tough 6 windowed point design with debossed METHOD logos."},{"label":"Detail 3","value":"Street-Loc V 3 lip with undercut simulates true beadlock wheel."}],
-    compatibleCars: ["toyota-hilux","toyota-fortuner"],
   },
   {
     id: "p17",
@@ -173,7 +166,6 @@ export const products: Product[] = [
     images: ["https://res.cloudinary.com/dmnijqmkz/image/upload/v1766149661/products/colors/a3dy70kjdaxawl6ca7z1.png","https://res.cloudinary.com/dmnijqmkz/image/upload/v1766149661/products/colors/ghkjmep8sa4loj3of4lz.webp","https://res.cloudinary.com/dmnijqmkz/image/upload/v1766149661/products/colors/t0mkbh6seomcjkzo7p23.webp","https://res.cloudinary.com/dmnijqmkz/image/upload/v1766149661/products/colors/t0tte9sm4qhsji3xdi2o.webp"],
     description: "Solid A356 aluminum with T6 heat treatment construction. Firm 12 spoke design with debossed METHOD logo. Machined pockets in outer lip for weight savings. Screw-on center cap with embossed METHOD logo. Hub centric fitments for common applications Strong 2650 lbs load rating. Set of 4.",
     specs: [{"label":"Detail 1","value":"Solid A356 aluminum with T6 heat treatment construction."},{"label":"Detail 2","value":"Firm 12 spoke design with debossed METHOD logo."},{"label":"Detail 3","value":"Machined pockets in outer lip for weight savings."}],
-    compatibleCars: ["toyota-hilux"],
   },
   {
     id: "p18",
@@ -186,7 +178,6 @@ export const products: Product[] = [
     images: ["https://res.cloudinary.com/dmnijqmkz/image/upload/v1766144585/products/zoa2lcf7acwchqjzm5hw.png","https://res.cloudinary.com/dmnijqmkz/image/upload/v1766144587/products/colors/rfvwvpfoy9z6etbbs50d.png","https://res.cloudinary.com/dmnijqmkz/image/upload/v1766144588/products/colors/oqdom2cju5ayt9hxmr5p.webp","https://res.cloudinary.com/dmnijqmkz/image/upload/v1766144587/products/colors/av6ejhtpf0xjshrwvoyd.webp"],
     description: "Solid A356 aluminum with T6 heat treatment construction. Firm 12 spoke design with debossed METHOD logo. Machined pockets in outer lip for weight savings. Hub centric fitments for common applications. Strong 2650 lbs load rating. Set of 4",
     specs: [{"label":"Detail 1","value":"Solid A356 aluminum with T6 heat treatment construction."},{"label":"Detail 2","value":"Firm 12 spoke design with debossed METHOD logo."},{"label":"Detail 3","value":"Machined pockets in outer lip for weight savings."}],
-    compatibleCars: ["toyota-hilux"],
   },
   {
     id: "p19",
@@ -199,7 +190,6 @@ export const products: Product[] = [
     images: ["https://res.cloudinary.com/dmnijqmkz/image/upload/v1766228994/products/fi043yazwtzdd8depn0u.png","https://res.cloudinary.com/dmnijqmkz/image/upload/v1766228996/products/colors/enxrykud0kyqovdysl3s.png","https://res.cloudinary.com/dmnijqmkz/image/upload/v1766228996/products/colors/w8zyv86mfuy7bmp4i1at.webp","https://res.cloudinary.com/dmnijqmkz/image/upload/v1766228996/products/colors/baqpdp4w8lak2u8mpqy2.webp"],
     description: "Solid A356 aluminum with T6 heat treatment construction. 10 window design with debossed METHOD logo. Snap in center cap with embossed METHOD logo. Hub centric fitments for common applications. Strong 2650 lbs load rating. Set of 4.",
     specs: [{"label":"Detail 1","value":"Solid A356 aluminum with T6 heat treatment construction."},{"label":"Detail 2","value":"10 window design with debossed METHOD logo."},{"label":"Detail 3","value":"Snap in center cap with embossed METHOD logo."}],
-    compatibleCars: ["toyota-hilux"],
   },
   {
     id: "p20",
@@ -212,7 +202,6 @@ export const products: Product[] = [
     images: ["https://res.cloudinary.com/dmnijqmkz/image/upload/v1766144618/products/sxylbazkt37kqpfsbg9d.png","https://res.cloudinary.com/dmnijqmkz/image/upload/v1766143688/products/colors/yaif48r6mhiaentpmofz.webp","https://res.cloudinary.com/dmnijqmkz/image/upload/v1766143688/products/colors/chhai4llon9vqilhy7ro.webp","https://res.cloudinary.com/dmnijqmkz/image/upload/v1766143688/products/colors/ew8ecdc9si9cilqnlo5x.webp"],
     description: "Solid A356 aluminum with T6 heat treatment construction. 10 window design with debossed METHOD logo. Snap in center cap with embossed METHOD logo. Hub centric fitments for common applications. Strong 2650 lbs load rating. Set of 4",
     specs: [{"label":"Detail 1","value":"Solid A356 aluminum with T6 heat treatment construction."},{"label":"Detail 2","value":"10 window design with debossed METHOD logo."},{"label":"Detail 3","value":"Snap in center cap with embossed METHOD logo."}],
-    compatibleCars: ["toyota-hilux"],
   },
   {
     id: "p21",
@@ -225,7 +214,6 @@ export const products: Product[] = [
     images: ["https://res.cloudinary.com/dmnijqmkz/image/upload/v1766146235/products/colors/nlnwgftvvxt54qyyjisn.png","https://res.cloudinary.com/dmnijqmkz/image/upload/v1766146235/products/colors/jsjkweu33noyqcoq0pvp.webp","https://res.cloudinary.com/dmnijqmkz/image/upload/v1766146235/products/colors/cluobvvtcnlgpkcg6bc0.webp","https://res.cloudinary.com/dmnijqmkz/image/upload/v1766146235/products/colors/pn1wurlnbtdpgsxuyf2g.webp"],
     description: "Solid A356 aluminum with T6 heat treatment construction. Tough 9 spoke design with debossed METHOD logo on spoke. Street-Loc V.3 inspired lip with weight savings pockets. Snap in center cap with embossed METHOD logo. Hub centric fitments for common applications. Strong 2650 lbs load rating on tires up to 37 inches. Set of 4.",
     specs: [{"label":"Detail 1","value":"Solid A356 aluminum with T6 heat treatment construction."},{"label":"Detail 2","value":"Tough 9 spoke design with debossed METHOD logo on spoke."},{"label":"Detail 3","value":"Street-Loc V.3 inspired lip with weight savings pockets."}],
-    compatibleCars: ["toyota-hilux"],
   },
   {
     id: "p22",
@@ -238,7 +226,6 @@ export const products: Product[] = [
     images: ["https://res.cloudinary.com/dmnijqmkz/image/upload/v1766145690/products/dsxh0o0ctyujehphtrn8.png","https://res.cloudinary.com/dmnijqmkz/image/upload/v1766145692/products/colors/ktyncfafwpqy81juthlb.png","https://res.cloudinary.com/dmnijqmkz/image/upload/v1766145692/products/colors/qftrudrg3tpozg9qmwmf.webp","https://res.cloudinary.com/dmnijqmkz/image/upload/v1766145691/products/colors/pr2ikm1snqazy6ctpxcx.webp"],
     description: "Solid A356 aluminum with T6 heat treatment construction. Tough 9 spoke design with debossed METHOD logo on spoke. Street-Loc V 3 inspired lip with weight savings pockets. Snap in center cap with embossed METHOD logo. Hub centric fitments for common applications. Strong 2650 lbs load rating on tires up to 37 inches.",
     specs: [{"label":"Detail 1","value":"Solid A356 aluminum with T6 heat treatment construction."},{"label":"Detail 2","value":"Tough 9 spoke design with debossed METHOD logo on spoke."},{"label":"Detail 3","value":"Street-Loc V 3 inspired lip with weight savings pockets."}],
-    compatibleCars: ["toyota-hilux"],
   },
   {
     id: "p23",
@@ -251,7 +238,6 @@ export const products: Product[] = [
     images: ["https://res.cloudinary.com/dmnijqmkz/image/upload/v1766145915/products/colors/swz5geqdn2nm2hpuwvyi.png","https://res.cloudinary.com/dmnijqmkz/image/upload/v1766145915/products/colors/cpotaoscrggbqjcj53sw.webp","https://res.cloudinary.com/dmnijqmkz/image/upload/v1766145914/products/colors/tr4cxdqfx9cbilmpuk36.webp","https://res.cloudinary.com/dmnijqmkz/image/upload/v1766145914/products/colors/wjttrr97zmfnzysv5eqk.webp"],
     description: "Solid A356 aluminum with T6 heat treatment construction. Tough 9 spoke design with debossed METHOD logo on spoke. Street-Loc V.3 inspired lip with weight savings pockets. Snap in center cap with embossed METHOD logo. Hub centric fitments for common applications. Strong 2650 lbs load rating on tires up to 37 inches. Set of 4",
     specs: [{"label":"Detail 1","value":"Solid A356 aluminum with T6 heat treatment construction."},{"label":"Detail 2","value":"Tough 9 spoke design with debossed METHOD logo on spoke."},{"label":"Detail 3","value":"Street-Loc V.3 inspired lip with weight savings pockets."}],
-    compatibleCars: ["toyota-hilux"],
   },
   {
     id: "p24",
@@ -264,7 +250,6 @@ export const products: Product[] = [
     images: ["https://res.cloudinary.com/dmnijqmkz/image/upload/v1766229653/products/colors/dkv74sdbwcuvcsssxdtc.png","https://res.cloudinary.com/dmnijqmkz/image/upload/v1766229653/products/colors/gelo7ygwvqow9tvaav9n.webp","https://res.cloudinary.com/dmnijqmkz/image/upload/v1766229652/products/colors/bnqosm63gce085wzvyuf.webp","https://res.cloudinary.com/dmnijqmkz/image/upload/v1766229652/products/colors/ymcptrztfath4fmyle2t.webp"],
     description: "Taking design cues from the popular 412 UTV Bead Grip® series wheel our all-new 318 Standard Series expands the look to the light truck market. With clean lines and our popular TOPO Center Cap, this wheel will certainly make any vehicle stand out from the crowd. Solid A356 aluminum with T6 heat treatment construction. Tough multi-spoke design with debossed METHOD logo. Snap-in TOPO center cap with embossed METHOD logo. Hub centric fitments for common applications. Strong 2650 lbs load rating per wheel. Supplied as ",
     specs: [{"label":"Detail 1","value":"Taking design cues from the popular 412 UTV Bead Grip® series wheel our all-new 318 Standard Series expands the look …"},{"label":"Detail 2","value":"With clean lines and our popular TOPO Center Cap, this wheel will certainly make any vehicle stand out from the crowd."},{"label":"Detail 3","value":"Solid A356 aluminum with T6 heat treatment construction."}],
-    compatibleCars: ["toyota-hilux"],
   },
   {
     id: "p25",
@@ -277,7 +262,6 @@ export const products: Product[] = [
     images: ["https://res.cloudinary.com/dmnijqmkz/image/upload/v1766230149/products/colors/tabbxcwlrpiuoahklick.png","https://res.cloudinary.com/dmnijqmkz/image/upload/v1766230149/products/colors/vv3zqwpvp9rhrgvhg0tj.webp","https://res.cloudinary.com/dmnijqmkz/image/upload/v1766230149/products/colors/fikokh41qveq6kys4k3f.webp"],
     description: "Taking design cues from the popular 412 UTV Bead Grip® series wheel our all-new 318 Standard Series expands the look to the light truck market. With clean lines and our popular TOPO Center Cap, this wheel will certainly make any vehicle stand out from the crowd. Solid A356 aluminum with T6 heat treatment construction. Tough multi-spoke design with debossed METHOD logo. Snap-in TOPO center cap with embossed METHOD logo. Hub centric fitments for common applications. Strong 2650 lbs load rating per wheel. Supplied as ",
     specs: [{"label":"Detail 1","value":"Taking design cues from the popular 412 UTV Bead Grip® series wheel our all-new 318 Standard Series expands the look …"},{"label":"Detail 2","value":"With clean lines and our popular TOPO Center Cap, this wheel will certainly make any vehicle stand out from the crowd."},{"label":"Detail 3","value":"Solid A356 aluminum with T6 heat treatment construction."}],
-    compatibleCars: ["toyota-hilux"],
   },
   {
     id: "p26",
@@ -290,7 +274,6 @@ export const products: Product[] = [
     images: ["https://res.cloudinary.com/dmnijqmkz/image/upload/v1766229940/products/colors/vtsaugfew6czu3jgopve.png","https://res.cloudinary.com/dmnijqmkz/image/upload/v1766229939/products/colors/sngkle29u6vorp41s6ob.webp","https://res.cloudinary.com/dmnijqmkz/image/upload/v1766229940/products/colors/ilbyj8reqaexnbeucgrt.webp","https://res.cloudinary.com/dmnijqmkz/image/upload/v1766229940/products/colors/y4kfborrkjwcfuku3dtt.webp"],
     description: "Taking design cues from the popular 412 UTV Bead Grip® series wheel our all-new 318 Standard Series expands the look to the light truck market. With clean lines and our popular TOPO Center Cap, this wheel will certainly make any vehicle stand out from the crowd. Solid A356 aluminum with T6 heat treatment construction. Tough multi-spoke design with debossed METHOD logo. Snap-in TOPO center cap with embossed METHOD logo. Hub centric fitments for common applications. Strong 2650 lbs load rating per wheel. Supplied as ",
     specs: [{"label":"Detail 1","value":"Taking design cues from the popular 412 UTV Bead Grip® series wheel our all-new 318 Standard Series expands the look …"},{"label":"Detail 2","value":"With clean lines and our popular TOPO Center Cap, this wheel will certainly make any vehicle stand out from the crowd."},{"label":"Detail 3","value":"Solid A356 aluminum with T6 heat treatment construction."}],
-    compatibleCars: ["toyota-hilux"],
   },
   {
     id: "p27",
@@ -303,7 +286,6 @@ export const products: Product[] = [
     images: ["https://res.cloudinary.com/dmnijqmkz/image/upload/v1766230660/products/colors/f9kdyd7z61ms6bid0d8v.png","https://res.cloudinary.com/dmnijqmkz/image/upload/v1766230705/products/colors/nu9mh3402qt7mkjm5wcf.webp","https://res.cloudinary.com/dmnijqmkz/image/upload/v1766230706/products/colors/a8z9znswlvnptl1zmpzx.webp","https://res.cloudinary.com/dmnijqmkz/image/upload/v1766230706/products/colors/rd8dkv1estevqhdysqwf.webp"],
     description: "Designed to stand out from the crowd, introducing Method Race Wheel’s 321 Standard. Engineered with a unique window/spoke design, this wheel is a statement of bold style and functionality. Available in Gloss Black and Machined finishes, and includes the popular Method TOPO center cap, It's a great choice for off-road enthusiasts who seek the perfect balance of unique aesthetics and high performance. Solid A356 aluminum with T6 heat treatment construction. Clean 8 windowed spoke design with debossed METHOD logo. Sna",
     specs: [{"label":"Detail 1","value":"Designed to stand out from the crowd, introducing Method Race Wheel’s 321 Standard. Engineered with a unique window/s…"},{"label":"Detail 2","value":"Available in Gloss Black and Machined finishes, and includes the popular Method TOPO center cap, It's a great choice …"},{"label":"Detail 3","value":"Solid A356 aluminum with T6 heat treatment construction."}],
-    compatibleCars: ["toyota-hilux"],
   },
   {
     id: "p28",
@@ -316,7 +298,6 @@ export const products: Product[] = [
     images: ["https://res.cloudinary.com/dmnijqmkz/image/upload/v1766230501/products/colors/py2u3twsgev1vdf7xjuo.png","https://res.cloudinary.com/dmnijqmkz/image/upload/v1766230500/products/colors/xtcer7vyadhubqafd5tq.webp","https://res.cloudinary.com/dmnijqmkz/image/upload/v1766230501/products/colors/jkywlokowuiqy83t3lel.webp","https://res.cloudinary.com/dmnijqmkz/image/upload/v1766230501/products/colors/xkwzwegyzf0zzirz8c6r.jpg"],
     description: "Designed to stand out from the crowd, introducing Method Race Wheel’s 321 Standard. Engineered with a unique window/spoke design, this wheel is a statement of bold style and functionality. Available in Gloss Black and Machined finishes, and includes the popular Method TOPO center cap, It's a great choice for off-road enthusiasts who seek the perfect balance of unique aesthetics and high performance. Solid A356 aluminum with T6 heat treatment construction. Clean 8 windowed spoke design with debossed METHOD logo. Sna",
     specs: [{"label":"Detail 1","value":"Designed to stand out from the crowd, introducing Method Race Wheel’s 321 Standard. Engineered with a unique window/s…"},{"label":"Detail 2","value":"Available in Gloss Black and Machined finishes, and includes the popular Method TOPO center cap, It's a great choice …"},{"label":"Detail 3","value":"Solid A356 aluminum with T6 heat treatment construction."}],
-    compatibleCars: ["toyota-hilux"],
   },
   {
     id: "p29",
@@ -329,7 +310,6 @@ export const products: Product[] = [
     images: ["https://res.cloudinary.com/dmnijqmkz/image/upload/v1766231176/products/colors/himtbqiycogq6vxha3xw.png","https://res.cloudinary.com/dmnijqmkz/image/upload/v1766231176/products/colors/accxgbqilym0extisqxf.webp","https://res.cloudinary.com/dmnijqmkz/image/upload/v1766231176/products/colors/tyti83zdzzq4jkaggsns.webp","https://res.cloudinary.com/dmnijqmkz/image/upload/v1766231176/products/colors/elfbq9ftlop6yjo79okt.webp"],
     description: "Designed with a sophisticated split spoke and engineered with performance in mind, this wheel is the ultimate combination of style and functionality. Available in Gloss Black and Gloss Titanium and includes an all-black, textured Method Race Wheels center cap. Solid A356 aluminum with T6 heat treatment construction. Sophisticated split-spoke design with debossed METHOD logo. Snap-in center cap with textured design and embossed METHOD logo. Hub centric fitments for common applications Strong 2650 lbs load rating per",
     specs: [{"label":"Detail 1","value":"Designed with a sophisticated split spoke and engineered with performance in mind, this wheel is the ultimate combina…"},{"label":"Detail 2","value":"Solid A356 aluminum with T6 heat treatment construction."},{"label":"Detail 3","value":"Sophisticated split-spoke design with debossed METHOD logo."}],
-    compatibleCars: ["toyota-hilux"],
   },
   {
     id: "p30",
@@ -342,7 +322,6 @@ export const products: Product[] = [
     images: ["https://res.cloudinary.com/dmnijqmkz/image/upload/v1766231308/products/colors/ifs3l4vwa6jzmc12tk8o.png","https://res.cloudinary.com/dmnijqmkz/image/upload/v1766231308/products/colors/ao9odcoxkojtnahptcya.webp","https://res.cloudinary.com/dmnijqmkz/image/upload/v1766231308/products/colors/ixsqp6b85sudryo42ygm.webp","https://res.cloudinary.com/dmnijqmkz/image/upload/v1766231308/products/colors/wwi9n8x0steibh2sepfk.webp"],
     description: "Designed with a sophisticated split spoke and engineered with performance in mind, this wheel is the ultimate combination of style and functionality. Available in Gloss Black and Gloss Titanium and includes an all-black, textured Method Race Wheels center cap. Solid A356 aluminum with T6 heat treatment construction. Sophisticated split-spoke design with debossed METHOD logo. Snap-in center cap with textured design and embossed METHOD logo. Hub centric fitments for common applications Strong 2650 lbs load rating per",
     specs: [{"label":"Detail 1","value":"Designed with a sophisticated split spoke and engineered with performance in mind, this wheel is the ultimate combina…"},{"label":"Detail 2","value":"Solid A356 aluminum with T6 heat treatment construction."},{"label":"Detail 3","value":"Sophisticated split-spoke design with debossed METHOD logo."}],
-    compatibleCars: ["toyota-hilux"],
   },
   {
     id: "p31",
@@ -355,7 +334,6 @@ export const products: Product[] = [
     images: ["https://res.cloudinary.com/dmnijqmkz/image/upload/v1766307785/products/colors/fpx6ew3rwbzmpag0v33r.png","https://res.cloudinary.com/dmnijqmkz/image/upload/v1766307784/products/colors/wszltfxf9o6m58la4tdf.webp"],
     description: "Solid A356 aluminum with T6 heat treatment construction. Unique 10 windowed design with debossed details and METHOD logos. Over-engineered to exceed SAE 2530 specifications. Screw-on center cap with embossed Method Race Wheels logo. Hub centric fitments for common applications. Strong 1850 lbs load rating per wheel. Supplied as a complete set of four wheels.",
     specs: [{"label":"Detail 1","value":"Solid A356 aluminum with T6 heat treatment construction."},{"label":"Detail 2","value":"Unique 10 windowed design with debossed details and METHOD logos."},{"label":"Detail 3","value":"Over-engineered to exceed SAE 2530 specifications."}],
-    compatibleCars: ["mahindra-thar"],
   },
   {
     id: "p32",
@@ -368,7 +346,6 @@ export const products: Product[] = [
     images: ["https://res.cloudinary.com/dmnijqmkz/image/upload/v1766237633/products/colors/tanwt7rhx2ulajgt249l.webp","https://res.cloudinary.com/dmnijqmkz/image/upload/v1766237633/products/colors/ugdivcmrwdtt9omvyk5x.webp","https://res.cloudinary.com/dmnijqmkz/image/upload/v1766237633/products/colors/sxkuxmuo6c2y08v6waqa.webp","https://res.cloudinary.com/dmnijqmkz/image/upload/v1766237633/products/colors/j7yqnoswvecxc0etkqwq.webp"],
     description: "The 701 Bead Grip® wheel was designed to be the perfect wheel for overland enthusiasts. The Bead Grip® technology allows deflation of tires down to pressures that previously would have required beadlock wheels to make sure tires didn’t debead. It’s advantageous to reduce tire inflation pressure while off-roading to increase a tire’s contact patch surface area for better traction on loose surfaces as well as improve ride comfort by effectively reducing the spring rate of the tire. The valve was strategically placed ",
     specs: [{"label":"Detail 1","value":"The 701 Bead Grip® wheel was designed to be the perfect wheel for overland enthusiasts. The Bead Grip® technology all…"},{"label":"Detail 2","value":"It’s advantageous to reduce tire inflation pressure while off-roading to increase a tire’s contact patch surface area…"},{"label":"Detail 3","value":"Patented Bead Grip® technology engages tire bead for increased grip at low tire pressures."}],
-    compatibleCars: ["toyota-hilux"],
   },
   {
     id: "p33",
@@ -381,7 +358,6 @@ export const products: Product[] = [
     images: ["https://res.cloudinary.com/dmnijqmkz/image/upload/v1766237353/products/colors/utoepkoqyoahmadz53gh.webp","https://res.cloudinary.com/dmnijqmkz/image/upload/v1766237353/products/colors/tbfwuabzkxlkfibcp2ex.webp","https://res.cloudinary.com/dmnijqmkz/image/upload/v1766237353/products/colors/bwfjxuarlguyhz6lnnvt.webp","https://res.cloudinary.com/dmnijqmkz/image/upload/v1766237353/products/colors/udsken0zuzpmttazdqad.webp"],
     description: "The 701 Bead Grip® wheel was designed to be the perfect wheel for overland enthusiasts. The Bead Grip® technology allows deflation of tires down to pressures that previously would have required beadlock wheels to make sure tires didn’t debead. It’s advantageous to reduce tire inflation pressure while off-roading to increase a tire’s contact patch surface area for better traction on loose surfaces as well as improve ride comfort by effectively reducing the spring rate of the tire. The valve was strategically placed ",
     specs: [{"label":"Detail 1","value":"The 701 Bead Grip® wheel was designed to be the perfect wheel for overland enthusiasts. The Bead Grip® technology all…"},{"label":"Detail 2","value":"It’s advantageous to reduce tire inflation pressure while off-roading to increase a tire’s contact patch surface area…"},{"label":"Detail 3","value":"Patented Bead Grip® technology engages tire bead for increased grip at low tire pressures."}],
-    compatibleCars: ["toyota-hilux"],
   },
   {
     id: "p34",
@@ -394,7 +370,6 @@ export const products: Product[] = [
     images: ["https://res.cloudinary.com/dmnijqmkz/image/upload/v1766237472/products/colors/a67qois9zf2rpkcvz7p5.png","https://res.cloudinary.com/dmnijqmkz/image/upload/v1766237472/products/colors/qsdgydo8mw6zvpe3oxrm.webp","https://res.cloudinary.com/dmnijqmkz/image/upload/v1766237471/products/colors/rrcrpdxjxltjjjjdhnks.webp","https://res.cloudinary.com/dmnijqmkz/image/upload/v1766237472/products/colors/mk8ld3hougoiwf3r9wyp.webp"],
     description: "The 701 Bead Grip® wheel was designed to be the perfect wheel for overland enthusiasts. The Bead Grip® technology allows deflation of tires down to pressures that previously would have required beadlock wheels to make sure tires didn’t debead. It’s advantageous to reduce tire inflation pressure while off-roading to increase a tire’s contact patch surface area for better traction on loose surfaces as well as improve ride comfort by effectively reducing the spring rate of the tire. The valve was strategically placed ",
     specs: [{"label":"Detail 1","value":"The 701 Bead Grip® wheel was designed to be the perfect wheel for overland enthusiasts. The Bead Grip® technology all…"},{"label":"Detail 2","value":"It’s advantageous to reduce tire inflation pressure while off-roading to increase a tire’s contact patch surface area…"},{"label":"Detail 3","value":"Patented Bead Grip® technology engages tire bead for increased grip at low tire pressures."}],
-    compatibleCars: ["toyota-hilux"],
   },
   {
     id: "p35",
@@ -407,7 +382,6 @@ export const products: Product[] = [
     images: ["https://res.cloudinary.com/dmnijqmkz/image/upload/v1766238202/products/colors/odolkxnr6hlfw02btbcv.webp","https://res.cloudinary.com/dmnijqmkz/image/upload/v1766238202/products/colors/sna20hlrble9caxikrjz.webp","https://res.cloudinary.com/dmnijqmkz/image/upload/v1766238202/products/colors/jodjle0a0orpwq2dyrw7.webp","https://res.cloudinary.com/dmnijqmkz/image/upload/v1766238202/products/colors/iyrxuleksgsbywudk3c7.webp"],
     description: "The 703 Bead Grip® wheel was developed for off-road enthusiasts and designed to handle the toughest trails and your next overland adventure. An iconic 12 window design and dual debossed METHOD logos help set your ride apart from the rest. The Bead Grip® technology allows deflation of tires down to pressures that previously would have required beadlock wheels to make sure tires didn’t debead. It’s advantageous to reduce tire inflation pressure while off-roading to increase a tire’s contact patch surface area for bet",
     specs: [{"label":"Detail 1","value":"The 703 Bead Grip® wheel was developed for off-road enthusiasts and designed to handle the toughest trails and your n…"},{"label":"Detail 2","value":"The Bead Grip® technology allows deflation of tires down to pressures that previously would have required beadlock wh…"},{"label":"Detail 3","value":"Patented Bead Grip® technology engages tire bead for increased grip at low tire pressures."}],
-    compatibleCars: ["toyota-hilux"],
   },
   {
     id: "p36",
@@ -420,7 +394,6 @@ export const products: Product[] = [
     images: ["https://res.cloudinary.com/dmnijqmkz/image/upload/v1766237898/products/colors/gdtpr2dx01ovfweqia5j.webp","https://res.cloudinary.com/dmnijqmkz/image/upload/v1766237898/products/colors/xmfstlz2hyzd9fu4d80r.webp","https://res.cloudinary.com/dmnijqmkz/image/upload/v1766237898/products/colors/oilxxw6rglmigc4ietz5.webp","https://res.cloudinary.com/dmnijqmkz/image/upload/v1766237898/products/colors/myeqmwp2llmsjpkuxugy.webp"],
     description: "The 703 Bead Grip® wheel was developed for off-road enthusiasts and designed to handle the toughest trails and your next overland adventure. An iconic 12 window design and dual debossed METHOD logos help set your ride apart from the rest. The Bead Grip® technology allows deflation of tires down to pressures that previously would have required beadlock wheels to make sure tires didn’t debead. It’s advantageous to reduce tire inflation pressure while off-roading to increase a tire’s contact patch surface area for bet",
     specs: [{"label":"Detail 1","value":"The 703 Bead Grip® wheel was developed for off-road enthusiasts and designed to handle the toughest trails and your n…"},{"label":"Detail 2","value":"The Bead Grip® technology allows deflation of tires down to pressures that previously would have required beadlock wh…"},{"label":"Detail 3","value":"Patented Bead Grip® technology engages tire bead for increased grip at low tire pressures."}],
-    compatibleCars: ["toyota-hilux"],
   },
   {
     id: "p37",
@@ -433,7 +406,6 @@ export const products: Product[] = [
     images: ["https://res.cloudinary.com/dmnijqmkz/image/upload/v1766238048/products/colors/zjzrnaaxbih2xg7epd3f.png","https://res.cloudinary.com/dmnijqmkz/image/upload/v1766238048/products/colors/qpbhstji0kn8khyfo48i.webp","https://res.cloudinary.com/dmnijqmkz/image/upload/v1766238048/products/colors/d6mrlcwsybknutvsnaof.webp","https://res.cloudinary.com/dmnijqmkz/image/upload/v1766238048/products/colors/mp60wfiq3dzldh6io221.webp"],
     description: "The 703 Bead Grip® wheel was developed for off-road enthusiasts and designed to handle the toughest trails and your next overland adventure. An iconic 12 window design and dual debossed METHOD logos help set your ride apart from the rest. The Bead Grip® technology allows deflation of tires down to pressures that previously would have required beadlock wheels to make sure tires didn’t debead. It’s advantageous to reduce tire inflation pressure while off-roading to increase a tire’s contact patch surface area for bet",
     specs: [{"label":"Detail 1","value":"The 703 Bead Grip® wheel was developed for off-road enthusiasts and designed to handle the toughest trails and your n…"},{"label":"Detail 2","value":"The Bead Grip® technology allows deflation of tires down to pressures that previously would have required beadlock wh…"},{"label":"Detail 3","value":"Patented Bead Grip® technology engages tire bead for increased grip at low tire pressures."}],
-    compatibleCars: ["toyota-hilux"],
   },
   {
     id: "p38",
@@ -446,7 +418,6 @@ export const products: Product[] = [
     images: ["https://res.cloudinary.com/dmnijqmkz/image/upload/v1766238521/products/colors/cjyguzpfpgh1ajuzm7u5.png","https://res.cloudinary.com/dmnijqmkz/image/upload/v1766238520/products/colors/opc5locslq8xgumjcsji.webp","https://res.cloudinary.com/dmnijqmkz/image/upload/v1766238520/products/colors/p8k99f0cqalnylkyvexv.webp","https://res.cloudinary.com/dmnijqmkz/image/upload/v1766238520/products/colors/qkuk2372syz41qp5jdch.webp"],
     description: "The 705 Bead Grip® wheel features a bold split 5-spoke, 10 windowed design with adventure and exploration in mind, It has been developed to handle the toughest trails, roughest deserts, or your next overland adventure.  The Bead Grip® technology allows deflation of tires down to pressures that previously would have required beadlock wheels to make sure tires didn’t debead. It’s advantageous to reduce tire inflation pressure while off-roading to increase a tire’s contact patch surface area for better traction on loo",
     specs: [{"label":"Detail 1","value":"The 705 Bead Grip® wheel features a bold split 5-spoke, 10 windowed design with adventure and exploration in mind, It…"},{"label":"Detail 2","value":"The Bead Grip® technology allows deflation of tires down to pressures that previously would have required beadlock wh…"},{"label":"Detail 3","value":"Patented Bead Grip® technology engages tire bead for increased grip at low tire pressures."}],
-    compatibleCars: ["toyota-hilux"],
   },
   {
     id: "p39",
@@ -459,7 +430,6 @@ export const products: Product[] = [
     images: ["https://res.cloudinary.com/dmnijqmkz/image/upload/v1766238691/products/colors/u2acjdrsq6i8x3y4oue9.webp","https://res.cloudinary.com/dmnijqmkz/image/upload/v1766238691/products/colors/qz7dyjvl8jw8blccoz8z.webp","https://res.cloudinary.com/dmnijqmkz/image/upload/v1766238691/products/colors/nssf9zgcndgtcqdyuxux.webp","https://res.cloudinary.com/dmnijqmkz/image/upload/v1766238691/products/colors/t6upcbgtjpp0igu7ojlm.webp"],
     description: "The 705 Bead Grip® wheel features a bold split 5-spoke, 10 windowed design with adventure and exploration in mind, It has been developed to handle the toughest trails, roughest deserts, or your next overland adventure.  The Bead Grip® technology allows deflation of tires down to pressures that previously would have required beadlock wheels to make sure tires didn’t debead. It’s advantageous to reduce tire inflation pressure while off-roading to increase a tire’s contact patch surface area for better traction on loo",
     specs: [{"label":"Detail 1","value":"The 705 Bead Grip® wheel features a bold split 5-spoke, 10 windowed design with adventure and exploration in mind, It…"},{"label":"Detail 2","value":"The Bead Grip® technology allows deflation of tires down to pressures that previously would have required beadlock wh…"},{"label":"Detail 3","value":"Patented Bead Grip® technology engages tire bead for increased grip at low tire pressures."}],
-    compatibleCars: ["toyota-hilux"],
   },
   {
     id: "p40",
@@ -472,7 +442,6 @@ export const products: Product[] = [
     images: ["https://res.cloudinary.com/dmnijqmkz/image/upload/v1766149036/products/colors/lsivsdeu3bxeo5atkz2s.png","https://res.cloudinary.com/dmnijqmkz/image/upload/v1766149036/products/colors/v1cstkf3tqwa5fiddmgf.webp","https://res.cloudinary.com/dmnijqmkz/image/upload/v1766149036/products/colors/vxdt71urcuz6p8c1glwu.webp","https://res.cloudinary.com/dmnijqmkz/image/upload/v1766149037/products/colors/uiaisxtxzfc0ormq1rl9.webp"],
     description: "Patented Bead Grip® technology engages tire bead for increased grip at low tire pressures. Solid A356 aluminum with T6 heat treatment construction. Iconic rally inspired multi-spoke design with debossed METHOD logo on outer lip. Aggressive safety hump on bead seats further prevents de-beading. Reinforced inner lip taken from MRW race wheel increases strength. Snap-in center cap with embossed METHOD Bead Grip® logo. Hub centric fitments for common applications Strong 2650 lbs load rating. Set of 4.",
     specs: [{"label":"Detail 1","value":"Patented Bead Grip® technology engages tire bead for increased grip at low tire pressures."},{"label":"Detail 2","value":"Solid A356 aluminum with T6 heat treatment construction."},{"label":"Detail 3","value":"Iconic rally inspired multi-spoke design with debossed METHOD logo on outer lip."}],
-    compatibleCars: ["toyota-hilux"],
   },
   {
     id: "p41",
@@ -485,7 +454,6 @@ export const products: Product[] = [
     images: ["https://res.cloudinary.com/dmnijqmkz/image/upload/v1766149324/products/colors/icb2qmphtfxkkwxe1amk.png","https://res.cloudinary.com/dmnijqmkz/image/upload/v1766149324/products/colors/ejtxl2bkpjvaudy28d6e.webp","https://res.cloudinary.com/dmnijqmkz/image/upload/v1766149324/products/colors/ub2wrxkmuh6pcm9ohhyp.webp","https://res.cloudinary.com/dmnijqmkz/image/upload/v1766149324/products/colors/xghajx86mrypyfiupqhy.webp"],
     description: "Patented Bead Grip® technology engages tire bead for increased grip at low tire pressures. Solid A356 aluminum with T6 heat treatment construction. Iconic rally inspired multi-spoke design with debossed METHOD logo on outer lip. Aggressive safety hump on bead seats further prevents de-beading. Reinforced inner lip taken from MRW race wheel increases strength. Snap-in center cap with embossed METHOD Bead Grip® logo. Hub centric fitments for common applications Strong 2650 lbs load rating. Set of 4.",
     specs: [{"label":"Detail 1","value":"Patented Bead Grip® technology engages tire bead for increased grip at low tire pressures."},{"label":"Detail 2","value":"Solid A356 aluminum with T6 heat treatment construction."},{"label":"Detail 3","value":"Iconic rally inspired multi-spoke design with debossed METHOD logo on outer lip."}],
-    compatibleCars: ["toyota-hilux"],
   },
   {
     id: "p42",
@@ -498,7 +466,6 @@ export const products: Product[] = [
     images: ["https://res.cloudinary.com/dmnijqmkz/image/upload/v1766307463/products/colors/bqgwegda2b2sin3xwpyd.png","https://res.cloudinary.com/dmnijqmkz/image/upload/v1766307462/products/colors/hp3dbb4cx87fyiwkvebv.webp","https://res.cloudinary.com/dmnijqmkz/image/upload/v1766307462/products/colors/pllyx4byvseodddeqh2q.webp","https://res.cloudinary.com/dmnijqmkz/image/upload/v1766307462/products/colors/vfat7vwvvy96smpvbpfi.webp"],
     description: "Introducing the 709 HD Bead Grip® from Method. Industry leading 3310 lbs load rating per wheel. Special Heavy Duty series designed to handle tons of weight (literally). Designed to deliver on both strength and style, this wheel features our patented Bead Grip® technology to keep tires secure under extreme aired-down conditions. With ultra heavy-duty load ratings across all applications, the 709 HD is built to handle whatever you throw at it, on or off the road. For added lip protection and a customized look, the op",
     specs: [{"label":"Detail 1","value":"Introducing the 709 HD Bead Grip® from Method."},{"label":"Detail 2","value":"Industry leading 3310 lbs load rating per wheel."},{"label":"Detail 3","value":"Special Heavy Duty series designed to handle tons of weight (literally)."}],
-    compatibleCars: ["toyota-hilux"],
   },
   {
     id: "p43",
@@ -511,7 +478,6 @@ export const products: Product[] = [
     images: ["https://res.cloudinary.com/dmnijqmkz/image/upload/v1766213353/products/colors/xqo0yuankysowgxqecsh.png","https://res.cloudinary.com/dmnijqmkz/image/upload/v1766213352/products/colors/kayha9l6omn69xrijkbh.jpg","https://res.cloudinary.com/dmnijqmkz/image/upload/v1766213353/products/colors/aqdzaf2omz5p0qzqlpra.jpg"],
     description: "A powerful series-wound motor and planetary gear train deliver faster line speed under load, with lower amp draw.  IP68-rated waterproof winch construction keeps the elements out.  High-performance Albright contactor delivers maximum reliability.  Control packs can be relocated for low-profile installations.  Durable, one-piece cast-aluminum tie-plate for added strength and durability. 2-in-1 wired and wireless remote.",
     specs: [{"label":"Detail 1","value":"A powerful series-wound motor and planetary gear train deliver faster line speed under load, with lower amp draw."},{"label":"Detail 2","value":"IP68-rated waterproof winch construction keeps the elements out."},{"label":"Detail 3","value":"High-performance Albright contactor delivers maximum reliability."}],
-    compatibleCars: ["toyota-hilux"],
   },
   {
     id: "p44",
@@ -524,7 +490,6 @@ export const products: Product[] = [
     images: ["https://res.cloudinary.com/dmnijqmkz/image/upload/v1766213431/products/colors/qay0wd5qwte1vpoetelu.png","https://res.cloudinary.com/dmnijqmkz/image/upload/v1766213431/products/colors/t7pecrtke5puns0wl5l2.jpg","https://res.cloudinary.com/dmnijqmkz/image/upload/v1766213431/products/colors/mqfhhrua1y9un0rr2v5i.jpg"],
     description: "A powerful series-wound motor and planetary gear train deliver faster line speed under load, with lower amp draw.  IP68-rated waterproof winch construction keeps the elements out.  High-performance Albright contactor delivers maximum reliability.  Control packs can be relocated for low-profile installations.  Durable, one-piece cast-aluminum tie-plate for added strength and durability. 2-in-1 wired and wireless remote.",
     specs: [{"label":"Detail 1","value":"A powerful series-wound motor and planetary gear train deliver faster line speed under load, with lower amp draw."},{"label":"Detail 2","value":"IP68-rated waterproof winch construction keeps the elements out."},{"label":"Detail 3","value":"High-performance Albright contactor delivers maximum reliability."}],
-    compatibleCars: ["toyota-hilux"],
   },
   {
     id: "p45",
@@ -537,7 +502,6 @@ export const products: Product[] = [
     images: ["https://res.cloudinary.com/dmnijqmkz/image/upload/v1766213502/products/colors/sfdcns7eingmjfp4vaeb.png","https://res.cloudinary.com/dmnijqmkz/image/upload/v1766213502/products/colors/f64mqpdr1oxyo0tvsnqn.jpg","https://res.cloudinary.com/dmnijqmkz/image/upload/v1766213502/products/colors/j3aytpbfdavsuealsa84.jpg"],
     description: "A powerful series-wound motor and planetary gear train deliver faster line speed under load, with lower amp draw.  IP68-rated waterproof winch construction keeps the elements out.  High-performance Albright contactor delivers maximum reliability.  Control packs can be relocated for low-profile installations.  Durable, one-piece cast-aluminum tie-plate for added strength and durability. 2-in-1 wired and wireless remote.",
     specs: [{"label":"Detail 1","value":"A powerful series-wound motor and planetary gear train deliver faster line speed under load, with lower amp draw."},{"label":"Detail 2","value":"IP68-rated waterproof winch construction keeps the elements out."},{"label":"Detail 3","value":"High-performance Albright contactor delivers maximum reliability."}],
-    compatibleCars: ["toyota-hilux"],
   },
   {
     id: "p46",
@@ -550,7 +514,6 @@ export const products: Product[] = [
     images: ["https://res.cloudinary.com/dmnijqmkz/image/upload/v1766213576/products/colors/pzsnu7inm98hnxbamecf.png","https://res.cloudinary.com/dmnijqmkz/image/upload/v1766213576/products/colors/oyqmahjtevavpknjjr4d.jpg","https://res.cloudinary.com/dmnijqmkz/image/upload/v1766213576/products/colors/axdddvtu7a74jndnze9f.jpg"],
     description: "A powerful series-wound motor and planetary gear train deliver faster line speed under load, with lower amp draw.  IP68-rated waterproof winch construction keeps the elements out.  High-performance Albright contactor delivers maximum reliability.  Control packs can be relocated for low-profile installations.  Durable, one-piece cast-aluminum tie-plate for added strength and durability. 2-in-1 wired and wireless remote.",
     specs: [{"label":"Detail 1","value":"A powerful series-wound motor and planetary gear train deliver faster line speed under load, with lower amp draw."},{"label":"Detail 2","value":"IP68-rated waterproof winch construction keeps the elements out."},{"label":"Detail 3","value":"High-performance Albright contactor delivers maximum reliability."}],
-    compatibleCars: ["toyota-hilux"],
   },
   {
     id: "p47",
@@ -563,7 +526,6 @@ export const products: Product[] = [
     images: ["https://res.cloudinary.com/dmnijqmkz/image/upload/v1766213067/products/colors/s8537jbzniqgy9wxir5g.png","https://res.cloudinary.com/dmnijqmkz/image/upload/v1766213067/products/colors/awrg8i7qhohxpma91ase.jpg","https://res.cloudinary.com/dmnijqmkz/image/upload/v1766213067/products/colors/bsn8hu9ycbvbnh22copo.jpg"],
     description: "A powerful series-wound motor and planetary gear train deliver faster line speed under load, with lower amp draw. IP68-rated waterproof winch construction keeps the elements out. High-performance Albright contactor delivers maximum reliability. Control packs can be relocated for low-profile installations . Durable, one-piece cast-aluminum tie-plate for added strength and durability. 2-in-1 wired and wireless remote.",
     specs: [{"label":"Detail 1","value":"A powerful series-wound motor and planetary gear train deliver faster line speed under load, with lower amp draw."},{"label":"Detail 2","value":"IP68-rated waterproof winch construction keeps the elements out."},{"label":"Detail 3","value":"High-performance Albright contactor delivers maximum reliability."}],
-    compatibleCars: ["toyota-hilux"],
   },
   {
     id: "p48",
@@ -576,7 +538,6 @@ export const products: Product[] = [
     images: ["https://res.cloudinary.com/dmnijqmkz/image/upload/v1766213227/products/colors/svbq5nv6qayjuy4umuxc.png","https://res.cloudinary.com/dmnijqmkz/image/upload/v1766213226/products/colors/x9nyqp1yftrfgyaxuprj.jpg","https://res.cloudinary.com/dmnijqmkz/image/upload/v1766213227/products/colors/honnduidh2nlidvhwp6z.jpg"],
     description: "A powerful series-wound motor and planetary gear train deliver faster line speed under load, with lower amp draw.  IP68-rated waterproof winch construction keeps the elements out.  High-performance Albright contactor delivers maximum reliability.  Control packs can be relocated for low-profile installations.  Durable, one-piece cast-aluminum tie-plate for added strength and durability. 2-in-1 wired and wireless remote.",
     specs: [{"label":"Detail 1","value":"A powerful series-wound motor and planetary gear train deliver faster line speed under load, with lower amp draw."},{"label":"Detail 2","value":"IP68-rated waterproof winch construction keeps the elements out."},{"label":"Detail 3","value":"High-performance Albright contactor delivers maximum reliability."}],
-    compatibleCars: ["toyota-hilux"],
   },
   {
     id: "p49",
@@ -589,7 +550,6 @@ export const products: Product[] = [
     images: ["https://res.cloudinary.com/dmnijqmkz/image/upload/v1766215552/products/colors/dymvz1libwuejawfu4h6.png","https://res.cloudinary.com/dmnijqmkz/image/upload/v1766215552/products/colors/yvzhiot6ks6bwsry41lc.jpg","https://res.cloudinary.com/dmnijqmkz/image/upload/v1766215552/products/colors/ovzgbdki5y01rzjplxas.jpg","https://res.cloudinary.com/dmnijqmkz/image/upload/v1766215552/products/colors/axdz8gpn3jxn4enlgtq8.jpg"],
     description: "VRX 35-S includes 50’ of lightweight, easy-to-handle 3/16” synthetic rope, hawse fairlead, and zinc-plated hook. Complete IP68 waterproof sealing keeps all the elements out Hard-working 3,500 lb capacity. Semi-gloss black powder-coated finish and stainless steel fasteners for corrosion resistance. New clutch design based on legendary WARN 4WD hub lock know-how. Load-holding mechanical brake for great control. Durable all-metal construction. Smooth and reliable all-metal three-stage planetary gear train Handlebar-mo",
     specs: [{"label":"Detail 1","value":"VRX 35-S includes 50’ of lightweight, easy-to-handle 3/16” synthetic rope, hawse fairlead, and zinc-plated hook."},{"label":"Detail 2","value":"Complete IP68 waterproof sealing keeps all the elements out"},{"label":"Detail 3","value":"Hard-working 3,500 lb capacity."}],
-    compatibleCars: ["jeep-wrangler","mahindra-thar"],
   },
   {
     id: "p50",
@@ -602,7 +562,6 @@ export const products: Product[] = [
     images: ["https://res.cloudinary.com/dmnijqmkz/image/upload/v1766215672/products/colors/natx5mxakbplrkqehcwa.png","https://res.cloudinary.com/dmnijqmkz/image/upload/v1766215672/products/colors/clhsc1wov4a1ipwcqagr.jpg","https://res.cloudinary.com/dmnijqmkz/image/upload/v1766215672/products/colors/mp07fp5tafckae2befya.jpg","https://res.cloudinary.com/dmnijqmkz/image/upload/v1766215672/products/colors/lj20egtc8ufomkhqtc4d.jpg"],
     description: "VRX 45-S includes 50’ of lightweight, easy-to-handle ¼” synthetic rope, hawse fairlead, and zinc-plated hook Huge 4,500 lb capacity available for the hardest-working cars Load-holding brake for great control. Durable all-metal construction. New clutch design based on legendary WARN 4WD hub lock know-how. Complete waterproof sealing keeps all the elements out. Semi-gloss back powder-coated finish and stainless steel fasteners for corrosion resistance. Smooth and reliable all-metal three-stage planetary gear train. D",
     specs: [{"label":"Detail 1","value":"VRX 45-S includes 50’ of lightweight, easy-to-handle ¼” synthetic rope, hawse fairlead, and zinc-plated hook"},{"label":"Detail 2","value":"Huge 4,500 lb capacity available for the hardest-working cars"},{"label":"Detail 3","value":"Load-holding brake for great control."}],
-    compatibleCars: ["jeep-wrangler","mahindra-thar"],
   },
   {
     id: "p51",
@@ -615,7 +574,6 @@ export const products: Product[] = [
     images: ["https://res.cloudinary.com/dmnijqmkz/image/upload/v1766214240/products/colors/ncfn45z28ckhudngsvix.png","https://res.cloudinary.com/dmnijqmkz/image/upload/v1766214240/products/colors/xnpuf41mxowz4ac2nbct.png","https://res.cloudinary.com/dmnijqmkz/image/upload/v1766214240/products/colors/wqgzft0trqshlecrygfr.png"],
     description: "Choose your way to conquer the terrain The ZEON 10 is tough enough to tackle anything you will, with a look that is advanced, capable and strong. Muck busting sealing keeps out everything but the good times. Add a hyper durable cast aluminum housing, satin black finish, and 10,000 Pounds Single line pulling capacity and, well, you've got a workhorse unit you can trust for years to come. Convertible Control Pack Can Be Attached To The Winch Or Remotely Mounted, Allowing For Various Winch Mounting Options And Looks. ",
     specs: [{"label":"Detail 1","value":"Choose your way to conquer the terrain The ZEON 10 is tough enough to tackle anything you will, with a look that is a…"},{"label":"Detail 2","value":"Convertible Control Pack Can Be Attached To The Winch Or Remotely Mounted, Allowing For Various Winch Mounting Option…"},{"label":"Detail 3","value":"New Design Planetary Gear Train And Series Wound Motor Deliver Fast, Quiet, And Reliable Pulling Power."}],
-    compatibleCars: ["toyota-hilux"],
   },
   {
     id: "p52",
@@ -628,7 +586,6 @@ export const products: Product[] = [
     images: ["https://res.cloudinary.com/dmnijqmkz/image/upload/v1766214378/products/colors/q0yidu9lqc4septntetj.png","https://res.cloudinary.com/dmnijqmkz/image/upload/v1766214378/products/colors/swdj1mfm7x1dklnsp9td.png","https://res.cloudinary.com/dmnijqmkz/image/upload/v1766214377/products/colors/kw1awzswspubnmmkpj6v.png"],
     description: "Choose your way to conquer the terrain The ZEON 10-S is tough enough to tackle anything you will, with a look that is advanced, capable and strong. Muck-busting sealing keeps out everything but the good times. Add a hyper-durable cast-aluminum housing, satin-black finish, and 10,000 Pound single-line pulling capacity and, well, you've got a workhorse unit you can trust for years to come. 10,000 Pound (4536 Kilogram) Single-Line Pulling Capacity. Includes 100 Foot Of 3/8 Inch Warn Spydura Synthetic Rope, Which Inclu",
     specs: [{"label":"Detail 1","value":"Choose your way to conquer the terrain The ZEON 10-S is tough enough to tackle anything you will, with a look that is…"},{"label":"Detail 2","value":"10,000 Pound (4536 Kilogram) Single-Line Pulling Capacity."},{"label":"Detail 3","value":"Includes 100 Foot Of 3/8 Inch Warn Spydura Synthetic Rope, Which Includes A Temperature-Resistant Sleeve On The First…"}],
-    compatibleCars: ["toyota-hilux"],
   },
   {
     id: "p53",
@@ -641,7 +598,6 @@ export const products: Product[] = [
     images: ["https://res.cloudinary.com/dmnijqmkz/image/upload/v1766214061/products/colors/nqiaddppkrleuip1ec03.png","https://res.cloudinary.com/dmnijqmkz/image/upload/v1766214062/products/colors/hko7rphj5m65c2higbry.png","https://res.cloudinary.com/dmnijqmkz/image/upload/v1766214060/products/colors/cfts2yztown5abc2zxsy.png"],
     description: "The ZEON 12 is a pulling machine you can rely on to rescue you or your buddies, from nearly anything. 12,000 lb (5443 kg) single-line pulling capacity. Includes 80' of durable 3/8\" galvanized steel wire rope. Convertible control pack can be attached to the winch or remotely mounted, allowing for various winch mounting options and looks. Gear train and motor deliver reliable pulling power that is fast, and quieter than ever. Satin-black powder-coated finish with stainless steel fasteners and clutch lever looks great",
     specs: [{"label":"Detail 1","value":"The ZEON 12 is a pulling machine you can rely on to rescue you or your buddies, from nearly anything."},{"label":"Detail 2","value":"12,000 lb (5443 kg) single-line pulling capacity."},{"label":"Detail 3","value":"Includes 80' of durable 3/8\" galvanized steel wire rope."}],
-    compatibleCars: ["toyota-hilux"],
   },
   {
     id: "p54",
@@ -654,7 +610,6 @@ export const products: Product[] = [
     images: ["https://res.cloudinary.com/dmnijqmkz/image/upload/v1766213905/products/colors/rqlxsn0wblrezwasiraj.png","https://res.cloudinary.com/dmnijqmkz/image/upload/v1766213905/products/colors/vy7sx9glohic3dh74tl2.png","https://res.cloudinary.com/dmnijqmkz/image/upload/v1766213905/products/colors/bv2ewlbijmlvsyqiokfv.png"],
     description: "The WARN ZEON® has proven itself in the field and among off roaders Now you can get the 12,000 Pounds capacity ZEON winch with Spydura® Pro synthetic rope, The new ZEON 12-S winch trims weight but keeps plenty of muscle for the big jobs and the toughest rescues, And the light, easy-to-handle synthetic rope makes any winching situation a bit easier, It's the perfect choice for heavily loaded off road vehicles.   Legendary WARN reliability and performance; 12,000 lb (5443 kg) capacity - perfect for the bigger vehicle",
     specs: [{"label":"Detail 1","value":"The WARN ZEON® has proven itself in the field and among off roaders Now you can get the 12,000 Pounds capacity ZEON w…"},{"label":"Detail 2","value":"Legendary WARN reliability and performance; 12,000 lb (5443 kg) capacity - perfect for the bigger vehicles."},{"label":"Detail 3","value":"Unique exterior styling and symmetrical design give this winch a look that is advanced, capable, and strong."}],
-    compatibleCars: ["toyota-hilux"],
   },
   {
     id: "p55",
@@ -667,7 +622,6 @@ export const products: Product[] = [
     images: ["https://res.cloudinary.com/dmnijqmkz/image/upload/v1766214634/products/colors/wrzslfhho3fzphxbogs0.png","https://res.cloudinary.com/dmnijqmkz/image/upload/v1766214634/products/colors/qetxuokrvngvv7ebn5p0.png","https://res.cloudinary.com/dmnijqmkz/image/upload/v1766214633/products/colors/luvvlzonxf04sz5kzxvz.png"],
     description: "Don't let the good looks fool you. We've packed the ZEON 8 winch with all the performance features off-roaders said they needed most. From a heat dissipating brake down to an incredibly smooth planetary gear train, this winch is ready to hit the trail. The 8,000 Pounds pulling capacity, combined with a fast line speed make this winch the perfect choice for Jeep and SUV trail rigs.  Convertible Control Pack Can Be Attached To The Winch Or Remotely Mounted, Allowing For Various Winch Mounting Options And Looks. Satin",
     specs: [{"label":"Detail 1","value":"Don't let the good looks fool you. We've packed the ZEON 8 winch with all the performance features off-roaders said t…"},{"label":"Detail 2","value":"Convertible Control Pack Can Be Attached To The Winch Or Remotely Mounted, Allowing For Various Winch Mounting Option…"},{"label":"Detail 3","value":"Satin Black Powder Coated Finish With Stainless Steel Fasteners And Clutch Lever Looks Great And Inhibits Corrosion."}],
-    compatibleCars: ["toyota-hilux"],
   },
   {
     id: "p56",
@@ -680,7 +634,6 @@ export const products: Product[] = [
     images: ["https://res.cloudinary.com/dmnijqmkz/image/upload/v1766214505/products/colors/csbxmlebjn3hdcfkxuin.png","https://res.cloudinary.com/dmnijqmkz/image/upload/v1766214505/products/colors/h4ytrajhioehxyarpoa6.png","https://res.cloudinary.com/dmnijqmkz/image/upload/v1766214505/products/colors/dizcrr7no5oszwghsuan.png"],
     description: "Don't let the good looks fool you. We've packed the ZEON 8-S winch with all the performance features off-roaders said they needed most. From a heat-dissipating brake down to an incredibly smooth planetary gear train, this winch is ready to hit the trail. The 8,000 Pound pulling capacity, combined with a fast line speed make this winch the perfect choice for Jeep and SUV trail rigs.   Includes 100 Foot Of 3/8 Inch Warn Spydura Synthetic Rope, Which Includes A Temperature-Resistant Sleeve On The First Layer, A Ballis",
     specs: [{"label":"Detail 1","value":"Don't let the good looks fool you. We've packed the ZEON 8-S winch with all the performance features off-roaders said…"},{"label":"Detail 2","value":"Includes 100 Foot Of 3/8 Inch Warn Spydura Synthetic Rope, Which Includes A Temperature-Resistant Sleeve On The First…"},{"label":"Detail 3","value":"Convertible Control Pack Can Be Attached To The Winch Or Remotely Mounted, Allowing For Various Winch Mounting Option…"}],
-    compatibleCars: ["toyota-hilux"],
   },
   {
     id: "p57",
@@ -693,7 +646,6 @@ export const products: Product[] = [
     images: ["https://res.cloudinary.com/dmnijqmkz/image/upload/v1766214973/products/colors/i3bk8fenesn1ywcr4dij.png","https://res.cloudinary.com/dmnijqmkz/image/upload/v1766214973/products/colors/celc60kdpcfnhbbzeatg.jpg","https://res.cloudinary.com/dmnijqmkz/image/upload/v1766214973/products/colors/aqmwodqcjwunoigigrzj.png","https://res.cloudinary.com/dmnijqmkz/image/upload/v1766214973/products/colors/q4q5wj9kj22rj8qkrpzz.png"],
     description: "With state-of-the-art features, cutting-edge technology, and world-class engineering, the ZEON Platinum is the future of winching. The one-of-a-kind Advanced Wireless Remote controls the clutch, power in/power out, plus it displays motor temperature and vehicle battery info. It also can control two 12-volt accessories, which can be plugged directly into the winch. Rated line pull of 10,000 lbs (4536 kg) single-line Comes with 80' of 3/8\" (24,38m of 9,52mm) aircraft-grade wire rope and a roller fairlead Remote Contr",
     specs: [{"label":"Detail 1","value":"With state-of-the-art features, cutting-edge technology, and world-class engineering, the ZEON Platinum is the future…"},{"label":"Detail 2","value":"Rated line pull of 10,000 lbs (4536 kg) single-line"},{"label":"Detail 3","value":"Comes with 80' of 3/8\" (24,38m of 9,52mm) aircraft-grade wire rope and a roller fairlead"}],
-    compatibleCars: ["toyota-hilux"],
   },
   {
     id: "p58",
@@ -706,7 +658,6 @@ export const products: Product[] = [
     images: ["https://res.cloudinary.com/dmnijqmkz/image/upload/v1766215139/products/colors/r4lh1wmkxzhhahvoomk0.png","https://res.cloudinary.com/dmnijqmkz/image/upload/v1766215139/products/colors/gbkbjncppvbnq6tdvid8.jpg","https://res.cloudinary.com/dmnijqmkz/image/upload/v1766215139/products/colors/bk7z8jhyh4udj6b1fk7s.png","https://res.cloudinary.com/dmnijqmkz/image/upload/v1766215138/products/colors/m905zbsyobmm6xqcgkue.png"],
     description: "The ZEON 10-S Platinum is built for those who push the limits-with double the durability, 20% faster line speed, and extreme IP68-rated waterproofing. The Advanced Wireless Remote controls not only the winch, but also the clutch and other accessories. With a 10,000 lb pulling capacity, high-performance motor package, and Spydura® Synthetic Rope, you'll be equipped to go places others only dream about. Rated line pull of 10,000 lbs (4536 kg) single-line Comes with 100' of 3/8\" (30m of 9,52mm) Spydura synthetic rope ",
     specs: [{"label":"Detail 1","value":"The ZEON 10-S Platinum is built for those who push the limits-with double the durability, 20% faster line speed, and …"},{"label":"Detail 2","value":"Rated line pull of 10,000 lbs (4536 kg) single-line"},{"label":"Detail 3","value":"Comes with 100' of 3/8\" (30m of 9,52mm) Spydura synthetic rope with a matte aluminum hawse fairlead."}],
-    compatibleCars: ["toyota-hilux"],
   },
   {
     id: "p59",
@@ -719,7 +670,6 @@ export const products: Product[] = [
     images: ["https://res.cloudinary.com/dmnijqmkz/image/upload/v1766215272/products/colors/p4d3ls9g3wtzuonectkh.png","https://res.cloudinary.com/dmnijqmkz/image/upload/v1766215271/products/colors/b5qpskbsinunlbrwe7ne.jpg","https://res.cloudinary.com/dmnijqmkz/image/upload/v1766215272/products/colors/nh02bq3pkc0ayewiu8ra.png","https://res.cloudinary.com/dmnijqmkz/image/upload/v1766215271/products/colors/k6px5dom58fqzo4eciv4.png"],
     description: "With state-of-the-art features, cutting-edge technology, and world-class engineering, the ZEON Platinum is the future of winching. The one-of-a-kind Advanced Wireless Remote controls the clutch, power in/power out, plus it displays motor temperature and vehicle battery info. It also can control two 12-volt accessories, which can be plugged directly into the winch. All-new high-speed motor, stronger gears, and heat-treated ring gear deliver 20% faster line speed, best-in-class efficiency, and our highest durability ",
     specs: [{"label":"Detail 1","value":"With state-of-the-art features, cutting-edge technology, and world-class engineering, the ZEON Platinum is the future…"},{"label":"Detail 2","value":"All-new high-speed motor, stronger gears, and heat-treated ring gear deliver 20% faster line speed, best-in-class eff…"},{"label":"Detail 3","value":"The Advanced Wireless Remote gives you total control in the palm of your hand, allowing you to control the winch and …"}],
-    compatibleCars: ["toyota-hilux"],
   },
   {
     id: "p60",
@@ -732,7 +682,6 @@ export const products: Product[] = [
     images: ["https://res.cloudinary.com/dmnijqmkz/image/upload/v1766150133/products/colors/raj3qinfzou3j3bexqwq.png"],
     description: "Safari Snorkel raised air intake for deep water crossings and cleaner air in dust. Rotationally molded UV-stable body, vehicle-specific fitment, and ARMAX series flow for tuned engines. Matches Advven’s Safari snorkel program for Hilux Revo.",
     specs: [{"label":"Fitment","value":"Toyota Hilux Revo (2020–present)"},{"label":"Series","value":"Safari ARMAX"}],
-    compatibleCars: ["toyota-hilux"],
   },
   {
     id: "p61",
@@ -745,7 +694,6 @@ export const products: Product[] = [
     images: ["https://res.cloudinary.com/dmnijqmkz/image/upload/v1766216355/products/colors/nzsf3a2por9cwycej7xy.png"],
     description: "Safari V-Spec snorkel engineered for compact 4x4 platforms. Snorkel body keeps intake above dust and water; includes template and hardware for clean install.",
     specs: [{"label":"Platforms","value":"Mahindra Thar, Suzuki Jimny (application-specific)"},{"label":"Type","value":"Safari V-Spec"}],
-    compatibleCars: ["mahindra-thar","jeep-wrangler"],
   },
   {
     id: "p62",
@@ -758,7 +706,6 @@ export const products: Product[] = [
     images: ["https://res.cloudinary.com/dmnijqmkz/image/upload/v1766213353/products/colors/xqo0yuankysowgxqecsh.png"],
     description: "NOCO Genius smart charger maintains AGM, lithium, and flooded batteries. Genius multi-stage profile with thermal compensation for workshop or overland garage use.",
     specs: [{"label":"Output","value":"10A 12V"},{"label":"Modes","value":"NOCO Genius repair / maintain"}],
-    compatibleCars: ["toyota-hilux","toyota-fortuner","jeep-wrangler","mahindra-thar","land-rover-defender","ford-bronco"],
   },
   {
     id: "p63",
@@ -771,7 +718,6 @@ export const products: Product[] = [
     images: ["https://res.cloudinary.com/dmnijqmkz/image/upload/v1766213067/products/colors/s8537jbzniqgy9wxir5g.png"],
     description: "Compact NOCO Genius maintainer for auxiliary and starter batteries. Genius float stage keeps dual-battery rigs ready after long parking intervals.",
     specs: [{"label":"Output","value":"5A 12V"},{"label":"Use","value":"Maintainer / trickle"}],
-    compatibleCars: ["toyota-hilux","toyota-fortuner","jeep-wrangler","mahindra-thar"],
   },
   {
     id: "p64",
@@ -784,7 +730,6 @@ export const products: Product[] = [
     images: ["https://res.cloudinary.com/dmnijqmkz/image/upload/v1766215967/products/colors/d8etrgud3f5f1ayhqvyl.png"],
     description: "ARB BASE Rack platform for roof tents, recovery boards, and lighting. Aluminum cross members and ARB mounting accessories integrate with factory rails where supported.",
     specs: [{"label":"Brand","value":"ARB"},{"label":"System","value":"BASE Rack modular"}],
-    compatibleCars: ["toyota-hilux","toyota-fortuner","jeep-wrangler","land-rover-defender","ford-bronco"],
   },
   {
     id: "p65",
@@ -797,7 +742,6 @@ export const products: Product[] = [
     images: ["https://res.cloudinary.com/dmnijqmkz/image/upload/v1766214240/products/colors/ncfn45z28ckhudngsvix.png"],
     description: "ARB high-output twin motor compressor for tire inflation and air tools. Weather-resistant install kit; pairs with ARB air tank and locker plumbing.",
     specs: [{"label":"Brand","value":"ARB"},{"label":"Type","value":"On-board 12V"}],
-    compatibleCars: ["toyota-hilux","jeep-wrangler","land-rover-defender","ford-bronco"],
   },
   {
     id: "p66",
@@ -810,7 +754,11 @@ export const products: Product[] = [
     images: ["https://res.cloudinary.com/dmnijqmkz/image/upload/v1766213905/products/colors/rqlxsn0wblrezwasiraj.png"],
     description: "ARB 47L portable fridge freezer with low-draw compressor for dual-battery touring. Durable ARB casing and tie-down points for deck or drawer installs.",
     specs: [{"label":"Brand","value":"ARB"},{"label":"Capacity","value":"47L"}],
-    compatibleCars: ["toyota-hilux","toyota-fortuner","jeep-wrangler","mahindra-thar","land-rover-defender","ford-bronco"],
   },
 ];
+
+export const products: Product[] = rawProducts.map((r) => ({
+  ...r,
+  compatibleCars: getVehicleSlugsForProductSlug(r.slug),
+}));
 

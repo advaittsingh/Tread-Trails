@@ -1,11 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { requireAdmin } from "@/lib/auth/request-user";
-import { connectDB } from "@/lib/db";
-import { Booking } from "@/lib/models/Booking";
-import { CartTelemetry } from "@/lib/models/CartTelemetry";
-import { Order } from "@/lib/models/Order";
-import { PageHit } from "@/lib/models/PageHit";
+import { prisma } from "@/lib/prisma";
 
 function dayKey(d: Date): string {
   return d.toISOString().slice(0, 10);
@@ -42,16 +38,14 @@ export async function GET() {
   if ("response" in gate) return gate.response;
 
   try {
-    await connectDB();
-
     const days = lastNDaysKeys(30);
     const start = new Date(`${days[0]}T00:00:00.000Z`);
 
     const [orders, bookings, hits, carts] = await Promise.all([
-      Order.find({ createdAt: { $gte: start } }).lean(),
-      Booking.find({ createdAt: { $gte: start } }).lean(),
-      PageHit.find({ createdAt: { $gte: start } }).lean(),
-      CartTelemetry.find({ updatedAt: { $gte: start } }).lean(),
+      prisma.order.findMany({ where: { createdAt: { gte: start } } }),
+      prisma.booking.findMany({ where: { createdAt: { gte: start } } }),
+      prisma.pageHit.findMany({ where: { createdAt: { gte: start } } }),
+      prisma.cartTelemetry.findMany({ where: { updatedAt: { gte: start } } }),
     ]);
 
     const revenueByDay = days.map((dk) => {

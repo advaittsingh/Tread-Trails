@@ -1,9 +1,10 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
+import type { Prisma } from "@prisma/client";
+import { BookingStatus } from "@prisma/client";
 
 import { requireAdmin } from "@/lib/auth/request-user";
-import { connectDB } from "@/lib/db";
-import { Booking } from "@/lib/models/Booking";
+import { prisma } from "@/lib/prisma";
 
 export async function GET(req: NextRequest) {
   const gate = await requireAdmin();
@@ -14,27 +15,40 @@ export async function GET(req: NextRequest) {
   const limit = Math.min(100, Math.max(1, Number(searchParams.get("limit")) || 25));
   const skip = (page - 1) * limit;
   const search = searchParams.get("search")?.trim();
+  const statusParam = searchParams.get("status")?.trim();
 
-  const filter: Record<string, unknown> = {};
+  const where: Prisma.BookingWhereInput = {};
+  if (
+    statusParam === BookingStatus.requested ||
+    statusParam === BookingStatus.confirmed ||
+    statusParam === BookingStatus.cancelled
+  ) {
+    where.status = statusParam;
+  }
   if (search) {
-    filter.$or = [
-      { contactEmail: { $regex: search, $options: "i" } },
-      { vehicleName: { $regex: search, $options: "i" } },
-      { service: { $regex: search, $options: "i" } },
+    where.OR = [
+      { contactEmail: { contains: search, mode: "insensitive" } },
+      { vehicleName: { contains: search, mode: "insensitive" } },
+      { service: { contains: search, mode: "insensitive" } },
+      { id: { equals: search } },
     ];
   }
 
   try {
-    await connectDB();
     const [bookings, total] = await Promise.all([
-      Booking.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit).lean(),
-      Booking.countDocuments(filter),
+      prisma.booking.findMany({
+        where,
+        orderBy: { createdAt: "desc" },
+        skip,
+        take: limit,
+      }),
+      prisma.booking.count({ where }),
     ]);
 
     return NextResponse.json({
       bookings: bookings.map((b) => ({
-        id: b._id.toString(),
-        userId: b.userId ? String(b.userId) : null,
+        id: b.id,
+        userId: b.userId ?? null,
         contactEmail: b.contactEmail,
         contactName: b.contactName,
         contactPhone: b.contactPhone,

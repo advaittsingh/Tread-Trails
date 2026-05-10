@@ -1,7 +1,10 @@
 import type { MetadataRoute } from "next";
 
-import { builds, cars, getBrandEntries, products } from "@/data/index";
+import { products } from "@/data/index";
 import { siteUrl } from "@/lib/site";
+import { listBrandEntries } from "@/lib/server/brand-catalog";
+import { listBuilds } from "@/lib/server/build-catalog";
+import { listVehicles } from "@/lib/server/vehicle-catalog";
 
 const STATIC = [
   "",
@@ -10,16 +13,27 @@ const STATIC = [
   "/products",
   "/builds",
   "/booking",
+  "/about",
+  "/corporate-inquiry",
+  "/contact",
   "/cart",
   "/checkout",
+  "/compare",
   "/account",
   "/login",
   "/signup",
+  "/forgot-password",
+  "/reset-password",
+  "/checkout/success",
+  "/checkout/canceled",
 ];
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const base = siteUrl.replace(/\/$/, "");
   const lastModified = new Date();
+  const cars = await listVehicles();
+  const builds = await listBuilds();
+  const hubBrands = await listBrandEntries();
 
   const staticEntries: MetadataRoute.Sitemap = STATIC.map((path) => ({
     url: `${base}${path || "/"}`,
@@ -42,7 +56,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.72,
   }));
 
-  const brandEntries: MetadataRoute.Sitemap = getBrandEntries().map((b) => ({
+  const brandEntries: MetadataRoute.Sitemap = hubBrands.map((b) => ({
     url: `${base}/brands/${b.slug}`,
     lastModified,
     changeFrequency: "weekly",

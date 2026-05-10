@@ -1,20 +1,25 @@
 import type { Metadata } from "next";
 
-import { cars } from "@/data/index";
-import { absoluteUrl } from "@/lib/site";
+import { buildPageMetadata } from "@/lib/seo/page-metadata";
+import { listVehicles } from "@/lib/server/vehicle-catalog";
 
 import { CarCard } from "@/components/marketing/car-card";
 import { SectionHeading } from "@/components/marketing/section-heading";
 
-export const metadata: Metadata = {
-  title: "Builds",
-  alternates: { canonical: absoluteUrl("/builds") },
-};
+export const metadata: Metadata = buildPageMetadata({
+  segmentTitle: "Builds",
+  description:
+    "Portfolio transformations by chassis — before/after installs, linked products, and narratives from real Tread Trails expedition builds.",
+  path: "/builds",
+});
 
-export default function BuildsPage() {
+export default async function BuildsPage() {
+  const cars = await listVehicles();
+
   return (
     <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
       <SectionHeading
+        titleAs="h1"
         eyebrow="Case studies"
         title="Explore builds by platform"
         description="Choose your chassis — we surface every portfolio row filmed on that architecture. Open a build for the full narrative, then mirror parts on your own vehicle."

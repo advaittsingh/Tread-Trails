@@ -1,9 +1,9 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
+import type { Prisma } from "@prisma/client";
 
 import { requireAdmin } from "@/lib/auth/request-user";
-import { connectDB } from "@/lib/db";
-import { User } from "@/lib/models/User";
+import { prisma } from "@/lib/prisma";
 
 export async function GET(req: NextRequest) {
   const gate = await requireAdmin();
@@ -15,29 +15,36 @@ export async function GET(req: NextRequest) {
   const skip = (page - 1) * limit;
   const search = searchParams.get("search")?.trim();
 
-  const filter: Record<string, unknown> = {};
+  const where: Prisma.UserWhereInput = {};
   if (search) {
-    filter.$or = [
-      { email: { $regex: search, $options: "i" } },
-      { name: { $regex: search, $options: "i" } },
+    where.OR = [
+      { email: { contains: search, mode: "insensitive" } },
+      { name: { contains: search, mode: "insensitive" } },
+      { id: { equals: search } },
     ];
   }
 
   try {
-    await connectDB();
     const [users, total] = await Promise.all([
-      User.find(filter)
-        .select("-passwordHash")
-        .sort({ createdAt: -1 })
-        .skip(skip)
-        .limit(limit)
-        .lean(),
-      User.countDocuments(filter),
+      prisma.user.findMany({
+        where,
+        orderBy: { createdAt: "desc" },
+        skip,
+        take: limit,
+        select: {
+          id: true,
+          email: true,
+          name: true,
+          role: true,
+          createdAt: true,
+        },
+      }),
+      prisma.user.count({ where }),
     ]);
 
     return NextResponse.json({
       users: users.map((u) => ({
-        id: u._id.toString(),
+        id: u.id,
         email: u.email,
         name: u.name,
         role: u.role,

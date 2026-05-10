@@ -5,6 +5,8 @@ import { usePathname } from "next/navigation";
 import {
   Activity,
   BarChart3,
+  Boxes,
+  Layers,
   LayoutDashboard,
   Mail,
   MapPin,
@@ -20,6 +22,8 @@ import { cn } from "@/lib/utils";
 const core = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
   { href: "/admin/orders", label: "Orders", icon: Package },
+  { href: "/admin/products", label: "Products", icon: Layers },
+  { href: "/admin/builds", label: "Builds", icon: Boxes },
   { href: "/admin/bookings", label: "Bookings", icon: Wrench },
 ];
 

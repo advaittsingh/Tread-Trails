@@ -1,11 +1,18 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 
 import { formatInr } from "@/lib/format";
+import { loadRazorpayCheckoutScript, type RazorpayWindow } from "@/lib/checkout/load-razorpay-script";
 import { useCart } from "@/contexts/cart-context";
 
+import {
+  checkoutGatewayLabel,
+  type CheckoutGateway,
+  type GatewayAvailability,
+  PaymentMethodSelector,
+} from "@/components/checkout/payment-method-selector";
 import { Button, buttonVariants } from "@/components/ui/button";
 import {
   Card,
@@ -18,9 +25,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
+import { validatePhone } from "@/lib/validations/phone";
 import { cn } from "@/lib/utils";
-
-type Payment = "upi" | "card" | "cod";
 
 export function CheckoutFlow() {
   const { lines, subtotal, hasPoaLines, clear } = useCart();
@@ -33,13 +39,43 @@ export function CheckoutFlow() {
   const [city, setCity] = useState("");
   const [region, setRegion] = useState("");
   const [postal, setPostal] = useState("");
-  const [payment, setPayment] = useState<Payment>("upi");
+  const [gateway, setGateway] = useState<CheckoutGateway>("stripe");
+  const [avail, setAvail] = useState<GatewayAvailability>({
+    stripe: false,
+    razorpay: false,
+    juspay: false,
+    cod: true,
+  });
   const [done, setDone] = useState(false);
   const [doneDetail, setDoneDetail] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const submitLock = useRef(false);
 
   const progress = useMemo(() => ((step + 1) / 4) * 100, [step]);
+
+  useEffect(() => {
+    fetch("/api/payments/availability")
+      .then((r) => r.json())
+      .then((data: Partial<GatewayAvailability>) => {
+        setAvail({
+          stripe: Boolean(data.stripe),
+          razorpay: Boolean(data.razorpay),
+          juspay: Boolean(data.juspay),
+          cod: data.cod !== false,
+        });
+      })
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    setGateway((current) => {
+      if (avail[current]) return current;
+      const order: CheckoutGateway[] = ["stripe", "razorpay", "juspay", "cod"];
+      const next = order.find((x) => avail[x]);
+      return next ?? "cod";
+    });
+  }, [avail]);
 
   function next() {
     setStep((s) => Math.min(s + 1, 3));
@@ -50,6 +86,7 @@ export function CheckoutFlow() {
   }
 
   async function submit() {
+    if (submitLock.current || submitting) return;
     setError(null);
     if (hasPoaLines || lines.some((l) => l.unitPrice == null)) {
       setError(
@@ -58,8 +95,21 @@ export function CheckoutFlow() {
       return;
     }
 
-    const paymentChannel = payment === "cod" ? "cod" : "stripe";
+    if (!avail[gateway]) {
+      setError("Selected payment method is not available right now.");
+      return;
+    }
 
+    const phoneResult = validatePhone(phone);
+    if (!phoneResult.ok) {
+      setError(phoneResult.message);
+      return;
+    }
+
+    const paymentChannel = gateway;
+
+    let deferCheckoutIdleReset = false;
+    submitLock.current = true;
     setSubmitting(true);
     try {
       const res = await fetch("/api/orders", {
@@ -67,15 +117,15 @@ export function CheckoutFlow() {
         credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          customerName: name,
-          customerPhone: phone,
-          customerEmail: email,
+          customerName: name.trim(),
+          customerPhone: phoneResult.normalized,
+          customerEmail: email.trim(),
           shippingAddress: {
-            line1,
-            line2: line2 || undefined,
-            city,
-            region,
-            postal,
+            line1: line1.trim(),
+            line2: line2.trim() || undefined,
+            city: city.trim(),
+            region: region.trim(),
+            postal: postal.trim(),
           },
           paymentChannel,
           items: lines.map((l) => ({
@@ -94,6 +144,14 @@ export function CheckoutFlow() {
         checkoutUrl?: string;
         mode?: string;
         message?: string;
+        orderId?: string;
+        razorpayOrderId?: string;
+        amountPaise?: number;
+        currency?: string;
+        keyId?: string;
+        prefillEmail?: string;
+        prefillContact?: string;
+        paymentLink?: string;
       };
 
       if (!res.ok) {
@@ -113,13 +171,102 @@ export function CheckoutFlow() {
         return;
       }
 
+      if (data.mode === "juspay" && data.paymentLink && data.orderId) {
+        window.location.href = data.paymentLink;
+        return;
+      }
+
+      if (
+        data.mode === "razorpay" &&
+        data.orderId &&
+        data.razorpayOrderId &&
+        data.keyId &&
+        data.amountPaise != null
+      ) {
+        await loadRazorpayCheckoutScript();
+        const RZP = (window as unknown as RazorpayWindow).Razorpay;
+        if (!RZP) {
+          setError("Could not initialize Razorpay.");
+          return;
+        }
+
+        const orderId = data.orderId;
+        const options: Record<string, unknown> = {
+          key: data.keyId,
+          amount: data.amountPaise,
+          currency: data.currency ?? "INR",
+          order_id: data.razorpayOrderId,
+          name: "Tread Trails",
+          description: `Order ${orderId.slice(-8).toUpperCase()}`,
+          prefill: {
+            email: data.prefillEmail ?? email,
+            contact: data.prefillContact ?? phoneResult.normalized.slice(-15),
+          },
+          theme: { color: "#1a5f4a" },
+          handler: async (response: {
+            razorpay_payment_id: string;
+            razorpay_order_id: string;
+            razorpay_signature: string;
+          }) => {
+            try {
+              const verify = await fetch("/api/orders/razorpay/verify", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  treadTrailsOrderId: orderId,
+                  razorpay_order_id: response.razorpay_order_id,
+                  razorpay_payment_id: response.razorpay_payment_id,
+                  razorpay_signature: response.razorpay_signature,
+                }),
+              });
+              const vJson = (await verify.json()) as { error?: string };
+              if (!verify.ok) {
+                setError(vJson.error ?? "Payment verification failed.");
+                submitLock.current = false;
+                setSubmitting(false);
+                return;
+              }
+              clear();
+              window.location.href = `/checkout/success?gateway=razorpay&order_id=${encodeURIComponent(orderId)}`;
+            } catch {
+              setError("Verification request failed.");
+              submitLock.current = false;
+              setSubmitting(false);
+            }
+          },
+          modal: {
+            ondismiss: () => {
+              submitLock.current = false;
+              setSubmitting(false);
+            },
+          },
+        };
+
+        const instance = new RZP(options);
+        instance.open();
+        deferCheckoutIdleReset = true;
+        return;
+      }
+
       setError("Unexpected response from checkout service.");
     } catch {
       setError("Network error — try again.");
     } finally {
-      setSubmitting(false);
+      if (!deferCheckoutIdleReset) {
+        submitLock.current = false;
+        setSubmitting(false);
+      }
     }
   }
+
+  const payLabel =
+    gateway === "cod"
+      ? "Place COD order"
+      : gateway === "juspay"
+        ? "Continue to Juspay"
+        : gateway === "razorpay"
+          ? "Pay with Razorpay"
+          : "Pay with Stripe";
 
   if (lines.length === 0 && !done) {
     return (
@@ -136,19 +283,25 @@ export function CheckoutFlow() {
     return (
       <Card className="mx-auto max-w-lg border-border/70 shadow-card">
         <CardHeader>
-          <CardTitle className="font-heading text-2xl tracking-tight">
+          <CardTitle as="h2" className="font-heading text-2xl tracking-tight">
             Order recorded
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3 text-sm text-muted-foreground">
-          <p>Thanks, {name}. {doneDetail ?? "Our fulfilment desk will confirm dispatch windows shortly."}</p>
+          <p>
+            Thanks, {name}.{" "}
+            {doneDetail ?? "Our fulfilment desk will confirm dispatch windows shortly."}
+          </p>
           <p>
             Confirmation correspondence goes to{" "}
             <span className="text-foreground">{email}</span>.
           </p>
         </CardContent>
         <CardFooter>
-          <Link href="/account" className={cn(buttonVariants({ variant: "secondary" }), "w-full justify-center")}>
+          <Link
+            href="/account"
+            className={cn(buttonVariants({ variant: "secondary" }), "w-full justify-center")}
+          >
             View account
           </Link>
         </CardFooter>
@@ -160,7 +313,7 @@ export function CheckoutFlow() {
     <Card className="mx-auto max-w-2xl border-border/70 shadow-card">
       <CardHeader className="gap-4">
         <div className="flex items-center justify-between gap-4">
-          <CardTitle className="font-heading text-2xl tracking-tight">
+          <CardTitle as="h2" className="font-heading text-2xl tracking-tight">
             Checkout
           </CardTitle>
           <span className="text-xs tracking-widest text-muted-foreground uppercase">
@@ -187,6 +340,7 @@ export function CheckoutFlow() {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required
+                disabled={submitting}
               />
             </div>
             <div className="space-y-2">
@@ -195,9 +349,15 @@ export function CheckoutFlow() {
                 id="co-phone"
                 type="tel"
                 autoComplete="tel"
+                inputMode="tel"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
+                onBlur={() => {
+                  const r = validatePhone(phone);
+                  if (r.ok) setPhone(r.normalized);
+                }}
                 required
+                disabled={submitting}
               />
             </div>
             <div className="space-y-2">
@@ -209,6 +369,7 @@ export function CheckoutFlow() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
+                disabled={submitting}
               />
             </div>
           </div>
@@ -224,6 +385,7 @@ export function CheckoutFlow() {
                 value={line1}
                 onChange={(e) => setLine1(e.target.value)}
                 required
+                disabled={submitting}
               />
             </div>
             <div className="space-y-2">
@@ -233,6 +395,7 @@ export function CheckoutFlow() {
                 autoComplete="address-line2"
                 value={line2}
                 onChange={(e) => setLine2(e.target.value)}
+                disabled={submitting}
               />
             </div>
             <div className="grid gap-4 sm:grid-cols-3">
@@ -244,6 +407,7 @@ export function CheckoutFlow() {
                   value={city}
                   onChange={(e) => setCity(e.target.value)}
                   required
+                  disabled={submitting}
                 />
               </div>
               <div className="space-y-2">
@@ -254,6 +418,7 @@ export function CheckoutFlow() {
                   value={region}
                   onChange={(e) => setRegion(e.target.value)}
                   required
+                  disabled={submitting}
                 />
               </div>
               <div className="space-y-2">
@@ -264,6 +429,7 @@ export function CheckoutFlow() {
                   value={postal}
                   onChange={(e) => setPostal(e.target.value)}
                   required
+                  disabled={submitting}
                 />
               </div>
             </div>
@@ -271,34 +437,17 @@ export function CheckoutFlow() {
         ) : null}
 
         {step === 2 ? (
-          <fieldset className="space-y-3">
-            <legend className="font-medium text-foreground">Payment method</legend>
-            {(
-              [
-                ["upi", "UPI"],
-                ["card", "Card"],
-                ["cod", "Cash on delivery"],
-              ] as const
-            ).map(([value, label]) => (
-              <label
-                key={value}
-                className="flex cursor-pointer items-center gap-3 rounded-xl border border-border/70 bg-muted/30 px-4 py-3 shadow-card transition hover:border-primary/30 hover:shadow-card-hover has-[:checked]:border-primary/40 has-[:checked]:bg-primary/5"
-              >
-                <input
-                  type="radio"
-                  name="payment"
-                  value={value}
-                  checked={payment === value}
-                  onChange={() => setPayment(value)}
-                  className="size-4 accent-primary"
-                />
-                <span className="text-sm font-medium">{label}</span>
-              </label>
-            ))}
-            <p className="text-xs text-muted-foreground">
-              UPI and card settle through Stripe Checkout. COD stays pending until our team confirms manually.
+          <>
+            <PaymentMethodSelector
+              value={gateway}
+              onChange={setGateway}
+              availability={avail}
+              disabled={submitting}
+            />
+            <p className="text-xs leading-relaxed text-muted-foreground">
+              Availability reflects server configuration — unavailable rails stay visible but disabled so you know what to enable.
             </p>
-          </fieldset>
+          </>
         ) : null}
 
         {step === 3 ? (
@@ -332,7 +481,7 @@ export function CheckoutFlow() {
               <p className="text-[11px] tracking-widest text-muted-foreground uppercase">
                 Payment
               </p>
-              <p className="mt-1 capitalize text-foreground">{payment}</p>
+              <p className="mt-1 text-foreground">{checkoutGatewayLabel(gateway)}</p>
             </div>
             <Separator />
             <div className="flex justify-between font-heading text-lg">
@@ -366,7 +515,11 @@ export function CheckoutFlow() {
             type="button"
             onClick={next}
             disabled={
-              (step === 0 && (!name || !phone || !email)) ||
+              submitting ||
+              (step === 0 &&
+                (!name.trim() ||
+                  !email.trim() ||
+                  !validatePhone(phone).ok)) ||
               (step === 1 && (!line1 || !city || !region || !postal))
             }
           >
@@ -379,10 +532,11 @@ export function CheckoutFlow() {
             disabled={
               submitting ||
               hasPoaLines ||
-              lines.some((l) => l.unitPrice == null)
+              lines.some((l) => l.unitPrice == null) ||
+              !avail[gateway]
             }
           >
-            {submitting ? "Processing…" : payment === "cod" ? "Place COD order" : "Pay securely"}
+            {submitting ? "Processing…" : payLabel}
           </Button>
         )}
       </CardFooter>

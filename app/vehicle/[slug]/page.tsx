@@ -2,44 +2,67 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import { notFound } from "next/navigation";
 
+import { excerptPlain } from "@/lib/seo/json-ld-builders";
 import {
-  cars,
-  getBuildsForVehicle,
-  getCarBySlug,
-  getProductsForVehicle,
-} from "@/data/index";
+  absoluteOgAsset,
+  defaultOgImage,
+} from "@/lib/seo/page-metadata";
 import { absoluteUrl } from "@/lib/site";
+import { getBuildsForVehicle } from "@/lib/server/build-catalog";
+import {
+  getVehicleBySlug,
+  listProductsForVehicleSlug,
+  listVehicleSlugs,
+} from "@/lib/server/vehicle-catalog";
 
 import { VehicleHeroActions } from "@/components/vehicle/vehicle-hero-actions";
+import { VehiclePlatformSpecs } from "@/components/vehicle/vehicle-platform-specs";
 import { VehicleTabs } from "@/components/vehicle/vehicle-tabs";
 
 type Props = { params: { slug: string } };
 
-export function generateStaticParams() {
-  return cars.map((c) => ({ slug: c.slug }));
+export async function generateStaticParams() {
+  const slugs = await listVehicleSlugs();
+  return slugs.map((slug) => ({ slug }));
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const car = getCarBySlug(params.slug);
+  const car = await getVehicleBySlug(params.slug);
   if (!car) return { title: "Vehicle" };
+  const description = excerptPlain(car.description, 165);
+  const canonical = absoluteUrl(`/vehicle/${car.slug}`);
+  const heroUrl = absoluteOgAsset(car.heroImage);
+  const ogImages = heroUrl
+    ? [{ url: heroUrl, width: 1200, height: 630, alt: car.name }]
+    : [defaultOgImage(car.name)];
   return {
     title: car.name,
-    description: car.description,
-    alternates: { canonical: absoluteUrl(`/vehicle/${car.slug}`) },
+    description,
+    alternates: { canonical },
     openGraph: {
-      title: car.name,
-      description: car.description,
-      url: absoluteUrl(`/vehicle/${car.slug}`),
+      title: `${car.name} | Tread Trails`,
+      description,
+      url: canonical,
+      siteName: "Tread Trails",
+      locale: "en_IN",
+      type: "website",
+      images: ogImages,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `${car.name} | Tread Trails`,
+      description,
+      images: ogImages.map((i) => i.url),
     },
   };
 }
 
-export default function VehicleDetailPage({ params }: Props) {
-  const car = getCarBySlug(params.slug);
+export default async function VehicleDetailPage({ params }: Props) {
+  const car = await getVehicleBySlug(params.slug);
   if (!car) notFound();
 
-  const products = getProductsForVehicle(car.slug);
-  const builds = getBuildsForVehicle(car.slug);
+  const products = await listProductsForVehicleSlug(car.slug);
+  const builds = await getBuildsForVehicle(car.slug);
 
   return (
     <>
@@ -73,6 +96,12 @@ export default function VehicleDetailPage({ params }: Props) {
           </div>
         </div>
       </section>
+
+      <VehiclePlatformSpecs
+        engineSummary={car.engineSummary}
+        modelYearsLabel={car.modelYearsLabel}
+        trimSummary={car.trimSummary}
+      />
 
       <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
         <VehicleTabs vehicleName={car.name} products={products} builds={builds} />

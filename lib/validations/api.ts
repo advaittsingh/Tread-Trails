@@ -1,5 +1,16 @@
 import { z } from "zod";
 
+import { phoneSchema } from "@/lib/validations/phone";
+
+import {
+  BOOKING_TIME_SLOTS,
+  bookingSlotErrorMessage,
+  bookingStudioClockContextServer,
+  validateBookingSlot,
+} from "@/lib/booking/slots";
+
+const bookingTimeEnum = z.enum(BOOKING_TIME_SLOTS);
+
 export const signupSchema = z.object({
   name: z.string().min(1).max(120),
   email: z.string().email(),
@@ -12,11 +23,11 @@ export const loginSchema = z.object({
 });
 
 const addressSchema = z.object({
-  line1: z.string().min(1).max(200),
-  line2: z.string().max(200).optional(),
-  city: z.string().min(1).max(120),
-  region: z.string().min(1).max(120),
-  postal: z.string().min(1).max(32),
+  line1: z.string().trim().min(1, "Address is required").max(200),
+  line2: z.string().trim().max(200).optional(),
+  city: z.string().trim().min(1, "City is required").max(120),
+  region: z.string().trim().min(1, "State / region is required").max(120),
+  postal: z.string().trim().min(1, "Postal code is required").max(32),
 });
 
 const orderLineSchema = z.object({
@@ -31,20 +42,31 @@ const orderLineSchema = z.object({
 export const createCheckoutOrderSchema = z.object({
   customerName: z.string().min(1).max(120),
   customerPhone: z.string().min(6).max(32),
-  customerEmail: z.string().email(),
+  customerEmail: z.string().trim().email("Enter a valid email address"),
   shippingAddress: addressSchema,
-  /** Client radios: UPI/card route through Stripe Checkout; COD stays pending for manual confirmation */
-  paymentChannel: z.enum(["stripe", "cod"]),
+  /** Online PSP selection — Stripe Checkout, Razorpay Checkout, Juspay hosted page, or COD */
+  paymentChannel: z.enum(["stripe", "razorpay", "juspay", "cod"]),
   items: z.array(orderLineSchema).min(1),
 });
 
-export const bookingCreateSchema = z.object({
-  vehicleSlug: z.string().min(1),
-  vehicleName: z.string().min(1),
-  service: z.string().min(1),
-  date: z.string().min(1),
-  time: z.string().min(1),
-  contactName: z.string().min(1).max(120),
-  contactEmail: z.string().email(),
-  contactPhone: z.string().min(6).max(32),
-});
+export const bookingCreateSchema = z
+  .object({
+    vehicleSlug: z.string().min(1),
+    vehicleName: z.string().min(1),
+    service: z.string().min(1),
+    date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Invalid date"),
+    time: bookingTimeEnum,
+    contactName: z.string().trim().min(1, "Name is required").max(120),
+    contactEmail: z.string().trim().email("Enter a valid email address"),
+    contactPhone: phoneSchema,
+  })
+  .superRefine((data, ctx) => {
+    const { utcOffsetMinutes } = bookingStudioClockContextServer();
+    const issue = validateBookingSlot(data.date, data.time, { utcOffsetMinutes });
+    if (!issue) return;
+    ctx.addIssue({
+      code: "custom",
+      message: bookingSlotErrorMessage(issue),
+      path: issue === "invalid_time" ? ["time"] : ["date"],
+    });
+  });

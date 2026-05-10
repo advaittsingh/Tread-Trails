@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
@@ -12,6 +13,8 @@ import { whatsappHref, whatsappProductInterest } from "@/lib/whatsapp";
 import { cn } from "@/lib/utils";
 
 import { AddToCartButton } from "@/components/cart/add-to-cart-button";
+import { VehicleCompatibilityTags } from "@/components/product/vehicle-compatibility-tags";
+import { CompareToggle } from "@/components/compare/compare-toggle";
 import { WishlistToggle } from "@/components/wishlist/wishlist-toggle";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
@@ -21,7 +24,10 @@ type ProductCardProps = {
   index?: number;
 };
 
-export function ProductCard({ product, index = 0 }: ProductCardProps) {
+export const ProductCard = memo(function ProductCard({
+  product,
+  index = 0,
+}: ProductCardProps) {
   const reduceMotion = useReducedMotion();
   const priceLabel = formatInr(product.price);
   const brandVis = getBrandVisualForProduct(product);
@@ -54,11 +60,10 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
             loading="lazy"
           />
         </Link>
-        <WishlistToggle
-          productSlug={product.slug}
-          label={product.name}
-          className="absolute top-3 right-3 z-10 shadow-card"
-        />
+        <div className="absolute top-3 right-3 z-10 flex flex-col gap-2">
+          <WishlistToggle productSlug={product.slug} label={product.name} className="shadow-card" />
+          <CompareToggle productSlug={product.slug} label={product.name} className="shadow-card" />
+        </div>
         <div className="pointer-events-none absolute inset-x-3 bottom-3 z-[1] flex flex-wrap items-center gap-2">
           <Badge className="flex max-w-[calc(100%-5rem)] items-center gap-1.5 rounded-full bg-background/95 py-1 pr-2 pl-1.5 text-[10px] tracking-wide uppercase shadow-card backdrop-blur">
             {brandVis.logoSrc ? (
@@ -90,6 +95,18 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
           </h3>
           <p className="line-clamp-2 text-sm text-muted-foreground">{product.description}</p>
         </div>
+        {product.compatibleCars.length > 0 ? (
+          <div className="space-y-1.5">
+            <p className="text-[10px] font-medium tracking-widest text-muted-foreground uppercase">
+              Vehicle fit
+            </p>
+            <VehicleCompatibilityTags
+              slugs={product.compatibleCars}
+              maxVisible={3}
+              link
+            />
+          </div>
+        ) : null}
         <div className="mt-auto flex flex-wrap gap-2">
           <AddToCartButton product={product} className="flex-1 shadow-none" />
           <a
@@ -107,4 +124,4 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
       </div>
     </motion.article>
   );
-}
+});

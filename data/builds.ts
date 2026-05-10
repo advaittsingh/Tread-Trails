@@ -17,6 +17,7 @@ export const builds: Build[] = [
       "/hilux/toyota0.avif",
     ],
     productIds: ["p10", "p5", "p43", "p44"],
+    homeSpotlightRank: 1,
   },
   {
     id: "b2",
@@ -34,6 +35,7 @@ export const builds: Build[] = [
       "/thar/1_110.jpg",
     ],
     productIds: ["p49", "p31", "p9"],
+    homeSpotlightRank: 2,
   },
   {
     id: "b3",
@@ -51,6 +53,7 @@ export const builds: Build[] = [
       "/jeep-wrangler/20240425100256_Jeep%20Wrangler%20Web%20Resized%20and%20Watermarked.009.avif",
     ],
     productIds: ["p10", "p50", "p49", "p9"],
+    homeSpotlightRank: 3,
   },
   {
     id: "b4",

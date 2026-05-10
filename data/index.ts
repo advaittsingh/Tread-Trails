@@ -1,25 +1,30 @@
+import { productSlugsShareVehiclePlatform } from "@/lib/compatibility/product-vehicle-map";
+
 import {
   ADVVEN_PARTNER_BRANDS,
   productBelongsToPartnerSlug,
 } from "./advven-brands";
-import { builds } from "./builds";
-import { cars } from "./cars";
+import {
+  builds,
+  getBuildBySlug,
+  getBuildsForVehicle,
+} from "./build";
 import { products } from "./products";
 import type { Build, Car, Product } from "./types";
+import { cars, getCarBySlug, getProductsForVehicle } from "./vehicle";
 
 export type { Build, Car, Product } from "./types";
 export { builds, cars, products };
 
-export function getCarBySlug(slug: string): Car | undefined {
-  return cars.find((c) => c.slug === slug);
-}
+export {
+  getBuildBySlug,
+  getBuildsForVehicle,
+  getCarBySlug,
+  getProductsForVehicle,
+};
 
 export function getProductBySlug(slug: string): Product | undefined {
   return products.find((p) => p.slug === slug);
-}
-
-export function getBuildBySlug(slug: string): Build | undefined {
-  return builds.find((b) => b.slug === slug);
 }
 
 export type BrandEntry = {
@@ -30,7 +35,10 @@ export type BrandEntry = {
   logoSrc?: string;
 };
 
-/** Hub brands only — same six partners as https://www.advven.com/brands */
+/**
+ * Hub brands only — same six partners as https://www.advven.com/brands.
+ * On the server, prefer `listBrandEntries()` from `@/lib/server/brand-catalog` (Neon + fallback).
+ */
 export function getBrandEntries(): BrandEntry[] {
   return ADVVEN_PARTNER_BRANDS.map((b) => ({
     name: b.name,
@@ -52,14 +60,6 @@ export function getProductsForBrandSlug(slug: string): Product[] {
   const partner = ADVVEN_PARTNER_BRANDS.find((b) => b.slug === slug);
   if (!partner) return [];
   return products.filter((p) => productBelongsToPartnerSlug(p, slug));
-}
-
-export function getProductsForVehicle(slug: string): Product[] {
-  return products.filter((p) => p.compatibleCars.includes(slug));
-}
-
-export function getBuildsForVehicle(slug: string): Build[] {
-  return builds.filter((b) => b.vehicleSlug === slug);
 }
 
 export function getProductsByIds(ids: string[]): Product[] {
@@ -90,8 +90,10 @@ export function getRelatedProducts(slug: string, limit = 4) {
 export function getBundleSuggestion(slug: string, limit = 2) {
   const p = getProductBySlug(slug);
   if (!p) return [];
-  const overlaps = (a: string[], b: string[]) => a.some((x) => b.includes(x));
   return products
-    .filter((x) => x.slug !== slug && overlaps(x.compatibleCars, p.compatibleCars))
+    .filter(
+      (x) =>
+        x.slug !== slug && productSlugsShareVehiclePlatform(x.slug, p.slug)
+    )
     .slice(0, limit);
 }

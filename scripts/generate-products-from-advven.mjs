@@ -1,6 +1,10 @@
 /**
  * One-off: reads /tmp/advven-all.json (from https://api.advven.com/api/v1/allProducts)
  * and writes ../data/products.ts — run: node scripts/generate-products-from-advven.mjs
+ *
+ * After regenerating products, refresh explicit compat edges:
+ *   npx tsx scripts/generate-product-vehicle-edges.ts
+ * (expects each product to carry `compatibleCars` temporarily, or edit edges by hand.)
  */
 import fs from "fs";
 import path from "path";

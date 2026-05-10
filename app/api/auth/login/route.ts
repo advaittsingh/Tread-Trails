@@ -3,8 +3,7 @@ import { NextResponse } from "next/server";
 import { verifyPassword } from "@/lib/auth/password";
 import { signAuthToken } from "@/lib/auth/jwt";
 import { setAuthCookie } from "@/lib/auth/session-cookie";
-import { connectDB } from "@/lib/db";
-import { User } from "@/lib/models/User";
+import { prisma } from "@/lib/prisma";
 import { loginFailureResponse } from "@/lib/auth/login-errors";
 import { loginSchema } from "@/lib/validations/api";
 
@@ -27,8 +26,7 @@ export async function POST(req: Request) {
   const { email, password } = parsed.data;
 
   try {
-    await connectDB();
-    const user = await User.findOne({ email: email.toLowerCase() });
+    const user = await prisma.user.findUnique({ where: { email: email.toLowerCase() } });
     if (!user) {
       return NextResponse.json({ error: "Invalid email or password" }, { status: 401 });
     }
@@ -39,16 +37,18 @@ export async function POST(req: Request) {
     }
 
     const token = await signAuthToken({
-      sub: user._id.toString(),
-      role: user.role as "user" | "admin",
+      sub: user.id,
+      role: user.role,
     });
 
     const res = NextResponse.json({
       user: {
-        id: user._id.toString(),
+        id: user.id,
         email: user.email,
         name: user.name,
+        phone: user.phone ?? null,
         role: user.role,
+        preferredVehicleSlug: user.preferredVehicleSlug ?? null,
       },
     });
     setAuthCookie(res, token);

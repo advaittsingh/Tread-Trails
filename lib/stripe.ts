@@ -1,3 +1,7 @@
+/**
+ * Payments: Stripe Checkout only (`POST /api/orders`, `/api/webhooks/stripe`, `/api/orders/verify`).
+ * INR catalog prices → Stripe smallest currency (paise). Razorpay/Juspay not integrated.
+ */
 import Stripe from "stripe";
 
 export function getStripe(): Stripe {

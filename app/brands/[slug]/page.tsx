@@ -3,43 +3,62 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { getProductsForBrandSlug } from "@/data/index";
+import { excerptPlain } from "@/lib/seo/json-ld-builders";
 import {
-  getBrandEntries,
-  getBrandEntryBySlug,
-  getProductsForBrandSlug,
-} from "@/data/index";
+  absoluteOgAsset,
+  defaultOgImage,
+} from "@/lib/seo/page-metadata";
 import { absoluteUrl } from "@/lib/site";
+import { getBrandBySlug, listBrandSlugs } from "@/lib/server/brand-catalog";
 
 import { ProductCard } from "@/components/marketing/product-card";
 import { SectionHeading } from "@/components/marketing/section-heading";
 
 type Props = { params: { slug: string } };
 
-export function generateStaticParams() {
-  return getBrandEntries().map((b) => ({ slug: b.slug }));
+export async function generateStaticParams() {
+  const slugs = await listBrandSlugs();
+  return slugs.map((slug) => ({ slug }));
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const entry = getBrandEntryBySlug(params.slug);
+  const entry = await getBrandBySlug(params.slug);
   if (!entry) return { title: "Brand" };
   const title = `${entry.name} parts`;
-  const description =
+  const rawDesc =
     entry.tagline ??
     `Shop ${entry.name} upgrades — expedition lighting, armor, suspension, and recovery from Tread Trails.`;
+  const description = excerptPlain(rawDesc, 165);
+  const canonical = absoluteUrl(`/brands/${entry.slug}`);
+  const logoUrl = absoluteOgAsset(entry.logoSrc);
+  const ogImages = logoUrl
+    ? [{ url: logoUrl, width: 1200, height: 630, alt: entry.name }]
+    : [defaultOgImage(entry.name)];
   return {
     title,
     description,
-    alternates: { canonical: absoluteUrl(`/brands/${entry.slug}`) },
+    alternates: { canonical },
     openGraph: {
-      title,
+      title: `${title} | Tread Trails`,
       description,
-      url: absoluteUrl(`/brands/${entry.slug}`),
+      url: canonical,
+      siteName: "Tread Trails",
+      locale: "en_IN",
+      type: "website",
+      images: ogImages,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `${title} | Tread Trails`,
+      description,
+      images: ogImages.map((i) => i.url),
     },
   };
 }
 
-export default function BrandProductsPage({ params }: Props) {
-  const entry = getBrandEntryBySlug(params.slug);
+export default async function BrandProductsPage({ params }: Props) {
+  const entry = await getBrandBySlug(params.slug);
   if (!entry) notFound();
 
   const brandProducts = getProductsForBrandSlug(params.slug);
@@ -59,7 +78,7 @@ export default function BrandProductsPage({ params }: Props) {
           <div className="flex shrink-0 justify-center sm:justify-start">
             <Image
               src={entry.logoSrc}
-              alt=""
+              alt={`${entry.name} logo`}
               width={220}
               height={88}
               className="h-20 w-auto max-w-[200px] object-contain sm:h-24"
@@ -67,6 +86,7 @@ export default function BrandProductsPage({ params }: Props) {
           </div>
         ) : null}
         <SectionHeading
+          titleAs="h1"
           eyebrow="Catalog"
           title={`${entry.name} — shop the line`}
           description={

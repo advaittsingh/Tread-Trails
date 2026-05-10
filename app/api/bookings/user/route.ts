@@ -1,23 +1,31 @@
 import { NextResponse } from "next/server";
 
 import { requireAuth } from "@/lib/auth/request-user";
-import { connectDB } from "@/lib/db";
-import { Booking } from "@/lib/models/Booking";
+import { prisma } from "@/lib/prisma";
 
 export async function GET() {
   const gate = await requireAuth();
   if ("response" in gate) return gate.response;
 
   try {
-    await connectDB();
-    const bookings = await Booking.find({ userId: gate.auth.userId })
-      .sort({ createdAt: -1 })
-      .limit(50)
-      .lean();
+    const bookings = await prisma.booking.findMany({
+      where: { userId: gate.auth.userId },
+      orderBy: { createdAt: "desc" },
+      take: 50,
+      select: {
+        id: true,
+        service: true,
+        vehicleName: true,
+        date: true,
+        time: true,
+        status: true,
+        createdAt: true,
+      },
+    });
 
     return NextResponse.json({
       bookings: bookings.map((b) => ({
-        id: b._id.toString(),
+        id: b.id,
         service: b.service,
         vehicleName: b.vehicleName,
         date: b.date,

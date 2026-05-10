@@ -1,6 +1,6 @@
 import type { ProductVariant } from "@/data/types";
 
-/** Mongoose lean product shape used for checkout pricing */
+/** Checkout pricing shape; `variants` matches persisted `Product.variants` JSON. */
 export type ProductPricingSource = {
   price?: number | null;
   variants?: ProductVariant[];

@@ -4,6 +4,7 @@ import { Minus, Plus } from "lucide-react";
 
 import type { Product } from "@/data/types";
 import { resolveVariants } from "@/lib/pricing";
+import { toastSuccess } from "@/lib/toast";
 import { useCart } from "@/contexts/cart-context";
 import { cn } from "@/lib/utils";
 
@@ -39,7 +40,10 @@ export function AddToCartButton({
         type="button"
         className={className}
         aria-label={`${label}: ${product.name}`}
-        onClick={() => addItem({ product, variantId: vid })}
+        onClick={() => {
+          addItem({ product, variantId: vid });
+          toastSuccess("Added to cart", product.name);
+        }}
       >
         {label}
       </Button>

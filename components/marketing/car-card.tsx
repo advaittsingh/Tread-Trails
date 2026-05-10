@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
@@ -19,7 +20,12 @@ type CarCardProps = {
   variant?: "default" | "compact";
 };
 
-export function CarCard({ car, index = 0, href, variant = "default" }: CarCardProps) {
+export const CarCard = memo(function CarCard({
+  car,
+  index = 0,
+  href,
+  variant = "default",
+}: CarCardProps) {
   const dest = href ?? `/vehicle/${car.slug}`;
   const reduceMotion = useReducedMotion();
   const compact = variant === "compact";
@@ -37,7 +43,11 @@ export function CarCard({ car, index = 0, href, variant = "default" }: CarCardPr
       whileHover={reduceMotion ? undefined : { y: -4 }}
       className={cn("group relative", compact && "w-[min(240px,78vw)] shrink-0 snap-start sm:w-[260px]")}
     >
-      <Link href={dest} className="block outline-none focus-visible:ring-2 focus-visible:ring-ring">
+      <Link
+        href={dest}
+        className="block outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        aria-label={`${car.name} — vehicle hub with compatible parts and portfolio builds`}
+      >
         <div
           className={cn(
             "flex flex-col overflow-hidden rounded-xl border border-border/70 bg-card shadow-card transition-shadow duration-300 hover:shadow-card-hover",
@@ -54,6 +64,7 @@ export function CarCard({ car, index = 0, href, variant = "default" }: CarCardPr
               src={car.thumbnail}
               alt=""
               fill
+              aria-hidden
               sizes={
                 compact
                   ? "(max-width: 640px) 78vw, 260px"
@@ -111,4 +122,4 @@ export function CarCard({ car, index = 0, href, variant = "default" }: CarCardPr
       </Link>
     </motion.article>
   );
-}
+});

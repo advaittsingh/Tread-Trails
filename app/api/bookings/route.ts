@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { getOptionalAuth } from "@/lib/auth/request-user";
-import { connectDB } from "@/lib/db";
-import { Booking } from "@/lib/models/Booking";
+import { prisma } from "@/lib/prisma";
 import { bookingCreateSchema } from "@/lib/validations/api";
 
 export async function POST(req: Request) {
@@ -25,22 +24,23 @@ export async function POST(req: Request) {
   const auth = await getOptionalAuth();
 
   try {
-    await connectDB();
-    const booking = await Booking.create({
-      userId: auth?.userId,
-      vehicleSlug: body.vehicleSlug,
-      vehicleName: body.vehicleName,
-      service: body.service,
-      date: body.date,
-      time: body.time,
-      contactName: body.contactName,
-      contactEmail: body.contactEmail,
-      contactPhone: body.contactPhone,
-      status: "requested",
+    const booking = await prisma.booking.create({
+      data: {
+        userId: auth?.userId ?? null,
+        vehicleSlug: body.vehicleSlug,
+        vehicleName: body.vehicleName,
+        service: body.service,
+        date: body.date,
+        time: body.time,
+        contactName: body.contactName,
+        contactEmail: body.contactEmail,
+        contactPhone: body.contactPhone,
+        status: "requested",
+      },
     });
 
     console.info("[booking] created", {
-      id: booking._id.toString(),
+      id: booking.id,
       service: body.service,
       vehicle: body.vehicleName,
       date: body.date,
@@ -50,7 +50,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json({
       booking: {
-        id: booking._id.toString(),
+        id: booking.id,
         status: booking.status,
       },
     });

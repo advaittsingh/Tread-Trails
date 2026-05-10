@@ -1,13 +1,21 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 
 import { cars } from "@/data/cars";
-import { getBuildBySlug, getProductBySlug } from "@/data/index";
+import { getProductBySlug } from "@/data/index";
+import { getBuildBySlug } from "@/lib/build";
 import { cn } from "@/lib/utils";
+import {
+  BOOKING_VEHICLE_FLOW_STEP_TITLES,
+  VEHICLE_PLATFORM_SELECT_PLACEHOLDER,
+} from "@/lib/ui/vehicle-selection-pattern";
 
+import { useSelectedVehicle } from "@/contexts/selected-vehicle-context";
+
+import { BookingWizardSteps } from "@/components/booking/booking-wizard-steps";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import {
@@ -21,6 +29,19 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 
+import {
+  BOOKING_SOON_BUFFER_MINUTES,
+  BOOKING_TIME_SLOTS,
+  bookingSelectableMaxISO,
+  bookingSlotErrorMessage,
+  bookingStudioClockContextClient,
+  formatBookingSlotLabel,
+  isBookingSlotDisabled,
+  studioCalendarTodayISO,
+  validateBookingSlot,
+} from "@/lib/booking/slots";
+import { validatePhone } from "@/lib/validations/phone";
+
 const SERVICES = [
   "Consultation & measurements",
   "Lift & suspension program",
@@ -29,10 +50,11 @@ const SERVICES = [
   "Full expedition conversion",
 ];
 
-const TIME_SLOTS = ["09:30", "11:00", "13:30", "15:30", "17:00"];
-
 export function BookingForm() {
   const searchParams = useSearchParams();
+  const { setSelectedSlug, slug: globalSlug, hydrated } = useSelectedVehicle();
+  const didApplyStoredVehicle = useRef(false);
+  const submitLock = useRef(false);
   const [step, setStep] = useState(0);
   const [carSlug, setCarSlug] = useState("");
   const [service, setService] = useState("");
@@ -52,7 +74,10 @@ export function BookingForm() {
     const buildSlug = searchParams.get("build");
     const svc = searchParams.get("service");
 
-    if (vehicle) setCarSlug(vehicle);
+    if (vehicle && cars.some((c) => c.slug === vehicle)) {
+      setCarSlug(vehicle);
+      setSelectedSlug(vehicle);
+    }
 
     const parts: string[] = [];
     if (productSlug) {
@@ -74,9 +99,33 @@ export function BookingForm() {
       setService(inferred);
       setPrefilled(true);
     }
-  }, [searchParams]);
+  }, [searchParams, setSelectedSlug]);
+
+  useEffect(() => {
+    if (!hydrated || didApplyStoredVehicle.current) return;
+    didApplyStoredVehicle.current = true;
+    const fromUrl = searchParams.get("vehicle");
+    if (fromUrl && cars.some((c) => c.slug === fromUrl)) return;
+    if (globalSlug) setCarSlug(globalSlug);
+  }, [hydrated, globalSlug, searchParams]);
 
   const progress = useMemo(() => ((step + 1) / 4) * 100, [step]);
+
+  const bookingClock = useMemo(() => bookingStudioClockContextClient(), []);
+
+  const datePickerBounds = useMemo(() => {
+    const now = new Date();
+    const { utcOffsetMinutes } = bookingClock;
+    return {
+      min: studioCalendarTodayISO(now, utcOffsetMinutes),
+      max: bookingSelectableMaxISO(now, utcOffsetMinutes),
+    };
+  }, [bookingClock]);
+
+  const slotValidationIssue = useMemo(() => {
+    if (!date || !time) return null;
+    return validateBookingSlot(date, time, { utcOffsetMinutes: bookingClock.utcOffsetMinutes });
+  }, [date, time, bookingClock.utcOffsetMinutes]);
 
   const contextBadges = useMemo(() => {
     const productSlug = searchParams.get("product");
@@ -89,6 +138,15 @@ export function BookingForm() {
     return out;
   }, [searchParams]);
 
+  useEffect(() => {
+    if (!date || !time) return;
+    if (
+      validateBookingSlot(date, time, { utcOffsetMinutes: bookingClock.utcOffsetMinutes }) !== null
+    ) {
+      setTime("");
+    }
+  }, [date, time, bookingClock.utcOffsetMinutes]);
+
   function next() {
     setStep((s) => Math.min(s + 1, 3));
   }
@@ -99,12 +157,26 @@ export function BookingForm() {
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
+    if (submitLock.current || submitting) return;
     setSubmitError(null);
     const vehicleName = cars.find((c) => c.slug === carSlug)?.name ?? "";
     if (!vehicleName) {
-      setSubmitError("Select a vehicle.");
+      setSubmitError("Choose a vehicle platform.");
       return;
     }
+    const slotIssue = validateBookingSlot(date, time, {
+      utcOffsetMinutes: bookingClock.utcOffsetMinutes,
+    });
+    if (slotIssue) {
+      setSubmitError(bookingSlotErrorMessage(slotIssue));
+      return;
+    }
+    const phoneResult = validatePhone(phone);
+    if (!phoneResult.ok) {
+      setSubmitError(phoneResult.message);
+      return;
+    }
+    submitLock.current = true;
     setSubmitting(true);
     try {
       const res = await fetch("/api/bookings", {
@@ -117,9 +189,9 @@ export function BookingForm() {
           service,
           date,
           time,
-          contactName: name,
-          contactEmail: email,
-          contactPhone: phone,
+          contactName: name.trim(),
+          contactEmail: email.trim(),
+          contactPhone: phoneResult.normalized,
         }),
       });
       const data = (await res.json()) as { error?: string };
@@ -131,6 +203,7 @@ export function BookingForm() {
     } catch {
       setSubmitError("Network error — try again.");
     } finally {
+      submitLock.current = false;
       setSubmitting(false);
     }
   }
@@ -139,7 +212,7 @@ export function BookingForm() {
     return (
       <Card className="mx-auto max-w-lg border-border/70 shadow-card">
         <CardHeader>
-          <CardTitle className="font-heading text-2xl tracking-tight">
+          <CardTitle as="h2" className="font-heading text-2xl tracking-tight">
             Request received
           </CardTitle>
         </CardHeader>
@@ -170,15 +243,14 @@ export function BookingForm() {
   return (
     <Card className="mx-auto max-w-xl border-border/70 shadow-card">
       <CardHeader className="gap-4">
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <CardTitle className="font-heading text-2xl tracking-tight">
-            Book installation
-          </CardTitle>
-          <span className="text-xs tracking-widest text-muted-foreground uppercase">
-            Step {step + 1} / 4
-          </span>
-        </div>
+        <CardTitle as="h2" className="font-heading text-2xl tracking-tight">
+          Book installation
+        </CardTitle>
         <Progress value={progress} />
+        <BookingWizardSteps
+          titles={BOOKING_VEHICLE_FLOW_STEP_TITLES}
+          currentStep={step}
+        />
         {(prefilled || contextBadges.length > 0) && (
           <div className="flex flex-wrap gap-2 rounded-xl border border-primary/15 bg-primary/5 px-3 py-2">
             <span className="w-full text-[11px] font-medium tracking-widest text-primary uppercase">
@@ -201,15 +273,33 @@ export function BookingForm() {
           ) : null}
           {step === 0 ? (
             <div className="space-y-3">
-              <Label htmlFor="car">Select vehicle</Label>
+              <div>
+                <Label htmlFor="car">Vehicle platform</Label>
+                <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+                  Required — pick the chassis we&apos;re scheduling for (same slugs as vehicle hub URLs).
+                  {searchParams.get("vehicle") ? (
+                    <>
+                      {" "}
+                      <span className="text-foreground/90">
+                        Pre-filled from the link you followed — change if needed.
+                      </span>
+                    </>
+                  ) : null}
+                </p>
+              </div>
               <select
                 id="car"
                 required
+                disabled={submitting}
                 value={carSlug}
-                onChange={(e) => setCarSlug(e.target.value)}
-                className="flex h-11 w-full rounded-xl border border-input bg-background px-3 text-sm shadow-card outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                onChange={(e) => {
+                  const v = e.target.value;
+                  setCarSlug(v);
+                  setSelectedSlug(v || null);
+                }}
+                className="flex h-11 w-full rounded-xl border border-input bg-background px-3 text-sm shadow-card outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-60"
               >
-                <option value="">Choose platform…</option>
+                <option value="">{VEHICLE_PLATFORM_SELECT_PLACEHOLDER}</option>
                 {cars.map((c) => (
                   <option key={c.slug} value={c.slug}>
                     {c.name}
@@ -225,9 +315,10 @@ export function BookingForm() {
               <select
                 id="service"
                 required
+                disabled={submitting}
                 value={service}
                 onChange={(e) => setService(e.target.value)}
-                className="flex h-11 w-full rounded-xl border border-input bg-background px-3 text-sm shadow-card outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className="flex h-11 w-full rounded-xl border border-input bg-background px-3 text-sm shadow-card outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-60"
               >
                 <option value="">Select program…</option>
                 {SERVICES.map((s) => (
@@ -240,34 +331,80 @@ export function BookingForm() {
           ) : null}
 
           {step === 2 ? (
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="space-y-3">
-                <Label htmlFor="date">Preferred date</Label>
-                <Input
-                  id="date"
-                  type="date"
-                  required
-                  value={date}
-                  onChange={(e) => setDate(e.target.value)}
-                />
+            <div className="space-y-5">
+              <p className="text-xs leading-relaxed text-muted-foreground">
+                Times use the studio clock ({bookingClock.timeZone.replace(/_/g, " ")}). Same-day visits need at least{" "}
+                {BOOKING_SOON_BUFFER_MINUTES} minutes&apos; notice. Sundays are blocked — pick another day.
+              </p>
+              <div className="grid gap-6 sm:grid-cols-2">
+                <div className="space-y-3">
+                  <Label htmlFor="date">Preferred date</Label>
+                  <Input
+                    id="date"
+                    type="date"
+                    required
+                    disabled={submitting}
+                    min={datePickerBounds.min}
+                    max={datePickerBounds.max}
+                    autoComplete="off"
+                    value={date}
+                    onChange={(e) => setDate(e.target.value)}
+                    aria-invalid={Boolean(date && slotValidationIssue)}
+                    className="font-medium tabular-nums"
+                  />
+                  <p className="text-[11px] text-muted-foreground">
+                    Choose between {datePickerBounds.min} and {datePickerBounds.max}.
+                  </p>
+                </div>
+                <div className="space-y-3">
+                  <span id="time-slots-label" className="text-sm font-medium leading-none">
+                    Time window
+                  </span>
+                  <div
+                    role="radiogroup"
+                    aria-labelledby="time-slots-label"
+                    className="grid grid-cols-2 gap-2 sm:grid-cols-1"
+                  >
+                    {BOOKING_TIME_SLOTS.map((slot) => {
+                      const disabled =
+                        !date ||
+                        isBookingSlotDisabled(date, slot, {
+                          utcOffsetMinutes: bookingClock.utcOffsetMinutes,
+                        });
+                      const selected = time === slot;
+                      return (
+                        <button
+                          key={slot}
+                          type="button"
+                          role="radio"
+                          aria-checked={selected}
+                          disabled={disabled || submitting}
+                          onClick={() => !disabled && !submitting && setTime(slot)}
+                          className={cn(
+                            "rounded-xl border px-3 py-2.5 text-left text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-45",
+                            selected
+                              ? "border-primary bg-primary/10 font-medium text-foreground"
+                              : "border-input bg-background hover:border-primary/40 hover:bg-muted/40",
+                          )}
+                        >
+                          <span className="tabular-nums">{formatBookingSlotLabel(slot)}</span>
+                          <span className="mt-0.5 block text-[11px] font-normal text-muted-foreground">
+                            {slot}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
               </div>
-              <div className="space-y-3">
-                <Label htmlFor="time">Time window</Label>
-                <select
-                  id="time"
-                  required
-                  value={time}
-                  onChange={(e) => setTime(e.target.value)}
-                  className="flex h-10 w-full rounded-xl border border-input bg-background px-3 text-sm shadow-card outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              {slotValidationIssue && date && time ? (
+                <p
+                  role="alert"
+                  className="rounded-xl border border-destructive/35 bg-destructive/10 px-4 py-3 text-sm text-destructive"
                 >
-                  <option value="">Select…</option>
-                  {TIME_SLOTS.map((t) => (
-                    <option key={t} value={t}>
-                      {t}
-                    </option>
-                  ))}
-                </select>
-              </div>
+                  {bookingSlotErrorMessage(slotValidationIssue)}
+                </p>
+              ) : null}
             </div>
           ) : null}
 
@@ -279,6 +416,7 @@ export function BookingForm() {
                   id="name"
                   required
                   autoComplete="name"
+                  disabled={submitting}
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                 />
@@ -290,6 +428,7 @@ export function BookingForm() {
                   type="email"
                   required
                   autoComplete="email"
+                  disabled={submitting}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                 />
@@ -301,8 +440,13 @@ export function BookingForm() {
                   type="tel"
                   required
                   autoComplete="tel"
+                  disabled={submitting}
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
+                  onBlur={() => {
+                    const r = validatePhone(phone);
+                    if (r.ok) setPhone(r.normalized);
+                  }}
                 />
               </div>
             </div>
@@ -317,9 +461,15 @@ export function BookingForm() {
               type="button"
               onClick={next}
               disabled={
+                submitting ||
                 (step === 0 && !carSlug) ||
                 (step === 1 && !service) ||
-                (step === 2 && (!date || !time))
+                (step === 2 &&
+                  (!date ||
+                    !time ||
+                    validateBookingSlot(date, time, {
+                      utcOffsetMinutes: bookingClock.utcOffsetMinutes,
+                    }) !== null))
               }
             >
               Continue

@@ -1,9 +1,9 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
+import type { Prisma } from "@prisma/client";
 
 import { requireAdmin } from "@/lib/auth/request-user";
-import { connectDB } from "@/lib/db";
-import { CartTelemetry } from "@/lib/models/CartTelemetry";
+import { prisma } from "@/lib/prisma";
 
 export async function GET(req: NextRequest) {
   const gate = await requireAdmin();
@@ -13,17 +13,35 @@ export async function GET(req: NextRequest) {
   const page = Math.max(1, Number(searchParams.get("page")) || 1);
   const limit = Math.min(100, Math.max(1, Number(searchParams.get("limit")) || 25));
   const skip = (page - 1) * limit;
+  const search = searchParams.get("search")?.trim();
+
+  let where: Prisma.CartTelemetryWhereInput;
+  if (search) {
+    where = {
+      AND: [
+        { itemCount: { gt: 0 } },
+        {
+          OR: [
+            { sessionId: { contains: search, mode: "insensitive" } },
+            { userEmail: { contains: search, mode: "insensitive" } },
+            { lastPath: { contains: search, mode: "insensitive" } },
+          ],
+        },
+      ],
+    };
+  } else {
+    where = { itemCount: { gt: 0 } };
+  }
 
   try {
-    await connectDB();
-    const filter = { itemCount: { $gt: 0 } as const };
     const [rows, total] = await Promise.all([
-      CartTelemetry.find(filter)
-        .sort({ updatedAt: -1 })
-        .skip(skip)
-        .limit(limit)
-        .lean(),
-      CartTelemetry.countDocuments(filter),
+      prisma.cartTelemetry.findMany({
+        where,
+        orderBy: { updatedAt: "desc" },
+        skip,
+        take: limit,
+      }),
+      prisma.cartTelemetry.count({ where }),
     ]);
 
     return NextResponse.json({

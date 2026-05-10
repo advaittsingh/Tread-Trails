@@ -1,8 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { UsersRound } from "lucide-react";
 
+import { toastError } from "@/lib/toast";
+
+import { AdminEmptyState } from "@/components/admin/admin-empty-state";
+import { AdminPaginationBar } from "@/components/admin/admin-pagination-bar";
 import { AdminStatusBadge } from "@/components/admin/admin-status-badge";
+import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 
 type Row = {
@@ -15,27 +21,54 @@ type Row = {
 
 export function AdminUsersPanel() {
   const [rows, setRows] = useState<Row[]>([]);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [limit] = useState(25);
+  const [search, setSearch] = useState("");
+  const [searchDraft, setSearchDraft] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const load = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const qs = new URLSearchParams({
+        page: String(page),
+        limit: String(limit),
+      });
+      if (search.trim()) qs.set("search", search.trim());
+
+      const res = await fetch(`/api/admin/users?${qs}`, {
+        credentials: "include",
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Failed to load users");
+      setRows(data.users as Row[]);
+      setTotal(data.total as number);
+      setTotalPages(data.totalPages as number);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Error";
+      setError(msg);
+      setRows([]);
+      toastError("Could not load users", msg);
+    } finally {
+      setLoading(false);
+    }
+  }, [page, limit, search]);
+
   useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const res = await fetch("/api/admin/users", { credentials: "include" });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error ?? "Failed");
-        if (!cancelled) setRows(data.users as Row[]);
-      } catch (e) {
-        if (!cancelled) setError(e instanceof Error ? e.message : "Error");
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+    load();
+  }, [load]);
+
+  useEffect(() => {
+    const t = window.setTimeout(() => {
+      setSearch(searchDraft);
+      setPage(1);
+    }, 400);
+    return () => window.clearTimeout(t);
+  }, [searchDraft]);
 
   return (
     <div className="space-y-8 p-6 lg:p-10">
@@ -44,7 +77,7 @@ export function AdminUsersPanel() {
           Users
         </h1>
         <p className="mt-2 max-w-2xl text-sm text-zinc-400">
-          Identity roster — passwords never exposed.
+          Identity roster — passwords never exposed. Search by email, name, or user id.
         </p>
       </header>
 
@@ -53,6 +86,18 @@ export function AdminUsersPanel() {
           {error}
         </p>
       ) : null}
+
+      <div className="max-w-md space-y-2">
+        <label className="text-[11px] tracking-wide text-zinc-500 uppercase">
+          Search
+        </label>
+        <Input
+          placeholder="Email, name, or id…"
+          value={searchDraft}
+          onChange={(e) => setSearchDraft(e.target.value)}
+          className="border-zinc-700 bg-zinc-900 text-zinc-100 placeholder:text-zinc-600"
+        />
+      </div>
 
       <div className="overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-900/30">
         <div className="overflow-x-auto">
@@ -78,20 +123,49 @@ export function AdminUsersPanel() {
                     <tr key={r.id} className="hover:bg-zinc-800/40">
                       <td className="px-4 py-4">
                         <p className="font-medium text-zinc-100">{r.name}</p>
-                        <p className="font-mono text-xs text-zinc-600">{r.id.slice(-8)}</p>
+                        <p className="font-mono text-xs text-zinc-600">
+                          {r.id.slice(-8)}
+                        </p>
                       </td>
                       <td className="px-4 py-4 text-zinc-300">{r.email}</td>
                       <td className="px-4 py-4">
                         <AdminStatusBadge status={r.role} />
                       </td>
                       <td className="px-4 py-4 text-xs text-zinc-500">
-                        {r.createdAt ? new Date(r.createdAt).toLocaleString() : "—"}
+                        {r.createdAt
+                          ? new Date(r.createdAt).toLocaleString()
+                          : "—"}
                       </td>
                     </tr>
                   ))}
             </tbody>
           </table>
         </div>
+
+        {!loading && rows.length === 0 ? (
+          <AdminEmptyState
+            icon={UsersRound}
+            title={
+              search.trim() ? "No users match this search" : "No users yet"
+            }
+            description={
+              search.trim()
+                ? "Try a different email fragment or id."
+                : "Accounts appear after sign-up."
+            }
+          />
+        ) : null}
+
+        <AdminPaginationBar
+          total={total}
+          page={page}
+          limit={limit}
+          totalPages={totalPages}
+          loading={loading}
+          nounPlural="users"
+          onPrev={() => setPage((p) => Math.max(1, p - 1))}
+          onNext={() => setPage((p) => p + 1)}
+        />
       </div>
     </div>
   );

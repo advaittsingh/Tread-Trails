@@ -1,8 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
-import { builds, cars, getBrandEntries, products } from "@/data/index";
-import { absoluteUrl } from "@/lib/site";
+import { products } from "@/data/index";
+import { buildPageMetadata } from "@/lib/seo/page-metadata";
+import { listBrandEntries } from "@/lib/server/brand-catalog";
+import { listHomeFeaturedBuilds } from "@/lib/server/build-catalog";
+import { listVehicles } from "@/lib/server/vehicle-catalog";
 
 import { PrimaryCta, WhatsAppCta } from "@/components/marketing/cta-buttons";
 import { BuildCard } from "@/components/marketing/build-card";
@@ -12,13 +15,18 @@ import { HomeHero } from "@/components/marketing/home-hero";
 import { ProductCard } from "@/components/marketing/product-card";
 import { SectionHeading } from "@/components/marketing/section-heading";
 
-export const metadata: Metadata = {
-  alternates: { canonical: absoluteUrl("/") },
-};
+export const metadata: Metadata = buildPageMetadata({
+  segmentTitle: "Home",
+  description:
+    "Expedition-grade suspension, armor, lighting, and accessories for Hilux, Thar, Fortuner, and Wrangler-class rigs — explore vehicles, partner-brand catalog, portfolio builds, and book studio fitting.",
+  path: "/",
+});
 
-export default function HomePage() {
-  const featuredBrands = getBrandEntries().slice(0, 6);
-  const featuredBuilds = builds.slice(0, 3);
+export default async function HomePage() {
+  const cars = await listVehicles();
+  const brandEntries = await listBrandEntries();
+  const featuredBrands = brandEntries.slice(0, 6);
+  const featuredBuilds = await listHomeFeaturedBuilds(3);
   const featuredProducts = products.slice(0, 4);
 
   return (
@@ -29,21 +37,42 @@ export default function HomePage() {
         <SectionHeading
           eyebrow="Platforms"
           title="Explore by vehicle"
-          description="Each architecture carries its own kinematic signature — we engineer kits that honor factory tolerances."
+          description="Each card opens that vehicle’s hub — compatible catalog SKUs, portfolio builds on that chassis, and platform specs. Uses the same fleet list as Vehicles. Below each card, jump straight to portfolio builds filtered for that chassis."
         />
         <div className="min-w-0">
-          <div className="flex max-w-full snap-x snap-mandatory gap-4 overflow-x-auto overflow-y-hidden pb-1 pt-0.5 scroll-px-0 [-ms-overflow-style:none] [scrollbar-width:thin] sm:gap-5 [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-border [&::-webkit-scrollbar-track]:bg-transparent">
+          <div
+            className="flex max-w-full snap-x snap-mandatory gap-4 overflow-x-auto overflow-y-hidden pb-1 pt-0.5 scroll-px-0 [-ms-overflow-style:none] [scrollbar-width:thin] sm:gap-5 [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-border [&::-webkit-scrollbar-track]:bg-transparent"
+            role="region"
+            aria-label="Vehicle platforms — cards link to vehicle hubs; secondary links open builds filtered by chassis"
+          >
             {cars.map((car, i) => (
-              <CarCard key={car.id} car={car} index={i} variant="compact" />
+              <div
+                key={car.id}
+                className="flex shrink-0 snap-start flex-col gap-2"
+              >
+                <CarCard car={car} index={i} variant="compact" />
+                <Link
+                  href={`/builds/${car.slug}`}
+                  className="block rounded px-1 py-0.5 text-center text-[11px] font-medium tracking-wide text-muted-foreground underline-offset-4 outline-none hover:text-primary hover:underline focus-visible:text-primary focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                >
+                  Portfolio builds on this platform
+                </Link>
+              </div>
             ))}
           </div>
         </div>
-        <div className="flex justify-center pt-4">
+        <div className="flex flex-col items-center gap-2 pt-4">
           <Link
             href="/vehicles"
-            className="text-sm tracking-wide text-primary underline-offset-4 hover:underline"
+            className="rounded-sm text-sm tracking-wide text-primary underline-offset-4 outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
           >
-            View full vehicle index
+            Browse all vehicle hubs
+          </Link>
+          <Link
+            href="/builds"
+            className="rounded-sm text-sm tracking-wide text-muted-foreground underline-offset-4 outline-none hover:text-primary hover:underline focus-visible:text-primary focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+          >
+            Explore builds by platform
           </Link>
         </div>
       </section>
@@ -53,19 +82,29 @@ export default function HomePage() {
           <SectionHeading
             eyebrow="Manufacturers"
             title="Explore by brand"
-            description="Curated partner lines — filter by the badge that matches how you spec chassis, lighting, and recovery."
+            description="Each card opens that manufacturer’s brand hub — the curated catalog filtered to their lineup. Home highlights six partners; the Brands index lists every hub from the same live catalog."
           />
-          <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+          <div
+            className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3"
+            role="region"
+            aria-label="Partner brands — each card links to that brand’s hub page"
+          >
             {featuredBrands.map((b, i) => (
               <BrandCard key={b.slug} brand={b} index={i} />
             ))}
           </div>
-          <div className="flex justify-center">
+          <div className="flex flex-col items-center gap-2">
             <Link
               href="/brands"
-              className="text-sm tracking-wide text-primary underline-offset-4 hover:underline"
+              className="rounded-sm text-sm tracking-wide text-primary underline-offset-4 outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
             >
-              View all brands
+              Browse all partner brands
+            </Link>
+            <Link
+              href="/products"
+              className="rounded-sm text-sm tracking-wide text-muted-foreground underline-offset-4 outline-none hover:text-primary hover:underline focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+            >
+              Open full product catalog
             </Link>
           </div>
         </div>
@@ -76,7 +115,7 @@ export default function HomePage() {
           <SectionHeading
             eyebrow="Portfolio"
             title="Featured builds"
-            description="Before and after discipline — parts lists stay traceable through to installation."
+            description="Ordered from portfolio spotlight ranks (same catalog as /builds); open a card for the full story and parts traceability."
           />
           <div className="grid gap-10 lg:grid-cols-3">
             {featuredBuilds.map((b, i) => {
@@ -89,7 +128,7 @@ export default function HomePage() {
           <div className="flex justify-center">
             <Link
               href="/builds"
-              className="text-sm tracking-wide text-primary underline-offset-4 hover:underline"
+              className="rounded-sm text-sm tracking-wide text-primary underline-offset-4 outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
             >
               Explore builds by vehicle
             </Link>
@@ -111,7 +150,7 @@ export default function HomePage() {
         <div className="flex justify-center">
           <Link
             href="/products"
-            className="text-sm tracking-wide text-primary underline-offset-4 hover:underline"
+            className="rounded-sm text-sm tracking-wide text-primary underline-offset-4 outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
           >
             Open full catalog
           </Link>

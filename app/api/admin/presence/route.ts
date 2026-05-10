@@ -1,32 +1,31 @@
 import { NextResponse } from "next/server";
 
 import { requireAdmin } from "@/lib/auth/request-user";
-import { connectDB } from "@/lib/db";
-import { PresenceSession } from "@/lib/models/PresenceSession";
+import { prisma } from "@/lib/prisma";
 
 export async function GET() {
   const gate = await requireAdmin();
   if ("response" in gate) return gate.response;
 
   try {
-    await connectDB();
-    const sessions = await PresenceSession.find()
-      .sort({ lastSeenAt: -1 })
-      .limit(200)
-      .lean();
+    const sessions = await prisma.presenceSession.findMany({
+      orderBy: { lastSeenAt: "desc" },
+      take: 200,
+      select: {
+        sessionId: true,
+        path: true,
+        city: true,
+        country: true,
+        lat: true,
+        lng: true,
+        userAgent: true,
+        lastSeenAt: true,
+      },
+    });
 
     return NextResponse.json({
       count: sessions.length,
-      sessions: sessions.map((s) => ({
-        sessionId: s.sessionId,
-        path: s.path,
-        city: s.city,
-        country: s.country,
-        lat: s.lat,
-        lng: s.lng,
-        userAgent: s.userAgent,
-        lastSeenAt: s.lastSeenAt,
-      })),
+      sessions,
     });
   } catch (e) {
     console.error(e);

@@ -1,3 +1,11 @@
+/**
+ * Admin-only transactional sends via Resend (`resend` npm package).
+ *
+ * Env: RESEND_API_KEY + RESEND_FROM_EMAIL (verified domain sender in production).
+ * Template ids below are app enums mapped to inline HTML — not Resend Dashboard templates.
+ * To use Resend-hosted layouts instead, switch `resend.emails.send` to pass `template`/`tags`
+ * per Resend API docs.
+ */
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
 import { z } from "zod";

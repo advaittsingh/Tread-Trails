@@ -8,17 +8,6 @@ export function loginFailureResponse(error: unknown): {
   const msg =
     error instanceof Error ? error.message : typeof error === "string" ? error : "";
 
-  if (msg.includes("MONGODB_URI is not set")) {
-    return {
-      status: 503,
-      body: {
-        error: dev
-          ? "Server missing MONGODB_URI — add it to .env.local and restart."
-          : "Service unavailable.",
-      },
-    };
-  }
-
   if (msg.includes("JWT_SECRET")) {
     return {
       status: 503,
@@ -30,12 +19,20 @@ export function loginFailureResponse(error: unknown): {
     };
   }
 
+  if (msg.includes("DATABASE_URL")) {
+    return {
+      status: 503,
+      body: {
+        error: dev
+          ? "Server missing DATABASE_URL — add your Neon Postgres connection string to .env.local and restart."
+          : "Service unavailable.",
+      },
+    };
+  }
+
   if (
     msg.includes("ECONNREFUSED") ||
     msg.includes("ENOTFOUND") ||
-    msg.includes("MongoNetwork") ||
-    msg.includes("MongoServerSelection") ||
-    msg.includes("querySrv") ||
     msg.includes("SSL routines") ||
     msg.includes("IP whitelist")
   ) {
@@ -43,7 +40,7 @@ export function loginFailureResponse(error: unknown): {
       status: 503,
       body: {
         error: dev
-          ? "Cannot connect to MongoDB — start MongoDB locally or fix MONGODB_URI (Atlas IP access / VPN)."
+          ? "Cannot connect to Postgres — check DATABASE_URL (Neon), networking, and SSL settings."
           : "Service unavailable.",
       },
     };

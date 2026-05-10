@@ -34,6 +34,8 @@ export function ImageGallery({ images, alt }: ImageGalleryProps) {
           className="object-cover"
           sizes="(max-width: 768px) 100vw, 55vw"
           priority
+          decoding="async"
+          fetchPriority={active === 0 ? "high" : "auto"}
         />
       </motion.div>
       {safe.length > 1 ? (
@@ -46,7 +48,7 @@ export function ImageGallery({ images, alt }: ImageGalleryProps) {
               key={`${src}-${i}`}
               type="button"
               aria-pressed={i === active}
-              aria-label={`Show image ${i + 1}`}
+              aria-label={`Show ${alt} — image ${i + 1} of ${safe.length}`}
               onClick={() => setActive(i)}
               className={cn(
                 "relative size-16 shrink-0 overflow-hidden rounded-lg ring-2 ring-transparent transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:size-20",
@@ -60,6 +62,7 @@ export function ImageGallery({ images, alt }: ImageGalleryProps) {
                 className="object-cover"
                 sizes="80px"
                 loading="lazy"
+                decoding="async"
               />
             </button>
           ))}

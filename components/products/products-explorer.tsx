@@ -1,6 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+
+import { useSelectedVehicle } from "@/contexts/selected-vehicle-context";
 
 import type { Product } from "@/data/types";
 import { cars } from "@/data/cars";
@@ -18,20 +20,50 @@ import {
 
 type ProductsExplorerProps = {
   products: Product[];
+  /** URL `?q=` from SearchAction / organic deep links */
+  initialQuery?: string;
 };
 
-export function ProductsExplorer({ products }: ProductsExplorerProps) {
+export function ProductsExplorer({
+  products,
+  initialQuery = "",
+}: ProductsExplorerProps) {
   const [brands, setBrands] = useState<string[]>([]);
   const [vehicles, setVehicles] = useState<string[]>([]);
+  const [textQuery, setTextQuery] = useState(() => initialQuery.trim());
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+  const { slug: storedVehicleSlug, hydrated } = useSelectedVehicle();
+  const didApplyStoredFilter = useRef(false);
+
+  useEffect(() => {
+    if (!hydrated || didApplyStoredFilter.current || !storedVehicleSlug) return;
+    didApplyStoredFilter.current = true;
+    setVehicles((prev) => (prev.length === 0 ? [storedVehicleSlug] : prev));
+  }, [hydrated, storedVehicleSlug]);
+
+  useEffect(() => {
+    setTextQuery(initialQuery.trim());
+  }, [initialQuery]);
 
   const carOptions = useMemo(
     () => cars.map((c) => ({ slug: c.slug, name: c.name })),
     []
   );
 
+  const textFiltered = useMemo(() => {
+    const q = textQuery.trim().toLowerCase();
+    if (!q) return products;
+    return products.filter(
+      (p) =>
+        p.name.toLowerCase().includes(q) ||
+        p.slug.toLowerCase().includes(q) ||
+        p.brand.toLowerCase().includes(q) ||
+        p.category.toLowerCase().includes(q)
+    );
+  }, [products, textQuery]);
+
   const filtered = useMemo(() => {
-    return products.filter((p) => {
+    return textFiltered.filter((p) => {
       const brandOk =
         brands.length === 0 || brands.includes(p.brand);
       const vehicleOk =
@@ -39,7 +71,7 @@ export function ProductsExplorer({ products }: ProductsExplorerProps) {
         p.compatibleCars.some((slug) => vehicles.includes(slug));
       return brandOk && vehicleOk;
     });
-  }, [products, brands, vehicles]);
+  }, [textFiltered, brands, vehicles]);
 
   function toggleBrand(b: string) {
     setBrands((prev) =>
@@ -77,6 +109,23 @@ export function ProductsExplorer({ products }: ProductsExplorerProps) {
       </aside>
 
       <div className="flex-1 space-y-8">
+        {textQuery ? (
+          <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-border/70 bg-muted/25 px-4 py-3 text-sm">
+            <span className="text-muted-foreground">
+              Search:{" "}
+              <span className="font-medium text-foreground">&ldquo;{textQuery}&rdquo;</span>
+            </span>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="h-8"
+              onClick={() => setTextQuery("")}
+            >
+              Clear search
+            </Button>
+          </div>
+        ) : null}
         <div className="flex flex-wrap items-center justify-between gap-3">
           <p className="text-sm text-muted-foreground">
             Showing{" "}
@@ -111,7 +160,9 @@ export function ProductsExplorer({ products }: ProductsExplorerProps) {
 
         {filtered.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-border/70 bg-muted/15 px-6 py-20 text-center text-sm text-muted-foreground">
-            No products match these filters. Adjust brand or vehicle selection.
+            {textQuery.trim()
+              ? `No products match “${textQuery.trim()}”. Try another keyword or adjust filters.`
+              : "No products match these filters. Adjust brand or vehicle selection."}
           </div>
         ) : (
           <div className="grid gap-8 sm:grid-cols-2 xl:grid-cols-3">

@@ -3,7 +3,7 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { ArrowRight, CalendarClock, Package } from "lucide-react";
+import { ArrowRight, CalendarClock, Layers, Package } from "lucide-react";
 
 import { formatInr } from "@/lib/format";
 
@@ -47,7 +47,7 @@ export function AdminDashboardHome() {
           Studio dashboard
         </h1>
         <p className="max-w-2xl text-sm text-zinc-400">
-          Live fulfilment radar — Stripe-paid revenue, bay requests, and order intake from MongoDB.
+          Live fulfilment radar — Stripe-paid revenue, bay requests, and order intake from Neon (Postgres).
         </p>
       </header>
 
@@ -81,7 +81,7 @@ export function AdminDashboardHome() {
         />
       </section>
 
-      <section className="grid gap-4 lg:grid-cols-2">
+      <section className="grid gap-4 lg:grid-cols-3">
         <Link
           href="/admin/orders"
           className="group flex items-center justify-between rounded-2xl border border-zinc-800 bg-zinc-900/40 px-6 py-5 transition hover:border-emerald-500/35 hover:bg-zinc-900/70"
@@ -93,6 +93,18 @@ export function AdminDashboardHome() {
             </p>
           </div>
           <ArrowRight className="size-5 text-zinc-600 transition group-hover:text-emerald-400" />
+        </Link>
+        <Link
+          href="/admin/products"
+          className="group flex items-center justify-between rounded-2xl border border-zinc-800 bg-zinc-900/40 px-6 py-5 transition hover:border-emerald-500/35 hover:bg-zinc-900/70"
+        >
+          <div>
+            <p className="text-sm font-medium text-white">Catalog · products</p>
+            <p className="mt-1 text-xs text-zinc-500">
+              CRUD, vehicle compatibility, Neon-backed SKUs
+            </p>
+          </div>
+          <Layers className="size-5 text-zinc-600 transition group-hover:text-emerald-400" />
         </Link>
         <Link
           href="/admin/bookings"

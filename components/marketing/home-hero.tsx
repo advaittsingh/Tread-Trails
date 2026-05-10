@@ -69,7 +69,7 @@ export function HomeHero() {
             />
             <Link
               href="/vehicles"
-              className="inline-flex h-11 items-center px-4 text-sm tracking-wide text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+              className="inline-flex h-11 items-center rounded-md px-4 text-sm tracking-wide text-muted-foreground underline-offset-4 outline-none hover:text-foreground hover:underline focus-visible:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
             >
               Explore vehicles
             </Link>

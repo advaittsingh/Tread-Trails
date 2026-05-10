@@ -5,8 +5,9 @@ import { useEffect, useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 
 type Payload = {
-  mongoOk: boolean;
-  mongoLatencyMs: number | null;
+  postgresConfigured: boolean;
+  postgresOk: boolean;
+  postgresLatencyMs: number | null;
   stripeConfigured: boolean;
   webhookConfigured: boolean;
   resendConfigured: boolean;
@@ -60,9 +61,13 @@ export function AdminSystemPanel() {
       ) : (
         <section className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
           <FlagCard
-            title="MongoDB"
-            ok={data.mongoOk}
-            detail={`Probe latency ${data.mongoLatencyMs ?? "—"} ms`}
+            title="Postgres (Neon)"
+            ok={data.postgresConfigured && data.postgresOk}
+            detail={
+              data.postgresConfigured
+                ? `Probe latency ${data.postgresLatencyMs ?? "—"} ms`
+                : "DATABASE_URL missing"
+            }
           />
           <FlagCard
             title="Stripe secret"
@@ -77,7 +82,7 @@ export function AdminSystemPanel() {
           <FlagCard
             title="Resend CRM"
             ok={data.resendConfigured}
-            detail="Transactional mail"
+            detail="API key + RESEND_FROM_EMAIL"
           />
           <div className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-5">
             <p className="text-[11px] tracking-[0.2em] text-zinc-500 uppercase">

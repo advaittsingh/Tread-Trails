@@ -4,7 +4,9 @@ import Image from "next/image";
 import Link from "next/link";
 import { Minus, Plus, Trash2 } from "lucide-react";
 
+import { useConfirmation } from "@/contexts/confirmation-context";
 import { formatInr } from "@/lib/format";
+import { toastSuccess } from "@/lib/toast";
 import { useCart } from "@/contexts/cart-context";
 
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -12,7 +14,20 @@ import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 
 export function CartPageContent() {
+  const { confirmDelete } = useConfirmation();
   const { lines, setQty, removeLine, subtotal, hasPoaLines } = useCart();
+
+  async function confirmRemoveLine(lineId: string, name: string) {
+    const ok = await confirmDelete({
+      title: "Remove from cart?",
+      description: `${name} will be removed from your cart.`,
+      confirmLabel: "Remove",
+    });
+    if (ok) {
+      removeLine(lineId);
+      toastSuccess("Removed from cart");
+    }
+  }
 
   if (lines.length === 0) {
     return (
@@ -94,7 +109,9 @@ export function CartPageContent() {
                     variant="ghost"
                     size="icon-sm"
                     aria-label={`Remove ${line.name} from cart`}
-                    onClick={() => removeLine(line.lineId)}
+                    onClick={() =>
+                      void confirmRemoveLine(line.lineId, line.name)
+                    }
                   >
                     <Trash2 className="size-4 text-muted-foreground" aria-hidden />
                   </Button>

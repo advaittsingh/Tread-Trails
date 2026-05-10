@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
-import { absoluteUrl } from "@/lib/site";
+import { buildPageMetadata } from "@/lib/seo/page-metadata";
 
 import { buttonVariants } from "@/components/ui/button";
 import {
@@ -13,29 +13,35 @@ import {
 } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
-export const metadata: Metadata = {
-  title: "Checkout canceled",
-  alternates: { canonical: absoluteUrl("/checkout/canceled") },
-};
+export const metadata: Metadata = buildPageMetadata({
+  segmentTitle: "Checkout canceled",
+  description:
+    "Checkout was canceled — your cart is unchanged. Return to cart or keep browsing expedition upgrades.",
+  path: "/checkout/canceled",
+  robots: { index: false, follow: true },
+});
 
 export default function CheckoutCanceledPage() {
   return (
     <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
       <Card className="mx-auto max-w-lg border-border/70 shadow-card">
         <CardHeader>
-          <CardTitle className="font-heading text-2xl tracking-tight">
+          <CardTitle as="h1" className="font-heading text-2xl tracking-tight">
             Checkout canceled
           </CardTitle>
         </CardHeader>
         <CardContent className="text-sm text-muted-foreground">
-          No charge was made. Your cart is unchanged — jump back in whenever you are ready.
+          You exited before completing payment. Nothing was charged — items remain in your cart.
         </CardContent>
-        <CardFooter className="flex flex-col gap-2 sm:flex-row">
-          <Link href="/checkout" className={cn(buttonVariants(), "w-full justify-center")}>
-            Return to checkout
+        <CardFooter className="flex flex-wrap gap-3">
+          <Link href="/cart" className={cn(buttonVariants({ variant: "default" }))}>
+            Back to cart
           </Link>
-          <Link href="/cart" className={cn(buttonVariants({ variant: "outline" }), "w-full justify-center")}>
-            Review cart
+          <Link
+            href="/products"
+            className={cn(buttonVariants({ variant: "outline" }))}
+          >
+            Browse products
           </Link>
         </CardFooter>
       </Card>

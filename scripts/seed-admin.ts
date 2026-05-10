@@ -2,7 +2,7 @@
  * Create or reset admin login — reads `.env.local` then `.env` via dotenv.
  *
  * Required in env:
- *   MONGODB_URI
+ *   DATABASE_URL
  *   SEED_ADMIN_PASSWORD (min 8 chars)
  *
  * Optional:
@@ -18,12 +18,11 @@ config({ path: ".env.local" });
 config({ path: ".env" });
 
 import { hashPassword } from "../lib/auth/password";
-import { connectDB } from "../lib/db";
-import { User } from "../lib/models/User";
+import { prisma } from "../lib/prisma";
 
 async function main() {
-  if (!process.env.MONGODB_URI) {
-    console.error("MONGODB_URI is required (.env.local or environment)");
+  if (!process.env.DATABASE_URL) {
+    console.error("DATABASE_URL is required (.env.local or environment)");
     process.exit(1);
   }
 
@@ -43,21 +42,25 @@ async function main() {
 
   const name = process.env.SEED_ADMIN_NAME?.trim() || "Studio Admin";
 
-  await connectDB();
   const passwordHash = await hashPassword(password);
 
-  await User.findOneAndUpdate(
-    { email },
-    {
+  await prisma.user.upsert({
+    where: { email },
+    create: {
       email,
       passwordHash,
       name,
       role: "admin",
     },
-    { upsert: true, new: true }
-  );
+    update: {
+      passwordHash,
+      name,
+      role: "admin",
+    },
+  });
 
   console.info(`Admin ready → ${email} (${name})`);
+  await prisma.$disconnect();
   process.exit(0);
 }
 

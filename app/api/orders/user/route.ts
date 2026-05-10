@@ -1,33 +1,48 @@
 import { NextResponse } from "next/server";
 
 import { requireAuth } from "@/lib/auth/request-user";
-import { connectDB } from "@/lib/db";
-import { Order } from "@/lib/models/Order";
+import { prisma } from "@/lib/prisma";
+
+type OrderItem = { name?: string; quantity?: number };
+
+function itemsFromJson(value: unknown): OrderItem[] {
+  if (!Array.isArray(value)) return [];
+  return value.filter((x) => typeof x === "object" && x !== null) as OrderItem[];
+}
 
 export async function GET() {
   const gate = await requireAuth();
   if ("response" in gate) return gate.response;
 
   try {
-    await connectDB();
-    const orders = await Order.find({ userId: gate.auth.userId })
-      .sort({ createdAt: -1 })
-      .limit(50)
-      .lean();
+    const orders = await prisma.order.findMany({
+      where: { userId: gate.auth.userId },
+      orderBy: { createdAt: "desc" },
+      take: 50,
+      select: {
+        id: true,
+        total: true,
+        currency: true,
+        status: true,
+        paymentMethod: true,
+        createdAt: true,
+        items: true,
+      },
+    });
 
     return NextResponse.json({
       orders: orders.map((o) => ({
-        id: o._id.toString(),
+        id: o.id,
         total: o.total,
         currency: o.currency,
         status: o.status,
         paymentMethod: o.paymentMethod,
         createdAt: o.createdAt,
-        itemSummary: o.items
+        itemSummary: itemsFromJson(o.items)
           .slice(0, 3)
-          .map((i: { name: string; quantity: number }) => `${i.name} × ${i.quantity}`)
+          .map((i) => `${i.name ?? "Item"} × ${i.quantity ?? 1}`)
           .join(" · "),
-        itemCount: o.items.length,
+        itemCount: itemsFromJson(o.items).length,
       })),
     });
   } catch (e) {

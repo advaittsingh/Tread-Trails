@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
-import { connectDB } from "@/lib/db";
-import { CartTelemetry } from "@/lib/models/CartTelemetry";
+import { prisma } from "@/lib/prisma";
 
 const lineSchema = z.object({
   productSlug: z.string().min(1),
@@ -36,7 +35,6 @@ export async function POST(req: Request) {
     parsed.data;
 
   try {
-    await connectDB();
     const setDoc: Record<string, unknown> = {
       lines,
       itemCount,
@@ -48,11 +46,25 @@ export async function POST(req: Request) {
       setDoc.userEmail = userEmail.trim().toLowerCase();
     }
 
-    await CartTelemetry.findOneAndUpdate(
-      { sessionId },
-      { $set: setDoc },
-      { upsert: true, new: true }
-    );
+    await prisma.cartTelemetry.upsert({
+      where: { sessionId },
+      create: {
+        sessionId,
+        lines,
+        itemCount,
+        subtotalHint: subtotalHint ?? 0,
+        userEmail: userEmail?.trim() ? userEmail.trim().toLowerCase() : null,
+        lastPath: lastPath ?? "",
+      },
+      update: {
+        lines,
+        itemCount,
+        subtotalHint: subtotalHint ?? 0,
+        userEmail: userEmail?.trim() ? userEmail.trim().toLowerCase() : null,
+        lastPath: lastPath ?? "",
+        updatedAt: new Date(),
+      },
+    });
 
     return NextResponse.json({ ok: true });
   } catch (e) {

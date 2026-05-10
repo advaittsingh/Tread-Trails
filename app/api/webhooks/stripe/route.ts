@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
 import type Stripe from "stripe";
 
-import { connectDB } from "@/lib/db";
-import { Order } from "@/lib/models/Order";
+import { prisma } from "@/lib/prisma";
 import { getStripe } from "@/lib/stripe";
 
 export const runtime = "nodejs";
@@ -36,15 +35,17 @@ export async function POST(req: Request) {
 
       const orderId = session.metadata?.orderId;
       if (orderId) {
-        await connectDB();
         const pi =
           typeof session.payment_intent === "string"
             ? session.payment_intent
             : session.payment_intent?.id;
-        await Order.findByIdAndUpdate(orderId, {
-          status: "paid",
-          stripeCheckoutSessionId: session.id,
-          ...(pi ? { stripePaymentIntentId: pi } : {}),
+        await prisma.order.update({
+          where: { id: orderId },
+          data: {
+            status: "paid",
+            stripeCheckoutSessionId: session.id,
+            ...(pi ? { stripePaymentIntentId: pi } : {}),
+          },
         });
       }
     }

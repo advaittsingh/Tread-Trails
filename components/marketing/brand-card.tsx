@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
@@ -12,7 +13,10 @@ type BrandCardProps = {
   index?: number;
 };
 
-export function BrandCard({ brand, index = 0 }: BrandCardProps) {
+export const BrandCard = memo(function BrandCard({
+  brand,
+  index = 0,
+}: BrandCardProps) {
   const reduceMotion = useReducedMotion();
   const cta = `Explore ${brand.name}`;
 
@@ -32,13 +36,14 @@ export function BrandCard({ brand, index = 0 }: BrandCardProps) {
       <Link
         href={`/brands/${brand.slug}`}
         className="block outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        aria-label={`${brand.name} — partner brand hub with filtered catalog`}
       >
         <div className="flex h-full min-h-[280px] flex-col rounded-xl border border-border/70 bg-card p-6 shadow-card transition-shadow duration-300 hover:shadow-card-hover">
           <div className="relative flex min-h-[100px] flex-1 items-center justify-center py-4">
             {brand.logoSrc ? (
               <Image
                 src={brand.logoSrc}
-                alt=""
+                alt={`${brand.name} logo`}
                 width={200}
                 height={72}
                 className="max-h-[72px] w-auto max-w-[85%] object-contain"
@@ -70,4 +75,4 @@ export function BrandCard({ brand, index = 0 }: BrandCardProps) {
       </Link>
     </motion.article>
   );
-}
+});

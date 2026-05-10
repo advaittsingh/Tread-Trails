@@ -6,6 +6,8 @@ type SectionHeadingProps = {
   description?: string;
   align?: "left" | "center";
   className?: string;
+  /** Semantic level for the title — use `h1` when this is the sole page heading. */
+  titleAs?: "h1" | "h2" | "h3";
 };
 
 export function SectionHeading({
@@ -14,7 +16,10 @@ export function SectionHeading({
   description,
   align = "left",
   className,
+  titleAs = "h2",
 }: SectionHeadingProps) {
+  const TitleTag = titleAs;
+
   return (
     <div
       className={cn(
@@ -28,9 +33,9 @@ export function SectionHeading({
           {eyebrow}
         </p>
       ) : null}
-      <h2 className="font-heading text-balance text-3xl tracking-tight text-foreground sm:text-4xl md:text-5xl">
+      <TitleTag className="font-heading text-balance text-3xl tracking-tight text-foreground sm:text-4xl md:text-5xl">
         {title}
-      </h2>
+      </TitleTag>
       {description ? (
         <p className="text-base leading-relaxed text-muted-foreground md:text-lg">
           {description}

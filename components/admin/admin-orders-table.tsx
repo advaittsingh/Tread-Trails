@@ -1,11 +1,16 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { ShoppingBag } from "lucide-react";
 
+import { useConfirmation } from "@/contexts/confirmation-context";
 import { formatInr } from "@/lib/format";
+import { toastError, toastSuccess } from "@/lib/toast";
 
+import { ADMIN_CONFIRM_DIALOG_CLASS } from "@/components/admin/admin-confirm-styles";
+import { AdminEmptyState } from "@/components/admin/admin-empty-state";
+import { AdminPaginationBar } from "@/components/admin/admin-pagination-bar";
 import { AdminStatusBadge } from "@/components/admin/admin-status-badge";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -20,12 +25,14 @@ type Row = {
 };
 
 export function AdminOrdersTable() {
+  const { confirmAction } = useConfirmation();
   const [rows, setRows] = useState<Row[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [limit] = useState(25);
   const [status, setStatus] = useState<string>("");
+  const [payment, setPayment] = useState<string>("");
   const [search, setSearch] = useState("");
   const [searchDraft, setSearchDraft] = useState("");
   const [loading, setLoading] = useState(true);
@@ -41,6 +48,7 @@ export function AdminOrdersTable() {
         limit: String(limit),
       });
       if (status) qs.set("status", status);
+      if (payment) qs.set("payment", payment);
       if (search.trim()) qs.set("search", search.trim());
 
       const res = await fetch(`/api/admin/orders?${qs}`, {
@@ -52,12 +60,14 @@ export function AdminOrdersTable() {
       setTotal(data.total as number);
       setTotalPages(data.totalPages as number);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Error");
+      const msg = e instanceof Error ? e.message : "Error";
+      setError(msg);
       setRows([]);
+      toastError("Could not load orders", msg);
     } finally {
       setLoading(false);
     }
-  }, [page, limit, status, search]);
+  }, [page, limit, status, payment, search]);
 
   useEffect(() => {
     load();
@@ -83,11 +93,30 @@ export function AdminOrdersTable() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Update failed");
       await load();
+      toastSuccess("Order updated", `Status: ${nextStatus}`);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Update failed");
+      const msg = e instanceof Error ? e.message : "Update failed";
+      setError(msg);
+      toastError("Could not update order", msg);
     } finally {
       setUpdatingId(null);
     }
+  }
+
+  async function onStatusChange(id: string, prevStatus: string, nextStatus: string) {
+    if (nextStatus === prevStatus) return;
+    if (nextStatus === "cancelled") {
+      const ok = await confirmAction({
+        title: "Mark this order as cancelled?",
+        description:
+          "Updates fulfilment state for the team. Payment capture is not reversed here.",
+        confirmLabel: "Mark cancelled",
+        cancelLabel: "Keep current status",
+        contentClassName: ADMIN_CONFIRM_DIALOG_CLASS,
+      });
+      if (!ok) return;
+    }
+    await patchStatus(id, nextStatus);
   }
 
   return (
@@ -127,12 +156,31 @@ export function AdminOrdersTable() {
             <option value="cancelled">Cancelled</option>
           </select>
         </div>
+        <div className="space-y-2">
+          <label className="text-[11px] tracking-wide text-zinc-500 uppercase">
+            Payment
+          </label>
+          <select
+            value={payment}
+            onChange={(e) => {
+              setPayment(e.target.value);
+              setPage(1);
+            }}
+            className="h-10 rounded-xl border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100 outline-none focus:ring-2 focus:ring-emerald-500/40"
+          >
+            <option value="">All</option>
+            <option value="stripe">Stripe</option>
+            <option value="razorpay">Razorpay</option>
+            <option value="juspay">Juspay</option>
+            <option value="cod">COD</option>
+          </select>
+        </div>
         <div className="min-w-[220px] flex-1 space-y-2">
           <label className="text-[11px] tracking-wide text-zinc-500 uppercase">
             Search
           </label>
           <Input
-            placeholder="Email, name, or Mongo ID…"
+            placeholder="Email, name, or Order ID…"
             value={searchDraft}
             onChange={(e) => setSearchDraft(e.target.value)}
             className="border-zinc-700 bg-zinc-900 text-zinc-100 placeholder:text-zinc-600"
@@ -190,7 +238,9 @@ export function AdminOrdersTable() {
                         <select
                           disabled={updatingId === r.id}
                           value={r.status}
-                          onChange={(e) => patchStatus(r.id, e.target.value)}
+                          onChange={(e) =>
+                            void onStatusChange(r.id, r.status, e.target.value)
+                          }
                           className="h-9 rounded-lg border border-zinc-700 bg-zinc-950 px-2 text-xs text-zinc-100 outline-none focus:ring-2 focus:ring-emerald-500/40 disabled:opacity-50"
                         >
                           <option value="pending">Pending</option>
@@ -206,38 +256,31 @@ export function AdminOrdersTable() {
         </div>
 
         {!loading && rows.length === 0 ? (
-          <p className="px-6 py-16 text-center text-sm text-zinc-500">
-            No orders match these filters.
-          </p>
+          <AdminEmptyState
+            icon={ShoppingBag}
+            title={
+              status || payment || search.trim()
+                ? "No orders match these filters"
+                : "No orders yet"
+            }
+            description={
+              status || payment || search.trim()
+                ? "Try clearing status, payment, or search."
+                : "Paid and COD checkouts will appear here once customers complete checkout."
+            }
+          />
         ) : null}
 
-        <div className="flex flex-wrap items-center justify-between gap-4 border-t border-zinc-800 px-4 py-4">
-          <p className="text-xs text-zinc-500">
-            {total.toLocaleString("en-IN")} orders · page {page} / {totalPages}
-          </p>
-          <div className="flex gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="border-zinc-700 bg-zinc-900 text-zinc-200"
-              disabled={page <= 1 || loading}
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
-            >
-              Previous
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="border-zinc-700 bg-zinc-900 text-zinc-200"
-              disabled={page >= totalPages || loading}
-              onClick={() => setPage((p) => p + 1)}
-            >
-              Next
-            </Button>
-          </div>
-        </div>
+        <AdminPaginationBar
+          total={total}
+          page={page}
+          limit={limit}
+          totalPages={totalPages}
+          loading={loading}
+          nounPlural="orders"
+          onPrev={() => setPage((p) => Math.max(1, p - 1))}
+          onNext={() => setPage((p) => p + 1)}
+        />
       </div>
     </div>
   );

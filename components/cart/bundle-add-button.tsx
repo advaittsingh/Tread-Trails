@@ -2,6 +2,7 @@
 
 import type { Product } from "@/data/types";
 import { resolveVariants } from "@/lib/pricing";
+import { toastSuccess } from "@/lib/toast";
 import { useCart } from "@/contexts/cart-context";
 
 import { Button } from "@/components/ui/button";
@@ -20,6 +21,10 @@ export function BundleAddButton({
       const v = resolveVariants(product)[0];
       addItem({ product, variantId: v.id });
     }
+    toastSuccess(
+      "Bundle added to cart",
+      `${items.length} item${items.length === 1 ? "" : "s"} queued`
+    );
   }
 
   return (

@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
@@ -14,7 +15,11 @@ type BuildCardProps = {
   index?: number;
 };
 
-export function BuildCard({ build, vehicleName, index = 0 }: BuildCardProps) {
+export const BuildCard = memo(function BuildCard({
+  build,
+  vehicleName,
+  index = 0,
+}: BuildCardProps) {
   const reduceMotion = useReducedMotion();
 
   return (
@@ -78,4 +83,4 @@ export function BuildCard({ build, vehicleName, index = 0 }: BuildCardProps) {
       </Link>
     </motion.article>
   );
-}
+});

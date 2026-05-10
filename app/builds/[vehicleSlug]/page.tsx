@@ -2,12 +2,17 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { excerptPlain } from "@/lib/seo/json-ld-builders";
 import {
-  cars,
-  getBuildsForVehicle,
-  getCarBySlug,
-} from "@/data/index";
+  absoluteOgAsset,
+  defaultOgImage,
+} from "@/lib/seo/page-metadata";
 import { absoluteUrl } from "@/lib/site";
+import { getBuildsForVehicle } from "@/lib/server/build-catalog";
+import {
+  getVehicleBySlug,
+  listVehicleSlugs,
+} from "@/lib/server/vehicle-catalog";
 
 import { BuildCard } from "@/components/marketing/build-card";
 import { SectionHeading } from "@/components/marketing/section-heading";
@@ -15,34 +20,49 @@ import { PrimaryCta } from "@/components/marketing/cta-buttons";
 
 type Props = { params: { vehicleSlug: string } };
 
-export function generateStaticParams() {
-  return cars.map((c) => ({ vehicleSlug: c.slug }));
+export async function generateStaticParams() {
+  const slugs = await listVehicleSlugs();
+  return slugs.map((vehicleSlug) => ({ vehicleSlug }));
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const car = getCarBySlug(params.vehicleSlug);
+  const car = await getVehicleBySlug(params.vehicleSlug);
   if (!car) return { title: "Builds" };
   const title = `${car.name} builds`;
-  const description = `Portfolio builds engineered on the ${car.name} platform.`;
+  const rawDesc = `Portfolio builds engineered on the ${car.name} platform — before/after installs and parts manifests from Tread Trails.`;
+  const description = excerptPlain(rawDesc, 165);
+  const canonical = absoluteUrl(`/builds/${car.slug}`);
+  const heroUrl = absoluteOgAsset(car.heroImage);
+  const ogImages = heroUrl
+    ? [{ url: heroUrl, width: 1200, height: 630, alt: car.name }]
+    : [defaultOgImage(title)];
   return {
     title,
     description,
-    alternates: {
-      canonical: absoluteUrl(`/builds/${car.slug}`),
-    },
+    alternates: { canonical },
     openGraph: {
-      title,
+      title: `${title} | Tread Trails`,
       description,
-      url: absoluteUrl(`/builds/${car.slug}`),
+      url: canonical,
+      siteName: "Tread Trails",
+      locale: "en_IN",
+      type: "website",
+      images: ogImages,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `${title} | Tread Trails`,
+      description,
+      images: ogImages.map((i) => i.url),
     },
   };
 }
 
-export default function BuildsForVehiclePage({ params }: Props) {
-  const car = getCarBySlug(params.vehicleSlug);
+export default async function BuildsForVehiclePage({ params }: Props) {
+  const car = await getVehicleBySlug(params.vehicleSlug);
   if (!car) notFound();
 
-  const vehicleBuilds = getBuildsForVehicle(car.slug);
+  const vehicleBuilds = await getBuildsForVehicle(car.slug);
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
@@ -55,6 +75,7 @@ export default function BuildsForVehiclePage({ params }: Props) {
       </nav>
 
       <SectionHeading
+        titleAs="h1"
         eyebrow="Portfolio"
         title={`${car.name} builds`}
         description="Open a case study for install narrative and parts traceability — or jump straight into the platform catalog for everything we retail for this chassis."

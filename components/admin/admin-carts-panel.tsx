@@ -1,10 +1,15 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { ShoppingCart } from "lucide-react";
 
 import { formatInr } from "@/lib/format";
+import { toastError } from "@/lib/toast";
 
-import { Button } from "@/components/ui/button";
+import { AdminEmptyState } from "@/components/admin/admin-empty-state";
+import { AdminPaginationBar } from "@/components/admin/admin-pagination-bar";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 
 type Row = {
@@ -23,6 +28,8 @@ export function AdminCartsPanel() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [limit] = useState(20);
+  const [search, setSearch] = useState("");
+  const [searchDraft, setSearchDraft] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -30,6 +37,7 @@ export function AdminCartsPanel() {
     setLoading(true);
     try {
       const qs = new URLSearchParams({ page: String(page), limit: String(limit) });
+      if (search.trim()) qs.set("search", search.trim());
       const res = await fetch(`/api/admin/carts?${qs}`, {
         credentials: "include",
       });
@@ -40,15 +48,25 @@ export function AdminCartsPanel() {
       setTotalPages(data.totalPages as number);
       setError(null);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Error");
+      const msg = e instanceof Error ? e.message : "Error";
+      setError(msg);
+      toastError("Could not load carts", msg);
     } finally {
       setLoading(false);
     }
-  }, [page, limit]);
+  }, [page, limit, search]);
 
   useEffect(() => {
     load();
   }, [load]);
+
+  useEffect(() => {
+    const t = window.setTimeout(() => {
+      setSearch(searchDraft);
+      setPage(1);
+    }, 400);
+    return () => window.clearTimeout(t);
+  }, [searchDraft]);
 
   return (
     <div className="space-y-8 p-6 lg:p-10">
@@ -66,6 +84,18 @@ export function AdminCartsPanel() {
           {error}
         </p>
       ) : null}
+
+      <div className="max-w-md space-y-2">
+        <Label className="text-[11px] tracking-wide text-zinc-500 uppercase">
+          Search
+        </Label>
+        <Input
+          placeholder="Session id, email, or last path…"
+          value={searchDraft}
+          onChange={(e) => setSearchDraft(e.target.value)}
+          className="border-zinc-700 bg-zinc-900 text-zinc-100 placeholder:text-zinc-600"
+        />
+      </div>
 
       <div className="overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-900/30">
         <div className="overflow-x-auto">
@@ -120,33 +150,32 @@ export function AdminCartsPanel() {
           </table>
         </div>
 
-        <div className="flex flex-wrap items-center justify-between gap-4 border-t border-zinc-800 px-4 py-4">
-          <p className="text-xs text-zinc-500">
-            {total} telemetry rows · page {page}/{totalPages}
-          </p>
-          <div className="flex gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="border-zinc-700 bg-zinc-900 text-zinc-200"
-              disabled={page <= 1 || loading}
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
-            >
-              Previous
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="border-zinc-700 bg-zinc-900 text-zinc-200"
-              disabled={page >= totalPages || loading}
-              onClick={() => setPage((p) => p + 1)}
-            >
-              Next
-            </Button>
-          </div>
-        </div>
+        {!loading && rows.length === 0 ? (
+          <AdminEmptyState
+            icon={ShoppingCart}
+            title={
+              search.trim()
+                ? "No carts match this search"
+                : "No abandoned carts with items"
+            }
+            description={
+              search.trim()
+                ? "Try another session fragment, email, or URL path."
+                : "Telemetry only lists sessions with at least one line item."
+            }
+          />
+        ) : null}
+
+        <AdminPaginationBar
+          total={total}
+          page={page}
+          limit={limit}
+          totalPages={totalPages}
+          loading={loading}
+          nounPlural="telemetry rows"
+          onPrev={() => setPage((p) => Math.max(1, p - 1))}
+          onNext={() => setPage((p) => p + 1)}
+        />
       </div>
     </div>
   );

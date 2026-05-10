@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 
+import { toastError, toastSuccess } from "@/lib/toast";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -32,11 +34,15 @@ export function AdminCrmPanel() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Send failed");
-      setMessage(`Queued · provider id ${data.id ?? "n/a"}`);
+      const queued = `Queued · provider id ${data.id ?? "n/a"}`;
+      setMessage(queued);
+      toastSuccess("Email queued", data.id ? String(data.id) : undefined);
       setEmail("");
       setFirstName("");
     } catch (err) {
-      setMessage(err instanceof Error ? err.message : "Error");
+      const msg = err instanceof Error ? err.message : "Error";
+      setMessage(msg);
+      toastError("Send failed", msg);
     } finally {
       setLoading(false);
     }
@@ -49,8 +55,9 @@ export function AdminCrmPanel() {
           CRM · transactional send
         </h1>
         <p className="mt-2 text-sm text-zinc-400">
-          Powered by Resend when <code className="text-emerald-300">RESEND_API_KEY</code>{" "}
-          and <code className="text-emerald-300">RESEND_FROM_EMAIL</code> are configured.
+          Uses Resend when <code className="text-emerald-300">RESEND_API_KEY</code> and a verified{" "}
+          <code className="text-emerald-300">RESEND_FROM_EMAIL</code> are set. Copy for each template lives in{" "}
+          <code className="text-emerald-300">/api/admin/email</code> (inline HTML — not Resend Dashboard templates unless you extend the route).
         </p>
       </header>
 

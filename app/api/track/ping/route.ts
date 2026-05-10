@@ -1,10 +1,9 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
-import { connectDB } from "@/lib/db";
 import { lookupGeo } from "@/lib/geo-ip";
 import { clientIpFromHeaders, hashIp } from "@/lib/ip-hash";
-import { PresenceSession } from "@/lib/models/PresenceSession";
+import { prisma } from "@/lib/prisma";
 
 const bodySchema = z.object({
   sessionId: z.string().min(8).max(128),
@@ -30,43 +29,46 @@ export async function POST(req: Request) {
   const ua = req.headers.get("user-agent") ?? "";
 
   try {
-    await connectDB();
-    const doc = await PresenceSession.findOneAndUpdate(
-      { sessionId },
-      {
-        $set: {
-          path,
-          userAgent: ua,
-          ipHash,
-          lastSeenAt: new Date(),
-        },
-        $setOnInsert: {
-          geoResolved: false,
-        },
+    const doc = await prisma.presenceSession.upsert({
+      where: { sessionId },
+      create: {
+        sessionId,
+        path,
+        userAgent: ua,
+        ipHash,
+        geoResolved: false,
+        lastSeenAt: new Date(),
       },
-      { upsert: true, new: true }
-    ).lean();
+      update: {
+        path,
+        userAgent: ua,
+        ipHash,
+        lastSeenAt: new Date(),
+      },
+      select: {
+        sessionId: true,
+        geoResolved: true,
+      },
+    });
 
     const needsGeo =
       doc &&
-      !(doc as { geoResolved?: boolean }).geoResolved &&
+      !doc.geoResolved &&
       ip;
 
     if (needsGeo) {
       const geo = await lookupGeo(ip);
       if (geo.city || geo.lat != null) {
-        await PresenceSession.updateOne(
-          { sessionId },
-          {
-            $set: {
-              city: geo.city,
-              country: geo.country,
-              lat: geo.lat,
-              lng: geo.lng,
-              geoResolved: true,
-            },
-          }
-        );
+        await prisma.presenceSession.update({
+          where: { sessionId },
+          data: {
+            city: geo.city ?? null,
+            country: geo.country ?? null,
+            lat: geo.lat ?? null,
+            lng: geo.lng ?? null,
+            geoResolved: true,
+          },
+        });
       }
     }
 

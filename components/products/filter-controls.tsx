@@ -69,9 +69,14 @@ export function FilterControls({
       </div>
       <Separator />
       <div className="space-y-3">
-        <Label className="text-[11px] tracking-widest text-muted-foreground uppercase">
-          Vehicle fitment
-        </Label>
+        <div>
+          <Label className="text-[11px] tracking-widest text-muted-foreground uppercase">
+            Vehicle fitment
+          </Label>
+          <p className="mt-1 text-[11px] leading-snug text-muted-foreground">
+            Catalog filter (multi-select). Separate from booking — combine with brand chips to narrow SKUs.
+          </p>
+        </div>
         <ul className="space-y-2">
           {cars.map((c) => {
             const on = selectedVehicles.includes(c.slug);

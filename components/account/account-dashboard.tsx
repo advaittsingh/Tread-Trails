@@ -4,13 +4,15 @@ import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 
 import type { Car, Product } from "@/data/types";
-import { getCarBySlug, getProductBySlug } from "@/data/index";
+import { getProductBySlug } from "@/data/index";
+import { getCarBySlug } from "@/lib/vehicle";
 import { formatInr } from "@/lib/format";
 import { useSavedVehicles } from "@/contexts/saved-vehicles-context";
 import { useWishlist } from "@/contexts/wishlist-context";
 
 import { ProductCard } from "@/components/marketing/product-card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -19,6 +21,9 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs";
+
+import { AccountChangePassword } from "@/components/account/account-change-password";
+import { AccountProfileSettings } from "@/components/account/account-profile-settings";
 
 type ApiOrder = {
   id: string;
@@ -42,7 +47,13 @@ type ApiBooking = {
 };
 
 export function AccountDashboard() {
-  const { slugs: wishSlugs } = useWishlist();
+  const {
+    slugs: wishSlugs,
+    isRemoteHydrating: wishlistHydrating,
+    isMutationPending: wishlistMutationPending,
+    remoteError: wishlistRemoteError,
+    clearRemoteError: clearWishlistError,
+  } = useWishlist();
   const { slugs: savedSlugs } = useSavedVehicles();
 
   const [orders, setOrders] = useState<ApiOrder[] | null>(null);
@@ -88,8 +99,7 @@ export function AccountDashboard() {
 
   const wishlistProducts = wishSlugs
     .map((s) => getProductBySlug(s))
-    .filter(Boolean)
-    .slice(0, 12) as Product[];
+    .filter(Boolean) as Product[];
 
   const savedCars = savedSlugs
     .map((s) => getCarBySlug(s))
@@ -97,11 +107,17 @@ export function AccountDashboard() {
     .slice(0, 12) as Car[];
 
   return (
-    <Tabs defaultValue="orders" className="gap-8">
+    <Tabs defaultValue="profile" className="gap-8">
       <TabsList
         variant="line"
         className="h-auto w-full flex-wrap justify-start gap-2 bg-transparent p-0"
       >
+        <TabsTrigger
+          value="profile"
+          className="rounded-full border border-transparent px-4 py-2 data-active:border-primary/35 data-active:bg-primary/8"
+        >
+          Profile
+        </TabsTrigger>
         <TabsTrigger
           value="orders"
           className="rounded-full border border-transparent px-4 py-2 data-active:border-primary/35 data-active:bg-primary/8"
@@ -134,9 +150,17 @@ export function AccountDashboard() {
         </p>
       ) : null}
 
+      <TabsContent value="profile" className="space-y-8">
+        <p className="text-sm text-muted-foreground">
+          Keep contact details current for studio confirmations and receipts. Preferred vehicle powers the global chassis selector when you&apos;re signed in.
+        </p>
+        <AccountProfileSettings />
+        <AccountChangePassword />
+      </TabsContent>
+
       <TabsContent value="orders" className="space-y-4">
         <p className="text-sm text-muted-foreground">
-          Stripe-paid and COD requests tied to your login — synced from MongoDB.
+          Stripe-paid and COD requests tied to your login — synced from Neon (Postgres).
         </p>
         {orders === null ? (
           <div className="grid gap-4 md:grid-cols-2">
@@ -156,7 +180,7 @@ export function AccountDashboard() {
             {orders.map((o) => (
               <Card key={o.id} className="border-border/70 shadow-card">
                 <CardHeader className="flex flex-row items-start justify-between gap-2">
-                  <CardTitle className="font-heading text-lg tracking-tight">
+                  <CardTitle as="h2" className="font-heading text-lg tracking-tight">
                     {o.id.slice(-8).toUpperCase()}
                   </CardTitle>
                   <Badge variant="secondary" className="rounded-full capitalize">
@@ -209,7 +233,7 @@ export function AccountDashboard() {
             {bookings.map((b) => (
               <Card key={b.id} className="border-border/70 shadow-card">
                 <CardHeader className="flex flex-row items-start justify-between gap-2">
-                  <CardTitle className="font-heading text-lg tracking-tight">
+                  <CardTitle as="h2" className="font-heading text-lg tracking-tight">
                     {b.service}
                   </CardTitle>
                   <Badge variant="outline" className="rounded-full border-primary/25 capitalize">
@@ -262,9 +286,39 @@ export function AccountDashboard() {
       </TabsContent>
 
       <TabsContent value="wishlist" className="space-y-6">
-        {wishlistProducts.length === 0 ? (
+        <p className="text-sm text-muted-foreground">
+          Saved items sync to your account when signed in — guests keep a device-only list until login merges it.
+        </p>
+
+        {wishlistRemoteError ? (
+          <div className="flex flex-col gap-3 rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive sm:flex-row sm:items-center sm:justify-between">
+            <span>{wishlistRemoteError}</span>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="shrink-0 border-destructive/35 text-destructive hover:bg-destructive/15"
+              onClick={() => clearWishlistError()}
+            >
+              Dismiss
+            </Button>
+          </div>
+        ) : null}
+
+        {wishlistHydrating ? (
+          <div className="grid gap-8 sm:grid-cols-2 xl:grid-cols-3">
+            <Skeleton className="h-[380px] rounded-2xl" />
+            <Skeleton className="h-[380px] rounded-2xl sm:block hidden" />
+            <Skeleton className="h-[380px] rounded-2xl xl:block hidden" />
+          </div>
+        ) : wishlistProducts.length === 0 ? (
           <p className="rounded-2xl border border-dashed border-border/70 bg-muted/20 px-6 py-14 text-center text-sm text-muted-foreground">
             Tap the heart on any product card to curate your upgrade shortlist.
+            {wishlistMutationPending ? (
+              <span className="mt-2 block text-xs text-muted-foreground/90">
+                Updating…
+              </span>
+            ) : null}
           </p>
         ) : (
           <div className="grid gap-8 sm:grid-cols-2 xl:grid-cols-3">

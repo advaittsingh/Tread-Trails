@@ -1,9 +1,13 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { CalendarClock } from "lucide-react";
 
+import { toastError } from "@/lib/toast";
+
+import { AdminEmptyState } from "@/components/admin/admin-empty-state";
+import { AdminPaginationBar } from "@/components/admin/admin-pagination-bar";
 import { AdminStatusBadge } from "@/components/admin/admin-status-badge";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -25,6 +29,7 @@ export function AdminBookingsTable() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [limit] = useState(25);
+  const [status, setStatus] = useState<string>("");
   const [search, setSearch] = useState("");
   const [searchDraft, setSearchDraft] = useState("");
   const [loading, setLoading] = useState(true);
@@ -39,6 +44,7 @@ export function AdminBookingsTable() {
         limit: String(limit),
       });
       if (search.trim()) qs.set("search", search.trim());
+      if (status) qs.set("status", status);
 
       const res = await fetch(`/api/admin/bookings?${qs}`, {
         credentials: "include",
@@ -49,12 +55,14 @@ export function AdminBookingsTable() {
       setTotal(data.total as number);
       setTotalPages(data.totalPages as number);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Error");
+      const msg = e instanceof Error ? e.message : "Error";
+      setError(msg);
       setRows([]);
+      toastError("Could not load bookings", msg);
     } finally {
       setLoading(false);
     }
-  }, [page, limit, search]);
+  }, [page, limit, search, status]);
 
   useEffect(() => {
     load();
@@ -85,16 +93,36 @@ export function AdminBookingsTable() {
         </p>
       ) : null}
 
-      <div className="max-w-md space-y-2">
-        <label className="text-[11px] tracking-wide text-zinc-500 uppercase">
-          Search
-        </label>
-        <Input
-          placeholder="Email, vehicle, service…"
-          value={searchDraft}
-          onChange={(e) => setSearchDraft(e.target.value)}
-          className="border-zinc-700 bg-zinc-900 text-zinc-100 placeholder:text-zinc-600"
-        />
+      <div className="flex flex-wrap items-end gap-4">
+        <div className="space-y-2">
+          <label className="text-[11px] tracking-wide text-zinc-500 uppercase">
+            Status
+          </label>
+          <select
+            value={status}
+            onChange={(e) => {
+              setStatus(e.target.value);
+              setPage(1);
+            }}
+            className="h-10 rounded-xl border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100 outline-none focus:ring-2 focus:ring-emerald-500/40"
+          >
+            <option value="">All</option>
+            <option value="requested">Requested</option>
+            <option value="confirmed">Confirmed</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+        </div>
+        <div className="max-w-md min-w-[220px] flex-1 space-y-2">
+          <label className="text-[11px] tracking-wide text-zinc-500 uppercase">
+            Search
+          </label>
+          <Input
+            placeholder="Email, vehicle, service…"
+            value={searchDraft}
+            onChange={(e) => setSearchDraft(e.target.value)}
+            className="border-zinc-700 bg-zinc-900 text-zinc-100 placeholder:text-zinc-600"
+          />
+        </div>
       </div>
 
       <div className="overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-900/30">
@@ -148,38 +176,31 @@ export function AdminBookingsTable() {
         </div>
 
         {!loading && rows.length === 0 ? (
-          <p className="px-6 py-16 text-center text-sm text-zinc-500">
-            No bookings yet.
-          </p>
+          <AdminEmptyState
+            icon={CalendarClock}
+            title={
+              status || search.trim()
+                ? "No bookings match these filters"
+                : "No bay requests yet"
+            }
+            description={
+              status || search.trim()
+                ? "Clear status or search to see the full queue."
+                : "Installation requests from the booking wizard will land here."
+            }
+          />
         ) : null}
 
-        <div className="flex flex-wrap items-center justify-between gap-4 border-t border-zinc-800 px-4 py-4">
-          <p className="text-xs text-zinc-500">
-            {total.toLocaleString("en-IN")} bookings · page {page} / {totalPages}
-          </p>
-          <div className="flex gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="border-zinc-700 bg-zinc-900 text-zinc-200"
-              disabled={page <= 1 || loading}
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
-            >
-              Previous
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="border-zinc-700 bg-zinc-900 text-zinc-200"
-              disabled={page >= totalPages || loading}
-              onClick={() => setPage((p) => p + 1)}
-            >
-              Next
-            </Button>
-          </div>
-        </div>
+        <AdminPaginationBar
+          total={total}
+          page={page}
+          limit={limit}
+          totalPages={totalPages}
+          loading={loading}
+          nounPlural="bookings"
+          onPrev={() => setPage((p) => Math.max(1, p - 1))}
+          onNext={() => setPage((p) => p + 1)}
+        />
       </div>
     </div>
   );

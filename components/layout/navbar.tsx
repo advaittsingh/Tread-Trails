@@ -18,6 +18,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
+import { NavbarSearch } from "@/components/layout/navbar-search";
 
 const nav = [
   { href: "/vehicles", label: "Vehicles" },
@@ -25,6 +26,9 @@ const nav = [
   { href: "/products", label: "Products" },
   { href: "/builds", label: "Builds" },
   { href: "/booking", label: "Booking" },
+  { href: "/about", label: "About" },
+  { href: "/corporate-inquiry", label: "Corporate" },
+  { href: "/contact", label: "Contact" },
 ];
 
 function NavLink({
@@ -50,9 +54,9 @@ function NavLink({
       onClick={onClick}
       aria-current={active ? "page" : undefined}
       className={cn(
-        "text-sm tracking-wide transition hover:text-foreground",
+        "rounded-md text-sm tracking-wide transition hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
         stacked &&
-          "rounded-lg px-3 py-3 font-medium hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+          "rounded-lg px-3 py-3 font-medium hover:bg-muted focus-visible:ring-offset-0",
         active ? "font-medium text-foreground" : "text-muted-foreground",
         stacked && active && "bg-muted/80 text-foreground"
       )}
@@ -109,7 +113,9 @@ export function Navbar() {
           ))}
         </nav>
 
-        <div className="flex items-center gap-1 sm:gap-2">
+        <NavbarSearch className="mx-4 hidden min-w-0 max-w-md flex-1 lg:block" />
+
+        <div className="flex shrink-0 items-center gap-1 sm:gap-2">
           <Link
             href="/account"
             className={cn(
@@ -167,7 +173,10 @@ export function Navbar() {
                   Menu
                 </SheetTitle>
               </SheetHeader>
-              <nav aria-label="Mobile" className="mt-8 flex flex-col gap-1 px-2">
+              <div className="px-2 pt-4">
+                <NavbarSearch onNavigate={() => setOpen(false)} />
+              </div>
+              <nav aria-label="Mobile" className="mt-6 flex flex-col gap-1 px-2">
                 <NavLink
                   href="/"
                   label="Home"

@@ -3,8 +3,7 @@ import { NextResponse } from "next/server";
 import { hashPassword } from "@/lib/auth/password";
 import { signAuthToken } from "@/lib/auth/jwt";
 import { setAuthCookie } from "@/lib/auth/session-cookie";
-import { connectDB } from "@/lib/db";
-import { User } from "@/lib/models/User";
+import { prisma } from "@/lib/prisma";
 import { signupSchema } from "@/lib/validations/api";
 
 export async function POST(req: Request) {
@@ -26,33 +25,36 @@ export async function POST(req: Request) {
   const { name, email, password } = parsed.data;
 
   try {
-    await connectDB();
     const passwordHash = await hashPassword(password);
-    const user = await User.create({
-      name,
-      email,
-      passwordHash,
-      role: "user",
+    const user = await prisma.user.create({
+      data: {
+        name,
+        email: email.toLowerCase(),
+        passwordHash,
+        role: "user",
+      },
     });
 
     const token = await signAuthToken({
-      sub: user._id.toString(),
-      role: user.role as "user" | "admin",
+      sub: user.id,
+      role: user.role,
     });
 
     const res = NextResponse.json({
       user: {
-        id: user._id.toString(),
+        id: user.id,
         email: user.email,
         name: user.name,
+        phone: user.phone ?? null,
         role: user.role,
+        preferredVehicleSlug: user.preferredVehicleSlug ?? null,
       },
     });
     setAuthCookie(res, token);
     return res;
   } catch (e: unknown) {
-    const code = (e as { code?: number }).code;
-    if (code === 11000) {
+    const maybe = e as { code?: string };
+    if (maybe?.code === "P2002") {
       return NextResponse.json(
         { error: "An account with this email already exists" },
         { status: 409 }

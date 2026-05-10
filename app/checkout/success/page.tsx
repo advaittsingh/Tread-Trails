@@ -1,14 +1,17 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 
-import { absoluteUrl } from "@/lib/site";
+import { buildPageMetadata } from "@/lib/seo/page-metadata";
 
 import { CheckoutSuccess } from "@/components/checkout/checkout-success";
 
-export const metadata: Metadata = {
-  title: "Payment success",
-  alternates: { canonical: absoluteUrl("/checkout/success") },
-};
+export const metadata: Metadata = buildPageMetadata({
+  segmentTitle: "Payment success",
+  description:
+    "Payment confirmation for your Tread Trails order — keep this page or your email receipt while we reconcile payment and dispatch.",
+  path: "/checkout/success",
+  robots: { index: false, follow: true },
+});
 
 export default function CheckoutSuccessPage() {
   return (

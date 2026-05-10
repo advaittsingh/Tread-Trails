@@ -7,13 +7,26 @@ export type Car = {
   heroImage: string;
   thumbnail: string;
   category: string;
+  /** Representative engines we kit for (market variants exist). */
+  engineSummary: string;
+  /** Human-readable model-year span for catalog alignment. */
+  modelYearsLabel: string;
+  /** Trims / packages we commonly reference when fitting parts. */
+  trimSummary: string;
 };
 
+/** Persisted on `Product.variants` (JSON / Prisma); drives PDP variant selector and checkout line pricing. */
 export type ProductVariant = {
   id: string;
   label: string;
-  /** Added to base product.price when present */
+  /** Added to base `Product.price` when present (same integer units as price). */
   priceModifier?: number;
+};
+
+/** Stored on `Product.specs` (JSON / Prisma) and rendered as structured specs on PDPs. */
+export type ProductSpecification = {
+  label: string;
+  value: string;
 };
 
 export type Product = {
@@ -27,8 +40,13 @@ export type Product = {
   currency?: string;
   images: string[];
   description: string;
-  specs: { label: string; value: string }[];
+  specs: ProductSpecification[];
+  /**
+   * Vehicle slugs from static edges or `ProductVehicleCompatibility` (Neon).
+   * UI maps these to labels via `cars` / PDP tags and filters.
+   */
   compatibleCars: string[];
+  /** From `Product.variants` JSON; when absent / empty, UX falls back to a single default SKU. */
   variants?: ProductVariant[];
 };
 
@@ -42,5 +60,11 @@ export type Build = {
   beforeImage: string;
   afterImage: string;
   gallery: string[];
+  /**
+   * Mirrors `PortfolioBuild.productIds` — legacy catalog tokens (`Product.id` / `Product.legacyId`).
+   * Canonical graph edges live in `PortfolioBuildProduct` when DB is used; APIs prefer joins then fall back here.
+   */
   productIds: string[];
+  /** Portfolio editorial order for `/` featured builds; lower first; omit when not spotlighted. */
+  homeSpotlightRank?: number | null;
 };

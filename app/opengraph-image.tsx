@@ -1,5 +1,7 @@
 import { ImageResponse } from "next/og";
 
+export const runtime = "edge";
+
 export const alt = "Tread Trails — Premium Off-Road Lab";
 
 export const size = {

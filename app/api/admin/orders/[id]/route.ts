@@ -2,8 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { requireAdmin } from "@/lib/auth/request-user";
-import { connectDB } from "@/lib/db";
-import { Order } from "@/lib/models/Order";
+import { prisma } from "@/lib/prisma";
 
 const patchSchema = z.object({
   status: z.enum(["pending", "paid", "shipped", "cancelled"]),
@@ -33,12 +32,11 @@ export async function PATCH(
   }
 
   try {
-    await connectDB();
-    const order = await Order.findByIdAndUpdate(
-      id,
-      { status: parsed.data.status },
-      { new: true }
-    ).lean();
+    const order = await prisma.order.update({
+      where: { id },
+      data: { status: parsed.data.status },
+      select: { id: true, status: true },
+    });
 
     if (!order) {
       return NextResponse.json({ error: "Order not found" }, { status: 404 });
@@ -46,7 +44,7 @@ export async function PATCH(
 
     return NextResponse.json({
       order: {
-        id: order._id.toString(),
+        id: order.id,
         status: order.status,
       },
     });

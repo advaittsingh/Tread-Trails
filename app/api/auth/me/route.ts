@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
 
-import { connectDB } from "@/lib/db";
-import { User } from "@/lib/models/User";
 import { getOptionalAuth } from "@/lib/auth/request-user";
+import { prisma } from "@/lib/prisma";
 
 export async function GET() {
   const auth = await getOptionalAuth();
@@ -11,17 +10,18 @@ export async function GET() {
   }
 
   try {
-    await connectDB();
-    const user = await User.findById(auth.userId).lean();
+    const user = await prisma.user.findUnique({ where: { id: auth.userId } });
     if (!user) {
       return NextResponse.json({ user: null }, { status: 200 });
     }
     return NextResponse.json({
       user: {
-        id: user._id.toString(),
+        id: user.id,
         email: user.email,
         name: user.name,
+        phone: user.phone ?? null,
         role: user.role,
+        preferredVehicleSlug: user.preferredVehicleSlug ?? null,
       },
     });
   } catch (e) {

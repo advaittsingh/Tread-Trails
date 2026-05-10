@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { connectDB } from "@/lib/db";
-import { Order } from "@/lib/models/Order";
+import { prisma } from "@/lib/prisma";
 import { getStripe } from "@/lib/stripe";
 
 /** Used after Stripe redirect — webhook may still be processing */
@@ -29,8 +28,7 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: "Order not linked to session" }, { status: 404 });
     }
 
-    await connectDB();
-    const order = await Order.findById(orderId).lean();
+    const order = await prisma.order.findUnique({ where: { id: orderId } });
     if (!order) {
       return NextResponse.json({ error: "Order not found" }, { status: 404 });
     }
@@ -41,7 +39,7 @@ export async function GET(req: Request) {
 
     return NextResponse.json({
       order: {
-        id: order._id.toString(),
+        id: order.id,
         total: order.total,
         currency: order.currency,
         status: paid ? "paid" : order.status,

@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter, Playfair_Display } from "next/font/google";
 
 import "./globals.css";
@@ -7,18 +7,35 @@ import { absoluteUrl, siteUrl } from "@/lib/site";
 import { cn } from "@/lib/utils";
 import { AppProviders } from "@/components/providers/app-providers";
 import { SiteShell } from "@/components/layout/site-shell";
+import { SiteJsonLd } from "@/components/seo/site-json-ld";
 
 const playfair = Playfair_Display({
   subsets: ["latin"],
   variable: "--font-heading",
   weight: ["400", "500", "600", "700"],
+  display: "swap",
+  adjustFontFallback: true,
+  preload: false,
 });
 
 const inter = Inter({
   subsets: ["latin"],
   variable: "--font-body",
-  weight: ["400", "500", "600", "700"],
+  weight: ["400", "500", "600"],
+  display: "swap",
+  adjustFontFallback: true,
+  preload: true,
 });
+
+/** Explicit viewport helps mobile audits (Lighthouse SEO / Best practices). */
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#f7f6f3" },
+    { media: "(prefers-color-scheme: dark)", color: "#171717" },
+  ],
+};
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
@@ -27,7 +44,7 @@ export const metadata: Metadata = {
     template: "%s | Tread Trails",
   },
   description:
-    "Luxury automotive upgrades — expedition chassis tuning, curated accessories, portfolio installations, and concierge fitting.",
+    "Expedition-grade automotive upgrades — suspension, armor, lighting, and curated accessories with boutique studio fitting in Bengaluru, Mumbai, and Dubai.",
   openGraph: {
     type: "website",
     locale: "en_IN",
@@ -35,7 +52,7 @@ export const metadata: Metadata = {
     siteName: "Tread Trails",
     title: "Tread Trails | Premium Off-Road & Expedition Lab",
     description:
-      "Luxury automotive upgrades — expedition-grade builds and curated accessories.",
+      "Expedition-grade chassis tuning, curated SKUs, portfolio installs, and concierge checkout.",
     images: [
       {
         url: absoluteUrl("/opengraph-image"),
@@ -49,7 +66,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Tread Trails | Premium Off-Road & Expedition Lab",
     description:
-      "Luxury automotive upgrades — expedition-grade builds and curated accessories.",
+      "Expedition-grade chassis tuning, curated SKUs, portfolio installs, and concierge checkout.",
     images: [absoluteUrl("/opengraph-image")],
   },
   robots: {
@@ -70,6 +87,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={cn(playfair.variable, inter.variable)}>
       <body className="min-h-screen bg-background font-sans antialiased">
+        <SiteJsonLd />
         <AppProviders>
           <SiteShell>{children}</SiteShell>
         </AppProviders>

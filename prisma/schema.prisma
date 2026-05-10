@@ -29,34 +29,168 @@ model User {
   email        String   @unique
   passwordHash String
   name         String
+  /// Normalized digits-only phone when set (see `lib/validations/phone`)
+  phone        String?
   role         Role     @default(user)
+  /// PDP/booking/catalog global selection — synced when signed in
+  preferredVehicleSlug String?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  orders   Order[]
-  bookings Booking[]
+  orders               Order[]
+  bookings             Booking[]
+  savedVehicles        UserSavedVehicle[]
+  wishlistProducts     UserWishlistProduct[]
+  passwordResetTokens  PasswordResetToken[]
 
   @@index([role])
 }
 
-model Product {
-  id              String   @id @default(cuid())
-  legacyId        String?
-  slug            String   @unique
-  name            String
-  brand           String
-  category        String
-  price           Int?
-  currency        String   @default("INR")
-  images          String[]
-  description     String   @default("")
-  specs           Json     @default("[]")
-  variants        Json     @default("[]")
-  compatibleCars  String[]
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+model UserWishlistProduct {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productSlug String
+  createdAt   DateTime @default(now())
+
+  @@unique([userId, productSlug])
+  @@index([userId])
 }
 
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
+}
+
+model UserSavedVehicle {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  vehicleSlug String
+  createdAt   DateTime @default(now())
+
+  @@unique([userId, vehicleSlug])
+  @@index([userId])
+}
+
+model Vehicle {
+  id               String   @id @default(cuid())
+  legacyId         String?  @unique
+  slug             String   @unique
+  name             String
+  tagline          String
+  description      String   @default("")
+  heroImage        String
+  thumbnail        String
+  category         String
+  engineSummary    String   @default("")
+  modelYearsLabel  String   @default("")
+  trimSummary      String   @default("")
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+
+  productCompatibilities ProductVehicleCompatibility[]
+}
+
+/**
+ * Portfolio case studies (mirrors `data/types` Build / `data/builds`).
+ * Product linkage: canonical FK edges `PortfolioBuildProduct`; `productIds` (`text[]`) kept in sync
+ * as legacy mirror / static fallback (tokens = static `Product.id` & seeded `Product.legacyId`).
+ */
+model PortfolioBuild {
+  id           String   @id @default(cuid())
+  legacyId     String?  @unique
+  slug         String   @unique
+  title        String
+  vehicleSlug  String
+  summary      String   @default("")
+  description  String   @default("")
+  beforeImage  String
+  afterImage   String
+  gallery      String[]
+  /// Denormalized catalog tokens — duplicate of join targets for APIs without joins / static fallback.
+  productIds   String[]
+  /// Homepage portfolio strip: lower ranks first; null sorts last (see `listHomeFeaturedBuilds`).
+  homeSpotlightRank Int?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  linkedProducts PortfolioBuildProduct[]
+
+  @@index([vehicleSlug])
+  @@index([homeSpotlightRank])
+}
+
+model PortfolioBuildProduct {
+  id               String         @id @default(cuid())
+  portfolioBuildId String
+  productId        String
+  sortOrder        Int            @default(0)
+  portfolioBuild   PortfolioBuild @relation(fields: [portfolioBuildId], references: [id], onDelete: Cascade)
+  product          Product        @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([portfolioBuildId, productId])
+  @@index([productId])
+}
+
+/** Hub partner brands (Advven lineup); `productCount` recomputed on seed. */
+model Brand {
+  id           String   @id @default(cuid())
+  slug         String   @unique
+  name         String
+  tagline      String   @default("")
+  logoSrc      String   @default("")
+  productCount Int      @default(0)
+  sortOrder    Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([sortOrder])
+}
+
+/** Product ↔ Vehicle compatibility (many-to-many). Static catalog mirrors `product-vehicle-compatibility-edges.ts`. */
+model ProductVehicleCompatibility {
+  id        String   @id @default(cuid())
+  productId String
+  vehicleId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  vehicle   Vehicle  @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([productId, vehicleId])
+  @@index([vehicleId])
+  @@index([productId])
+}
+
+model Product {
+  id                     String   @id @default(cuid())
+  legacyId               String?
+  slug                   String   @unique
+  name                   String
+  brand                  String
+  category               String
+  price                  Int?
+  currency               String   @default("INR")
+  images                 String[]
+  description            String   @default("")
+  /// JSON array of `{ "label": string, "value": string }` (product specs / PDP). Default `[]`.
+  specs                  Json     @default("[]")
+  /// JSON array of `{ "id": string, "label": string, "priceModifier"?: number }`. PDP / cart; optional delta to base `price`. Default `[]`.
+  variants               Json     @default("[]")
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+  vehicleCompatibilities ProductVehicleCompatibility[]
+  portfolioLinks         PortfolioBuildProduct[]
+}
+
+/// Customer orders: Stripe Checkout, Razorpay Checkout, Juspay hosted page, or COD — shipping captured at checkout; no courier PSP integration unless extended.
 model Order {
   id                     String      @id @default(cuid())
   userId                 String?
@@ -65,6 +199,7 @@ model Order {
   customerName           String
   customerPhone          String
   customerEmail          String
+  /// Structured ship-to from checkout form — not forwarded to any carrier API in this codebase.
   shippingAddress        Json
   items                  Json
   total                  Int
@@ -73,6 +208,10 @@ model Order {
   paymentMethod          String      @default("stripe")
   stripeCheckoutSessionId String?
   stripePaymentIntentId  String?
+  razorpayOrderId        String?
+  razorpayPaymentId      String?
+  juspayGatewayOrderId   String?
+  juspayCheckoutOrderRef String?
   createdAt              DateTime    @default(now())
   updatedAt              DateTime    @updatedAt
 

@@ -79,7 +79,7 @@ export function AdminAnalyticsDashboard() {
           Revenue & behaviour
         </h1>
         <p className="mt-2 max-w-2xl text-sm text-zinc-400">
-          Rolling 30-day window sourced from Mongo telemetry + transactional collections.
+          Rolling 30-day window sourced from Postgres telemetry + transactional collections.
         </p>
       </header>
 

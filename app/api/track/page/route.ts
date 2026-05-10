@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
-import { connectDB } from "@/lib/db";
-import { PageHit } from "@/lib/models/PageHit";
+import { prisma } from "@/lib/prisma";
 
 const bodySchema = z.object({
   sessionId: z.string().min(8).max(128),
@@ -23,10 +22,11 @@ export async function POST(req: Request) {
   }
 
   try {
-    await connectDB();
-    await PageHit.create({
-      sessionId: parsed.data.sessionId,
-      path: parsed.data.path,
+    await prisma.pageHit.create({
+      data: {
+        sessionId: parsed.data.sessionId,
+        path: parsed.data.path,
+      },
     });
     return NextResponse.json({ ok: true });
   } catch (e) {
