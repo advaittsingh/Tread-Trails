@@ -54,11 +54,22 @@ function NavLink({
       onClick={onClick}
       aria-current={active ? "page" : undefined}
       className={cn(
-        "rounded-md text-sm tracking-wide transition hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
-        stacked &&
-          "rounded-lg px-3 py-3 font-medium hover:bg-muted focus-visible:ring-offset-0",
-        active ? "font-medium text-foreground" : "text-muted-foreground",
-        stacked && active && "bg-muted/80 text-foreground"
+        "text-sm tracking-wide transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+        !stacked && [
+          "relative rounded-md pb-1",
+          "after:pointer-events-none after:absolute after:inset-x-0 after:-bottom-0.5 after:h-[2px] after:origin-left after:scale-x-0 after:rounded-full after:bg-[#25D366] after:transition-transform after:duration-200 after:ease-out",
+          "hover:text-[#128C7E] hover:after:scale-x-100",
+          active
+            ? "font-medium text-[#128C7E] after:scale-x-100"
+            : "text-muted-foreground",
+        ],
+        stacked && [
+          "rounded-lg px-3 py-3 font-medium focus-visible:ring-offset-0",
+          "hover:bg-[#25D366]/10 hover:text-[#128C7E]",
+          active
+            ? "bg-[#25D366]/10 text-[#128C7E]"
+            : "text-muted-foreground",
+        ]
       )}
     >
       {label}
