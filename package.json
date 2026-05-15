@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "dev:fresh": "rimraf .next && next dev",
+    "dev:fresh": "rimraf .next node_modules/.cache && next dev",
     "dev:turbo": "rimraf .next && next dev --turbo",
     "build": "prisma generate && next build",
     "postinstall": "prisma generate",

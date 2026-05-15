@@ -76,7 +76,7 @@ export function NavbarSearch({
           }
           aria-autocomplete="list"
           role="combobox"
-          placeholder="Search products…"
+          placeholder="Search products"
           autoComplete="off"
           className="h-9 rounded-full border-border/80 bg-background/90 pl-9 pr-3 shadow-inner"
           onChange={(e) => {

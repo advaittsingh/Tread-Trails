@@ -14,6 +14,7 @@ const STATIC = [
   "/builds",
   "/booking",
   "/about",
+  "/youtube",
   "/corporate-inquiry",
   "/contact",
   "/cart",
