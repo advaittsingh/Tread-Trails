@@ -1,29 +1,16 @@
 "use client";
 
+import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { Truck } from "lucide-react";
 
 import type { Car } from "@/data/types";
 import { useConfirmation } from "@/contexts/confirmation-context";
 import { toastError, toastSuccess } from "@/lib/toast";
-import {
-  VEHICLE_CATEGORY_ORDER,
-  type VehicleCategory,
-} from "@/lib/vehicle-categories";
+import { VEHICLE_CATEGORY_ORDER } from "@/lib/vehicle-categories";
 
 import { ADMIN_CONFIRM_DIALOG_CLASS } from "@/components/admin/admin-confirm-styles";
-import {
-  AdminEditSheet,
-  AdminField,
-  AdminFieldGrid,
-  AdminFormSection,
-  AdminFormStack,
-  AdminPageHeader,
-  AdminSheetFooterButtons,
-  adminInputClass,
-  adminSelectClass,
-  adminTextareaClass,
-} from "@/components/admin/admin-edit-sheet";
+import { AdminPageHeader } from "@/components/admin/admin-form-ui";
 import { AdminEmptyState } from "@/components/admin/admin-empty-state";
 import { AdminPaginationBar } from "@/components/admin/admin-pagination-bar";
 import { Button } from "@/components/ui/button";
@@ -35,45 +22,6 @@ type ListRow = {
   id: string;
   vehicle: Car;
 };
-
-type VehicleFormState = {
-  slug: string;
-  name: string;
-  tagline: string;
-  description: string;
-  heroImage: string;
-  thumbnail: string;
-  category: VehicleCategory;
-  engineSummary: string;
-  modelYearsLabel: string;
-  trimSummary: string;
-  legacyId: string;
-};
-
-function emptyForm(): VehicleFormState {
-  return {
-    slug: "",
-    name: "",
-    tagline: "",
-    description: "",
-    heroImage: "",
-    thumbnail: "",
-    category: VEHICLE_CATEGORY_ORDER[0],
-    engineSummary: "",
-    modelYearsLabel: "",
-    trimSummary: "",
-    legacyId: "",
-  };
-}
-
-function apiErrorMessage(data: Record<string, unknown>, fallback: string): string {
-  if (typeof data.error === "string") return data.error;
-  if (typeof data.detail === "string") return data.detail;
-  if (typeof data.details === "object" && data.details !== null) {
-    return JSON.stringify(data.details);
-  }
-  return fallback;
-}
 
 export function AdminVehiclesTable() {
   const { confirmDelete } = useConfirmation();
@@ -87,12 +35,6 @@ export function AdminVehiclesTable() {
   const [categoryFilter, setCategoryFilter] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [sheetOpen, setSheetOpen] = useState(false);
-  const [editingInternalId, setEditingInternalId] = useState<string | null>(null);
-  const [form, setForm] = useState<VehicleFormState>(emptyForm);
-  const [formLoading, setFormLoading] = useState(false);
-  const [formError, setFormError] = useState<string | null>(null);
-  const [saving, setSaving] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const load = useCallback(async () => {
@@ -136,121 +78,6 @@ export function AdminVehiclesTable() {
     return () => window.clearTimeout(t);
   }, [searchDraft]);
 
-  function openCreate() {
-    setEditingInternalId(null);
-    setForm(emptyForm());
-    setFormError(null);
-    setSheetOpen(true);
-  }
-
-  async function openEdit(internalId: string) {
-    setEditingInternalId(internalId);
-    setFormError(null);
-    setFormLoading(true);
-    setSheetOpen(true);
-    try {
-      const res = await fetch(`/api/admin/vehicles/${internalId}`, {
-        credentials: "include",
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "Failed to load vehicle");
-      const v = data.vehicle as Car;
-      const rowId = typeof data.id === "string" ? data.id : internalId;
-      const legacyIdField = v.id !== rowId ? v.id : "";
-      setForm({
-        slug: v.slug,
-        name: v.name,
-        tagline: v.tagline ?? "",
-        description: v.description ?? "",
-        heroImage: v.heroImage,
-        thumbnail: v.thumbnail,
-        category: v.category as VehicleCategory,
-        engineSummary: v.engineSummary ?? "",
-        modelYearsLabel: v.modelYearsLabel ?? "",
-        trimSummary: v.trimSummary ?? "",
-        legacyId: legacyIdField,
-      });
-    } catch (e) {
-      setFormError(e instanceof Error ? e.message : "Load failed");
-      setForm(emptyForm());
-    } finally {
-      setFormLoading(false);
-    }
-  }
-
-  async function saveVehicle() {
-    setSaving(true);
-    setFormError(null);
-
-    if (!form.slug.trim() || !form.name.trim()) {
-      setFormError("Slug and name are required.");
-      setSaving(false);
-      return;
-    }
-    if (!form.heroImage.trim() || !form.thumbnail.trim()) {
-      setFormError("Hero image and thumbnail URLs are required.");
-      setSaving(false);
-      return;
-    }
-
-    try {
-      const payload: Record<string, unknown> = {
-        slug: form.slug.trim(),
-        name: form.name.trim(),
-        tagline: form.tagline,
-        description: form.description,
-        heroImage: form.heroImage.trim(),
-        thumbnail: form.thumbnail.trim(),
-        category: form.category,
-        engineSummary: form.engineSummary,
-        modelYearsLabel: form.modelYearsLabel,
-        trimSummary: form.trimSummary,
-      };
-
-      if (editingInternalId) {
-        if (form.legacyId.trim()) payload.legacyId = form.legacyId.trim();
-        else payload.legacyId = null;
-
-        const res = await fetch(`/api/admin/vehicles/${editingInternalId}`, {
-          method: "PATCH",
-          credentials: "include",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        });
-        const data = await res.json();
-        if (!res.ok) {
-          throw new Error(apiErrorMessage(data, "Update failed"));
-        }
-      } else {
-        if (form.legacyId.trim()) payload.legacyId = form.legacyId.trim();
-
-        const res = await fetch(`/api/admin/vehicles`, {
-          method: "POST",
-          credentials: "include",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        });
-        const data = await res.json();
-        if (!res.ok) {
-          throw new Error(apiErrorMessage(data, "Create failed"));
-        }
-      }
-
-      setSheetOpen(false);
-      await load();
-      toastSuccess(
-        editingInternalId ? "Vehicle updated" : "Vehicle created",
-        form.slug.trim()
-      );
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : "Save failed";
-      setFormError(msg);
-      toastError("Could not save vehicle", msg);
-    } finally {
-      setSaving(false);
-    }
-  }
-
   async function deleteVehicle(internalId: string, slugLabel: string) {
     const confirmed = await confirmDelete({
       title: "Delete this vehicle?",
@@ -286,13 +113,7 @@ export function AdminVehiclesTable() {
         title="Vehicles"
         description="Platform hubs on the storefront — each vehicle has its own catalog and build gallery."
         action={
-          <Button
-            type="button"
-            onClick={openCreate}
-            className="bg-emerald-600 text-white hover:bg-emerald-500"
-          >
-            New vehicle
-          </Button>
+          <Link href="/admin/vehicles/new" className="inline-flex h-10 items-center justify-center rounded-md bg-emerald-600 px-4 text-sm font-medium text-white transition hover:bg-emerald-500">New vehicle</Link>
         }
       />
 
@@ -366,15 +187,12 @@ export function AdminVehiclesTable() {
                       </td>
                       <td className="px-4 py-4 text-zinc-400">{r.vehicle.category}</td>
                       <td className="space-x-2 whitespace-nowrap px-4 py-4">
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          className="border-zinc-600 bg-zinc-950 text-zinc-200"
-                          onClick={() => openEdit(r.id)}
+                        <Link
+                          href={`/admin/vehicles/${r.id}`}
+                          className="inline-flex h-8 items-center justify-center rounded-md border border-zinc-600 bg-zinc-950 px-3 text-xs font-medium text-zinc-200 transition hover:bg-zinc-800"
                         >
                           Edit
-                        </Button>
+                        </Link>
                         <Button
                           type="button"
                           variant="outline"
@@ -421,168 +239,6 @@ export function AdminVehiclesTable() {
         />
       </div>
 
-      <AdminEditSheet
-        open={sheetOpen}
-        onOpenChange={setSheetOpen}
-        title={editingInternalId ? "Edit vehicle" : "New vehicle"}
-        subtitle="Published at /vehicles/[slug] on the storefront."
-        formError={formError}
-        loading={formLoading}
-        loadingSkeleton={
-          <div className="space-y-3">
-            <Skeleton className="h-24 w-full rounded-xl bg-zinc-800" />
-            <Skeleton className="h-24 w-full rounded-xl bg-zinc-800" />
-          </div>
-        }
-        footer={
-          <AdminSheetFooterButtons
-            onCancel={() => setSheetOpen(false)}
-            onSave={() => void saveVehicle()}
-            saving={saving}
-            saveDisabled={formLoading}
-          />
-        }
-      >
-        <AdminFormStack>
-          <AdminFormSection title="Basics" description="Slug, name, and category.">
-            <AdminFieldGrid>
-              <AdminField label="URL slug" hint="Lowercase, hyphenated.">
-                <Input
-                  value={form.slug}
-                  onChange={(e) =>
-                    setForm((f) => ({ ...f, slug: e.target.value }))
-                  }
-                  className={adminInputClass}
-                  placeholder="toyota-hilux"
-                />
-              </AdminField>
-              <AdminField label="Name">
-                <Input
-                  value={form.name}
-                  onChange={(e) =>
-                    setForm((f) => ({ ...f, name: e.target.value }))
-                  }
-                  className={adminInputClass}
-                />
-              </AdminField>
-            </AdminFieldGrid>
-            <AdminField label="Tagline">
-              <Input
-                value={form.tagline}
-                onChange={(e) =>
-                  setForm((f) => ({ ...f, tagline: e.target.value }))
-                }
-                className={adminInputClass}
-              />
-            </AdminField>
-            <AdminField label="Category">
-              <select
-                value={form.category}
-                onChange={(e) =>
-                  setForm((f) => ({
-                    ...f,
-                    category: e.target.value as VehicleCategory,
-                  }))
-                }
-                className={adminSelectClass}
-              >
-                {VEHICLE_CATEGORY_ORDER.map((c) => (
-                  <option key={c} value={c}>
-                    {c}
-                  </option>
-                ))}
-              </select>
-            </AdminField>
-          </AdminFormSection>
-
-          <AdminFormSection title="Story" description="Hub page copy.">
-            <AdminField label="Description">
-              <textarea
-                value={form.description}
-                onChange={(e) =>
-                  setForm((f) => ({ ...f, description: e.target.value }))
-                }
-                rows={4}
-                className={adminTextareaClass}
-              />
-            </AdminField>
-          </AdminFormSection>
-
-          <AdminFormSection
-            title="Images"
-            description="Hero and thumbnail for listings."
-            defaultOpen={false}
-          >
-            <AdminFieldGrid>
-              <AdminField label="Hero image URL">
-                <Input
-                  value={form.heroImage}
-                  onChange={(e) =>
-                    setForm((f) => ({ ...f, heroImage: e.target.value }))
-                  }
-                  className={adminInputClass}
-                />
-              </AdminField>
-              <AdminField label="Thumbnail URL">
-                <Input
-                  value={form.thumbnail}
-                  onChange={(e) =>
-                    setForm((f) => ({ ...f, thumbnail: e.target.value }))
-                  }
-                  className={adminInputClass}
-                />
-              </AdminField>
-            </AdminFieldGrid>
-          </AdminFormSection>
-
-          <AdminFormSection
-            title="Technical"
-            description="Engine, years, and trim notes."
-            defaultOpen={false}
-          >
-            <AdminField label="Engine summary">
-              <textarea
-                value={form.engineSummary}
-                onChange={(e) =>
-                  setForm((f) => ({ ...f, engineSummary: e.target.value }))
-                }
-                rows={3}
-                className={adminTextareaClass}
-              />
-            </AdminField>
-            <AdminFieldGrid>
-              <AdminField label="Model years" hint="e.g. 2016–2024">
-                <Input
-                  value={form.modelYearsLabel}
-                  onChange={(e) =>
-                    setForm((f) => ({ ...f, modelYearsLabel: e.target.value }))
-                  }
-                  className={adminInputClass}
-                />
-              </AdminField>
-              <AdminField label="Legacy ID" hint="Migration only.">
-                <Input
-                  value={form.legacyId}
-                  onChange={(e) =>
-                    setForm((f) => ({ ...f, legacyId: e.target.value }))
-                  }
-                  className={adminInputClass}
-                />
-              </AdminField>
-            </AdminFieldGrid>
-            <AdminField label="Trim summary">
-              <textarea
-                value={form.trimSummary}
-                onChange={(e) =>
-                  setForm((f) => ({ ...f, trimSummary: e.target.value }))
-                }
-                rows={3}
-                className={adminTextareaClass}
-              />
-            </AdminField>
-          </AdminFormSection>
-        </AdminFormStack>
-      </AdminEditSheet>
     </div>
   );
 }

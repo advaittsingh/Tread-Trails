@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { Tags } from "lucide-react";
 
@@ -7,16 +8,7 @@ import { useConfirmation } from "@/contexts/confirmation-context";
 import { toastError, toastSuccess } from "@/lib/toast";
 
 import { ADMIN_CONFIRM_DIALOG_CLASS } from "@/components/admin/admin-confirm-styles";
-import {
-  AdminEditSheet,
-  AdminField,
-  AdminFieldGrid,
-  AdminFormSection,
-  AdminFormStack,
-  AdminPageHeader,
-  AdminSheetFooterButtons,
-  adminInputClass,
-} from "@/components/admin/admin-edit-sheet";
+import { AdminPageHeader } from "@/components/admin/admin-form-ui";
 import { AdminEmptyState } from "@/components/admin/admin-empty-state";
 import { AdminPaginationBar } from "@/components/admin/admin-pagination-bar";
 import { Button } from "@/components/ui/button";
@@ -34,25 +26,6 @@ type BrandRow = {
   sortOrder: number;
 };
 
-function emptyForm() {
-  return {
-    slug: "",
-    name: "",
-    tagline: "",
-    logoSrc: "",
-    sortOrderStr: "0",
-  };
-}
-
-function apiErrorMessage(data: Record<string, unknown>, fallback: string): string {
-  if (typeof data.error === "string") return data.error;
-  if (typeof data.detail === "string") return data.detail;
-  if (typeof data.details === "object" && data.details !== null) {
-    return JSON.stringify(data.details);
-  }
-  return fallback;
-}
-
 export function AdminBrandsTable() {
   const { confirmDelete } = useConfirmation();
   const [rows, setRows] = useState<BrandRow[]>([]);
@@ -64,12 +37,6 @@ export function AdminBrandsTable() {
   const [searchDraft, setSearchDraft] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [sheetOpen, setSheetOpen] = useState(false);
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [form, setForm] = useState(emptyForm);
-  const [formLoading, setFormLoading] = useState(false);
-  const [formError, setFormError] = useState<string | null>(null);
-  const [saving, setSaving] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const load = useCallback(async () => {
@@ -112,114 +79,6 @@ export function AdminBrandsTable() {
     return () => window.clearTimeout(t);
   }, [searchDraft]);
 
-  function openCreate() {
-    setEditingId(null);
-    setForm(emptyForm());
-    setFormError(null);
-    setSheetOpen(true);
-  }
-
-  async function openEdit(id: string) {
-    setEditingId(id);
-    setFormError(null);
-    setFormLoading(true);
-    setSheetOpen(true);
-    try {
-      const res = await fetch(`/api/admin/brands/${id}`, {
-        credentials: "include",
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "Failed to load brand");
-      const b = data.brand as BrandRow;
-      setForm({
-        slug: b.slug,
-        name: b.name,
-        tagline: b.tagline ?? "",
-        logoSrc: b.logoSrc ?? "",
-        sortOrderStr: String(b.sortOrder ?? 0),
-      });
-    } catch (e) {
-      setFormError(e instanceof Error ? e.message : "Load failed");
-      setForm(emptyForm());
-    } finally {
-      setFormLoading(false);
-    }
-  }
-
-  function parseSortOrder(): { ok: true; value: number } | { ok: false; message: string } {
-    const raw = form.sortOrderStr.trim();
-    const n = raw === "" ? 0 : Number.parseInt(raw, 10);
-    if (Number.isNaN(n) || n < 0 || n > 9999) {
-      return { ok: false, message: "Sort order must be an integer from 0 to 9999." };
-    }
-    return { ok: true, value: n };
-  }
-
-  async function saveBrand() {
-    setSaving(true);
-    setFormError(null);
-
-    if (!form.slug.trim() || !form.name.trim()) {
-      setFormError("Slug and name are required.");
-      setSaving(false);
-      return;
-    }
-
-    const sort = parseSortOrder();
-    if (!sort.ok) {
-      setFormError(sort.message);
-      setSaving(false);
-      return;
-    }
-
-    try {
-      const payload = {
-        slug: form.slug.trim(),
-        name: form.name.trim(),
-        tagline: form.tagline,
-        logoSrc: form.logoSrc,
-        sortOrder: sort.value,
-      };
-
-      if (editingId) {
-        const res = await fetch(`/api/admin/brands/${editingId}`, {
-          method: "PATCH",
-          credentials: "include",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        });
-        const data = await res.json();
-        if (!res.ok) {
-          throw new Error(apiErrorMessage(data, "Update failed"));
-        }
-      } else {
-        const res = await fetch(`/api/admin/brands`, {
-          method: "POST",
-          credentials: "include",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        });
-        const data = await res.json();
-        if (!res.ok) {
-          throw new Error(apiErrorMessage(data, "Create failed"));
-        }
-      }
-
-      setSheetOpen(false);
-      await load();
-      toastSuccess(
-        editingId ? "Brand updated" : "Brand created",
-        form.slug.trim()
-      );
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : "Save failed";
-      setFormError(msg);
-      toastError("Could not save brand", msg);
-    } finally {
-      setSaving(false);
-    }
-  }
-
   async function deleteBrand(id: string, slugLabel: string) {
     const confirmed = await confirmDelete({
       title: "Delete this brand?",
@@ -255,13 +114,7 @@ export function AdminBrandsTable() {
         title="Brands"
         description="Supplier logos and catalog grouping. Product counts update automatically from linked SKUs."
         action={
-          <Button
-            type="button"
-            onClick={openCreate}
-            className="bg-emerald-600 text-white hover:bg-emerald-500"
-          >
-            New brand
-          </Button>
+          <Link href="/admin/brands/new" className="inline-flex h-10 items-center justify-center rounded-md bg-emerald-600 px-4 text-sm font-medium text-white transition hover:bg-emerald-500">New brand</Link>
         }
       />
 
@@ -319,15 +172,12 @@ export function AdminBrandsTable() {
                         {r.sortOrder}
                       </td>
                       <td className="space-x-2 whitespace-nowrap px-4 py-4">
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          className="border-zinc-600 bg-zinc-950 text-zinc-200"
-                          onClick={() => openEdit(r.id)}
+                        <Link
+                          href={`/admin/brands/${r.id}`}
+                          className="inline-flex h-8 items-center justify-center rounded-md border border-zinc-600 bg-zinc-950 px-3 text-xs font-medium text-zinc-200 transition hover:bg-zinc-800"
                         >
                           Edit
-                        </Button>
+                        </Link>
                         <Button
                           type="button"
                           variant="outline"
@@ -370,84 +220,6 @@ export function AdminBrandsTable() {
         />
       </div>
 
-      <AdminEditSheet
-        open={sheetOpen}
-        onOpenChange={setSheetOpen}
-        title={editingId ? "Edit brand" : "New brand"}
-        subtitle="Shown in catalog filters and product cards."
-        formError={formError}
-        loading={formLoading}
-        loadingSkeleton={
-          <div className="space-y-3">
-            <Skeleton className="h-10 w-full rounded-xl bg-zinc-800" />
-            <Skeleton className="h-10 w-full rounded-xl bg-zinc-800" />
-          </div>
-        }
-        footer={
-          <AdminSheetFooterButtons
-            onCancel={() => setSheetOpen(false)}
-            onSave={() => void saveBrand()}
-            saving={saving}
-            saveDisabled={formLoading}
-          />
-        }
-      >
-        <AdminFormStack>
-          <AdminFormSection title="Identity" description="Slug and display name.">
-            <AdminFieldGrid>
-              <AdminField label="URL slug" hint="Lowercase, hyphenated.">
-                <Input
-                  value={form.slug}
-                  onChange={(e) =>
-                    setForm((f) => ({ ...f, slug: e.target.value }))
-                  }
-                  className={adminInputClass}
-                  placeholder="arb"
-                />
-              </AdminField>
-              <AdminField label="Name">
-                <Input
-                  value={form.name}
-                  onChange={(e) =>
-                    setForm((f) => ({ ...f, name: e.target.value }))
-                  }
-                  className={adminInputClass}
-                />
-              </AdminField>
-            </AdminFieldGrid>
-            <AdminField label="Tagline">
-              <Input
-                value={form.tagline}
-                onChange={(e) =>
-                  setForm((f) => ({ ...f, tagline: e.target.value }))
-                }
-                className={adminInputClass}
-              />
-            </AdminField>
-          </AdminFormSection>
-          <AdminFormSection title="Presentation" description="Logo and list order.">
-            <AdminField label="Logo URL">
-              <Input
-                value={form.logoSrc}
-                onChange={(e) =>
-                  setForm((f) => ({ ...f, logoSrc: e.target.value }))
-                }
-                className={adminInputClass}
-              />
-            </AdminField>
-            <AdminField label="Sort order" hint="Lower numbers appear first.">
-              <Input
-                value={form.sortOrderStr}
-                onChange={(e) =>
-                  setForm((f) => ({ ...f, sortOrderStr: e.target.value }))
-                }
-                className={adminInputClass}
-                placeholder="0"
-              />
-            </AdminField>
-          </AdminFormSection>
-        </AdminFormStack>
-      </AdminEditSheet>
     </div>
   );
 }
