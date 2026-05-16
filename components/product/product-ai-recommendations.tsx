@@ -6,10 +6,8 @@ import Link from "next/link";
 import { useProductCatalog } from "@/contexts/product-catalog-context";
 import type { Product } from "@/data/types";
 import { useSelectedVehicle } from "@/contexts/selected-vehicle-context";
-import {
-  buildRecommendationsPayload,
-  type ProductRecommendationsPayload,
-} from "@/lib/recommendations/build-payload";
+import { buildRecommendationsPayloadClient } from "@/lib/recommendations/build-payload-client";
+import type { ProductRecommendationsPayload } from "@/lib/recommendations/types";
 
 import { AIRecommendationCard } from "@/components/product/ai-recommendation-card";
 import { SectionHeading } from "@/components/marketing/section-heading";
@@ -20,7 +18,7 @@ type ApiPayload = ProductRecommendationsPayload & {
 };
 
 export function ProductAiRecommendations({ productSlug }: { productSlug: string }) {
-  const { getProductBySlug } = useProductCatalog();
+  const { getProductBySlug, products } = useProductCatalog();
   const { slug: vehicleSlug, vehicleName, hydrated: vehicleHydrated } =
     useSelectedVehicle();
 
@@ -60,7 +58,13 @@ export function ProductAiRecommendations({ productSlug }: { productSlug: string 
         setSource(remoteSource === "api" ? "api" : "mock");
       } catch {
         if (cancelled) return;
-        setPayload(await buildRecommendationsPayload(productSlug));
+        setPayload(
+          buildRecommendationsPayloadClient(
+            productSlug,
+            getProductBySlug,
+            products
+          )
+        );
         setSource("mock");
       } finally {
         if (!cancelled) setLoading(false);
@@ -70,7 +74,7 @@ export function ProductAiRecommendations({ productSlug }: { productSlug: string 
     return () => {
       cancelled = true;
     };
-  }, [productSlug]);
+  }, [productSlug, getProductBySlug, products]);
 
   const vehicleFiltered = useMemo(() => {
     if (!payload) return [];

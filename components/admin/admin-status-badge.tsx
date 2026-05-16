@@ -12,8 +12,6 @@ const map: Record<string, string> = {
     "border-violet-500/40 bg-violet-500/15 text-violet-200 ring-violet-500/20",
   cancelled:
     "border-rose-500/40 bg-rose-500/15 text-rose-200 ring-rose-500/20",
-  pending:
-    "border-amber-500/40 bg-amber-500/15 text-amber-200 ring-amber-500/20",
   requested:
     "border-amber-500/40 bg-amber-500/15 text-amber-200 ring-amber-500/20",
   confirmed:

@@ -12,7 +12,7 @@ function authorizeCron(req: Request): boolean {
 }
 
 /**
- * Scheduled stale-session purge (Vercel Cron every 2 minutes).
+ * Scheduled stale-session purge (Vercel Cron daily; Hobby plan allows once per day).
  * Set CRON_SECRET in env and configure vercel.json crons.
  */
 export async function GET(req: Request) {

@@ -3,9 +3,6 @@ import { fillDailySeries } from "@/lib/analytics/date-range";
 import type {
   AnalyticsReport,
   DailyConversion,
-  DailyCount,
-  DailyRevenue,
-  DailyViews,
   RankedRow,
 } from "@/lib/analytics/types";
 import { prisma } from "@/lib/prisma";

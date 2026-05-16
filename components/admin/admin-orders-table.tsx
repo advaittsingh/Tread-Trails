@@ -12,7 +12,7 @@ import { ADMIN_CONFIRM_DIALOG_CLASS } from "@/components/admin/admin-confirm-sty
 import { AdminEmptyState } from "@/components/admin/admin-empty-state";
 import { AdminExportButton } from "@/components/admin/admin-export-button";
 import { AdminPaginationBar } from "@/components/admin/admin-pagination-bar";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import { AdminStatusBadge } from "@/components/admin/admin-status-badge";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";

@@ -1,26 +1,11 @@
-import "server-only";
-
 import type { Product } from "@/data/types";
 import {
   getProductSlugsForVehicleSlug,
   getVehicleSlugsForProductSlug,
+  productSlugsShareVehiclePlatform,
 } from "@/lib/compatibility/product-vehicle-map";
-import type {
-  ProductRecommendationsPayload,
-  RecommendationEntry,
-  UpgradeStep,
-} from "@/lib/recommendations/types";
-import {
-  getBundleSuggestion,
-  getProductBySlug,
-  getRelatedProducts,
-} from "@/lib/server/product-catalog";
 
-export type {
-  ProductRecommendationsPayload,
-  RecommendationEntry,
-  UpgradeStep,
-} from "@/lib/recommendations/types";
+import type { ProductRecommendationsPayload } from "@/lib/recommendations/types";
 
 const VEHICLE_COPY = [
   "Strong platform fit — installers often pair this with your chassis program.",
@@ -51,7 +36,6 @@ function pickRationale(pool: string[], i: number): string {
   return pool[i % pool.length];
 }
 
-/** Deterministic shuffle so SSR, API, and client mock stay aligned. */
 function shuffleStable(slugs: string[], seed: string): string[] {
   const arr = [...slugs];
   let h = 0;
@@ -64,10 +48,13 @@ function shuffleStable(slugs: string[], seed: string): string[] {
   return arr;
 }
 
-export async function buildRecommendationsPayload(
-  productSlug: string
-): Promise<ProductRecommendationsPayload> {
-  const current = await getProductBySlug(productSlug);
+/** Client fallback when recommendations API is unavailable (no Prisma). */
+export function buildRecommendationsPayloadClient(
+  productSlug: string,
+  getProductBySlug: (slug: string) => Product | undefined,
+  catalog: Product[]
+): ProductRecommendationsPayload {
+  const current = getProductBySlug(productSlug);
   if (!current) {
     return { forVehicle: [], alsoBought: [], upgradePath: { intro: "", steps: [] } };
   }
@@ -85,41 +72,41 @@ export async function buildRecommendationsPayload(
     `${productSlug}:vehicle`
   ).slice(0, 4);
 
-  const related = await getRelatedProducts(productSlug, 12);
+  const related = catalog
+    .filter(
+      (p) =>
+        p.slug !== productSlug &&
+        productSlugsShareVehiclePlatform(productSlug, p.slug)
+    )
+    .slice(0, 12);
+
   if (forVehicleSlugs.length === 0) {
     forVehicleSlugs = related.slice(0, 4).map((p) => p.slug);
   }
 
-  const forVehicle: RecommendationEntry[] = forVehicleSlugs.map((slug, i) => ({
+  const forVehicle = forVehicleSlugs.map((slug, i) => ({
     productSlug: slug,
     rationale: pickRationale(VEHICLE_COPY, i),
     badge: i === 0 ? "Platform match" : undefined,
   }));
 
-  const bundle = await getBundleSuggestion(productSlug);
-  const alsoPool = Array.from(
-    new Set([
-      ...bundle.map((p) => p.slug),
-      ...related.map((p) => p.slug),
-    ])
-  ).filter((s) => s !== productSlug);
-
+  const alsoPool = related.map((p) => p.slug);
   const alsoBoughtSlugs = shuffleStable(alsoPool, `${productSlug}:also`).slice(
     0,
     4
   );
 
-  const alsoBought: RecommendationEntry[] = alsoBoughtSlugs.map((slug, i) => ({
+  const alsoBought = alsoBoughtSlugs.map((slug, i) => ({
     productSlug: slug,
     rationale: pickRationale(ALSO_COPY, i),
     badge: i === 0 ? "Studio pairing" : undefined,
   }));
 
-  const poolProducts = (
-    await Promise.all(alsoPool.map((s) => getProductBySlug(s)))
-  ).filter(Boolean) as Product[];
+  const poolProducts = alsoBoughtSlugs
+    .map((s) => getProductBySlug(s))
+    .filter(Boolean) as Product[];
 
-  const steps: UpgradeStep[] = [];
+  const steps: ProductRecommendationsPayload["upgradePath"]["steps"] = [];
   for (const cat of CATEGORY_PRIORITY) {
     const hit = poolProducts.find((p) => p.category === cat);
     if (hit && !steps.some((s) => s.productSlug === hit.slug)) {

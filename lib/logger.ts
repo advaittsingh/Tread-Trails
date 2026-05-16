@@ -195,6 +195,7 @@ export async function logPaymentFailure(
     provider?: string;
     orderId?: string;
     severity?: LogSeverity;
+    meta?: Record<string, unknown>;
   }
 ): Promise<void> {
   const severity = opts?.severity ?? "error";
@@ -206,6 +207,7 @@ export async function logPaymentFailure(
     meta: {
       provider: opts?.provider,
       orderId: opts?.orderId,
+      ...opts?.meta,
     },
   });
 }

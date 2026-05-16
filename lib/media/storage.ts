@@ -77,7 +77,7 @@ async function uploadToCloudinary(
   const body = new FormData();
   body.append(
     "file",
-    new Blob([buffer], { type: "application/octet-stream" }),
+    new Blob([new Uint8Array(buffer)], { type: "application/octet-stream" }),
     safeFilename(filename)
   );
   body.append("api_key", apiKey);
