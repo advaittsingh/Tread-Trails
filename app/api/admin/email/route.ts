@@ -1,10 +1,5 @@
 /**
  * Admin-only transactional sends via Resend (`resend` npm package).
- *
- * Env: RESEND_API_KEY + RESEND_FROM_EMAIL (verified domain sender in production).
- * Template ids below are app enums mapped to inline HTML — not Resend Dashboard templates.
- * To use Resend-hosted layouts instead, switch `resend.emails.send` to pass `template`/`tags`
- * per Resend API docs.
  */
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
@@ -12,27 +7,53 @@ import { z } from "zod";
 
 import { requireAdmin } from "@/lib/auth/request-user";
 
+const TEMPLATES = [
+  "complete_order",
+  "interest",
+  "booking_confirmed",
+  "order_shipped",
+] as const;
+
+type TemplateId = (typeof TEMPLATES)[number];
+
 const bodySchema = z.object({
   to: z.string().email(),
-  template: z.enum(["complete_order", "interest"]),
+  template: z.enum(TEMPLATES),
   firstName: z.string().max(80).optional(),
 });
 
 function htmlForTemplate(
-  template: "complete_order" | "interest",
+  template: TemplateId,
   firstName?: string
 ): { subject: string; html: string } {
   const name = firstName?.trim() || "there";
-  if (template === "complete_order") {
-    return {
-      subject: "Complete your Tread Trails order",
-      html: `<p>Hi ${name},</p><p>We saved your build sheet — reply when you are ready to resume checkout.</p><p>— Tread Trails Concierge</p>`,
-    };
+  switch (template) {
+    case "complete_order":
+      return {
+        subject: "Complete your Tread Trails order",
+        html: `<p>Hi ${name},</p><p>We saved your build sheet — reply when you are ready to resume checkout.</p><p>— Tread Trails Concierge</p>`,
+      };
+    case "interest":
+      return {
+        subject: "We noticed your interest",
+        html: `<p>Hi ${name},</p><p>Our expedition engineers can spec the right kit for your platform. Want a quick call?</p><p>— Tread Trails</p>`,
+      };
+    case "booking_confirmed":
+      return {
+        subject: "Your Tread Trails bay booking is confirmed",
+        html: `<p>Hi ${name},</p><p>Your installation / consultation slot is confirmed. Our studio team will reach out if anything changes.</p><p>— Tread Trails</p>`,
+      };
+    case "order_shipped":
+      return {
+        subject: "Your Tread Trails order has shipped",
+        html: `<p>Hi ${name},</p><p>Your order is on the way. Tracking details will follow separately if applicable.</p><p>— Tread Trails Fulfilment</p>`,
+      };
+    default:
+      return {
+        subject: "Message from Tread Trails",
+        html: `<p>Hi ${name},</p><p>Thanks for choosing Tread Trails.</p>`,
+      };
   }
-  return {
-    subject: "We noticed your interest",
-    html: `<p>Hi ${name},</p><p>Our expedition engineers can spec the right kit for your platform. Want a quick call?</p><p>— Tread Trails</p>`,
-  };
 }
 
 export async function POST(req: Request) {

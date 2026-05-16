@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
+import { InboxKind } from "@prisma/client";
 import { Resend } from "resend";
 
+import { prisma } from "@/lib/prisma";
+import { logAppError } from "@/lib/server/log-app-error";
 import { contactFormSchema } from "@/lib/validations/contact";
 
 function escapeHtml(s: string): string {
@@ -12,20 +15,6 @@ function escapeHtml(s: string): string {
 }
 
 export async function POST(req: Request) {
-  const apiKey = process.env.RESEND_API_KEY;
-  const from = process.env.RESEND_FROM_EMAIL;
-  const to = process.env.CONTACT_TO_EMAIL;
-
-  if (!apiKey || !from || !to) {
-    return NextResponse.json(
-      {
-        error:
-          "Contact form email is not configured. Set RESEND_API_KEY, RESEND_FROM_EMAIL, and CONTACT_TO_EMAIL.",
-      },
-      { status: 503 }
-    );
-  }
-
   let json: unknown;
   try {
     json = await req.json();
@@ -42,6 +31,30 @@ export async function POST(req: Request) {
   }
 
   const { name, email, phone, subject, message } = parsed.data;
+
+  const apiKey = process.env.RESEND_API_KEY;
+  const from = process.env.RESEND_FROM_EMAIL;
+  const to = process.env.CONTACT_TO_EMAIL;
+
+  const inboxRow = await prisma.inboxSubmission.create({
+    data: {
+      kind: InboxKind.contact,
+      payload: { name, email, phone, subject, message },
+      emailSent: false,
+    },
+  });
+
+  if (!apiKey || !from || !to) {
+    return NextResponse.json(
+      {
+        error:
+          "Contact form email is not configured. Set RESEND_API_KEY, RESEND_FROM_EMAIL, and CONTACT_TO_EMAIL.",
+        inboxId: inboxRow.id,
+      },
+      { status: 503 }
+    );
+  }
+
   const safeSubject = escapeHtml(subject);
   const html = `
     <p><strong>New message</strong> from the Tread Trails contact form.</p>
@@ -66,14 +79,28 @@ export async function POST(req: Request) {
       html,
     });
     if (error) {
+      await logAppError({
+        source: "contact",
+        message: error.message ?? "Resend failed",
+        meta: { inboxId: inboxRow.id },
+      });
       return NextResponse.json(
         { error: error.message ?? "Could not send message" },
         { status: 502 }
       );
     }
+    await prisma.inboxSubmission.update({
+      where: { id: inboxRow.id },
+      data: { emailSent: true },
+    });
     return NextResponse.json({ ok: true, id: data?.id });
   } catch (e) {
     console.error(e);
+    await logAppError({
+      source: "contact",
+      message: e instanceof Error ? e.message : "Contact send failed",
+      meta: { inboxId: inboxRow.id },
+    });
     return NextResponse.json(
       { error: "Could not send message — try again shortly." },
       { status: 502 }

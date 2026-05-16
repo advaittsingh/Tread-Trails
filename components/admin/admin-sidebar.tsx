@@ -6,12 +6,15 @@ import {
   Activity,
   BarChart3,
   Boxes,
+  Car,
+  Inbox,
   Layers,
   LayoutDashboard,
   Mail,
   MapPin,
   Package,
   ShoppingCart,
+  Tag,
   Users,
   Wrench,
   Shield,
@@ -20,20 +23,23 @@ import {
 import { cn } from "@/lib/utils";
 
 const core = [
-  { href: "/admin/bookings", label: "Bookings", icon: Wrench },
-  { href: "/admin/builds", label: "Builds", icon: Boxes },
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
   { href: "/admin/orders", label: "Orders", icon: Package },
+  { href: "/admin/bookings", label: "Bookings", icon: Wrench },
   { href: "/admin/products", label: "Products", icon: Layers },
+  { href: "/admin/builds", label: "Builds", icon: Boxes },
+  { href: "/admin/vehicles", label: "Vehicles", icon: Car },
+  { href: "/admin/brands", label: "Brands", icon: Tag },
 ];
 
 const advanced = [
+  { href: "/admin/inbox", label: "Inbox", icon: Inbox },
   { href: "/admin/carts", label: "Abandoned carts", icon: ShoppingCart },
   { href: "/admin/analytics", label: "Analytics", icon: BarChart3 },
   { href: "/admin/crm", label: "CRM email", icon: Mail },
   { href: "/admin/live", label: "Live map", icon: MapPin },
-  { href: "/admin/system", label: "System", icon: Activity },
   { href: "/admin/users", label: "Users", icon: Users },
+  { href: "/admin/system", label: "System", icon: Activity },
 ];
 
 function NavBlock({
@@ -96,7 +102,7 @@ export function AdminSidebar() {
 
       <div className="flex flex-1 flex-col gap-10 overflow-y-auto no-scrollbar">
         <NavBlock title="Operations" items={core} pathname={pathname} />
-        <NavBlock title="Intelligence" items={advanced} pathname={pathname} />
+        <NavBlock title="Growth" items={advanced} pathname={pathname} />
       </div>
 
       <div className="mt-8 border-t border-zinc-800/80 px-3 pt-6">

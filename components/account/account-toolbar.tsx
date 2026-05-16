@@ -42,6 +42,14 @@ export function AccountToolbar() {
           </span>
         ) : null}
       </p>
+      {user.role === "admin" ? (
+        <Link
+          href="/admin"
+          className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
+        >
+          Admin panel
+        </Link>
+      ) : null}
       <Button
         type="button"
         variant="ghost"

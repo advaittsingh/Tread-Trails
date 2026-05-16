@@ -1,7 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import { ShoppingCart } from "lucide-react";
+import Link from "next/link";
+import { Fragment, useCallback, useEffect, useState } from "react";
+import { ChevronDown, ChevronRight, Mail, ShoppingCart } from "lucide-react";
 
 import { formatInr } from "@/lib/format";
 import { toastError } from "@/lib/toast";
@@ -11,6 +12,13 @@ import { AdminPaginationBar } from "@/components/admin/admin-pagination-bar";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
+
+type CartLine = {
+  slug?: string;
+  name?: string;
+  qty?: number;
+  variantId?: string;
+};
 
 type Row = {
   sessionId: string;
@@ -32,6 +40,7 @@ export function AdminCartsPanel() {
   const [searchDraft, setSearchDraft] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [expanded, setExpanded] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -75,7 +84,7 @@ export function AdminCartsPanel() {
           Abandoned carts
         </h1>
         <p className="mt-2 max-w-2xl text-sm text-zinc-400">
-          Anonymous snapshots debounced from storefront carts — correlate with CRM outreach when email exists.
+          Expand a row for line items. Send CRM email when an address is captured.
         </p>
       </header>
 
@@ -102,19 +111,21 @@ export function AdminCartsPanel() {
           <table className="w-full min-w-[920px] text-left text-sm">
             <thead className="border-b border-zinc-800 bg-zinc-900/80 text-[11px] tracking-wide text-zinc-500 uppercase">
               <tr>
+                <th className="w-8 px-2 py-3" />
                 <th className="px-4 py-3 font-medium">Session</th>
                 <th className="px-4 py-3 font-medium">Email</th>
                 <th className="px-4 py-3 font-medium">Items</th>
                 <th className="px-4 py-3 font-medium">Hint total</th>
                 <th className="px-4 py-3 font-medium">Last path</th>
                 <th className="px-4 py-3 font-medium">Idle</th>
+                <th className="px-4 py-3 font-medium">CRM</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-800/80">
               {loading
                 ? Array.from({ length: 5 }).map((_, i) => (
                     <tr key={i}>
-                      <td colSpan={6} className="px-4 py-4">
+                      <td colSpan={8} className="px-4 py-4">
                         <Skeleton className="h-10 w-full rounded-lg bg-zinc-800" />
                       </td>
                     </tr>
@@ -123,27 +134,95 @@ export function AdminCartsPanel() {
                     const idleMin = Math.round(
                       (Date.now() - new Date(r.updatedAt).getTime()) / 60000
                     );
+                    const isOpen = expanded === r.sessionId;
+                    const lines = Array.isArray(r.lines)
+                      ? (r.lines as CartLine[])
+                      : [];
                     return (
-                      <tr key={r.sessionId} className="hover:bg-zinc-800/40">
-                        <td className="px-4 py-4 font-mono text-xs text-zinc-300">
-                          {r.sessionId.slice(0, 14)}…
-                        </td>
-                        <td className="px-4 py-4 text-zinc-200">
-                          {r.userEmail ?? "—"}
-                        </td>
-                        <td className="px-4 py-4 tabular-nums text-zinc-300">
-                          {r.itemCount}
-                        </td>
-                        <td className="px-4 py-4 tabular-nums text-zinc-300">
-                          {formatInr(r.subtotalHint) ?? "—"}
-                        </td>
-                        <td className="px-4 py-4 text-xs text-zinc-500">
-                          {r.lastPath || "—"}
-                        </td>
-                        <td className="px-4 py-4 text-xs text-amber-200/90">
-                          {idleMin} min
-                        </td>
-                      </tr>
+                      <Fragment key={r.sessionId}>
+                        <tr className="hover:bg-zinc-800/40">
+                          <td className="px-2 py-4">
+                            <button
+                              type="button"
+                              aria-label={isOpen ? "Collapse" : "Expand"}
+                              onClick={() =>
+                                setExpanded(isOpen ? null : r.sessionId)
+                              }
+                              className="text-zinc-500 hover:text-zinc-200"
+                            >
+                              {isOpen ? (
+                                <ChevronDown className="size-4" />
+                              ) : (
+                                <ChevronRight className="size-4" />
+                              )}
+                            </button>
+                          </td>
+                          <td className="px-4 py-4 font-mono text-xs text-zinc-300">
+                            {r.sessionId.slice(0, 14)}…
+                          </td>
+                          <td className="px-4 py-4 text-zinc-200">
+                            {r.userEmail ?? "—"}
+                          </td>
+                          <td className="px-4 py-4 tabular-nums text-zinc-300">
+                            {r.itemCount}
+                          </td>
+                          <td className="px-4 py-4 tabular-nums text-zinc-300">
+                            {formatInr(r.subtotalHint) ?? "—"}
+                          </td>
+                          <td className="px-4 py-4 text-xs text-zinc-500">
+                            {r.lastPath || "—"}
+                          </td>
+                          <td className="px-4 py-4 text-xs text-amber-200/90">
+                            {idleMin} min
+                          </td>
+                          <td className="px-4 py-4">
+                            {r.userEmail ? (
+                              <Link
+                                href={`/admin/crm?email=${encodeURIComponent(r.userEmail)}&template=complete_order`}
+                                className="inline-flex h-8 items-center rounded-md px-2 text-xs text-emerald-400 hover:bg-zinc-800 hover:text-emerald-300"
+                              >
+                                <Mail className="mr-1 size-3.5" />
+                                Email
+                              </Link>
+                            ) : (
+                              <span className="text-xs text-zinc-600">—</span>
+                            )}
+                          </td>
+                        </tr>
+                        {isOpen ? (
+                          <tr key={`${r.sessionId}-lines`}>
+                            <td colSpan={8} className="bg-zinc-950/60 px-6 py-4">
+                              {lines.length === 0 ? (
+                                <p className="text-xs text-zinc-500">No line detail.</p>
+                              ) : (
+                                <ul className="space-y-2 text-xs text-zinc-300">
+                                  {lines.map((line, i) => (
+                                    <li
+                                      key={`${line.slug ?? i}`}
+                                      className="flex flex-wrap gap-3 rounded-lg border border-zinc-800/80 bg-zinc-900/50 px-3 py-2"
+                                    >
+                                      <span className="font-medium text-zinc-100">
+                                        {line.name ?? line.slug ?? "SKU"}
+                                      </span>
+                                      {line.slug ? (
+                                        <span className="font-mono text-zinc-500">
+                                          {line.slug}
+                                        </span>
+                                      ) : null}
+                                      <span>qty {line.qty ?? 1}</span>
+                                      {line.variantId ? (
+                                        <span className="text-zinc-500">
+                                          variant {line.variantId}
+                                        </span>
+                                      ) : null}
+                                    </li>
+                                  ))}
+                                </ul>
+                              )}
+                            </td>
+                          </tr>
+                        ) : null}
+                      </Fragment>
                     );
                   })}
             </tbody>

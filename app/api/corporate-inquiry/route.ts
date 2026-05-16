@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
+import { InboxKind } from "@prisma/client";
 import { Resend } from "resend";
 
+import { prisma } from "@/lib/prisma";
+import { logAppError } from "@/lib/server/log-app-error";
 import { corporateInquirySchema } from "@/lib/validations/corporate-inquiry";
 
 function escapeHtml(s: string): string {
@@ -12,21 +15,6 @@ function escapeHtml(s: string): string {
 }
 
 export async function POST(req: Request) {
-  const apiKey = process.env.RESEND_API_KEY;
-  const from = process.env.RESEND_FROM_EMAIL;
-  const to =
-    process.env.CORPORATE_TO_EMAIL?.trim() || process.env.CONTACT_TO_EMAIL?.trim();
-
-  if (!apiKey || !from || !to) {
-    return NextResponse.json(
-      {
-        error:
-          "Corporate inquiry email is not configured. Set RESEND_API_KEY, RESEND_FROM_EMAIL, and CORPORATE_TO_EMAIL or CONTACT_TO_EMAIL.",
-      },
-      { status: 503 }
-    );
-  }
-
   let json: unknown;
   try {
     json = await req.json();
@@ -50,6 +38,37 @@ export async function POST(req: Request) {
     businessType,
     requirements,
   } = parsed.data;
+
+  const apiKey = process.env.RESEND_API_KEY;
+  const from = process.env.RESEND_FROM_EMAIL;
+  const to =
+    process.env.CORPORATE_TO_EMAIL?.trim() || process.env.CONTACT_TO_EMAIL?.trim();
+
+  const inboxRow = await prisma.inboxSubmission.create({
+    data: {
+      kind: InboxKind.corporate,
+      payload: {
+        companyName,
+        contactPerson,
+        email,
+        phone,
+        businessType,
+        requirements,
+      },
+      emailSent: false,
+    },
+  });
+
+  if (!apiKey || !from || !to) {
+    return NextResponse.json(
+      {
+        error:
+          "Corporate inquiry email is not configured. Set RESEND_API_KEY, RESEND_FROM_EMAIL, and CORPORATE_TO_EMAIL or CONTACT_TO_EMAIL.",
+        inboxId: inboxRow.id,
+      },
+      { status: 503 }
+    );
+  }
 
   const html = `
     <p><strong>New corporate inquiry</strong> from the Tread Trails website.</p>
@@ -75,14 +94,28 @@ export async function POST(req: Request) {
       html,
     });
     if (error) {
+      await logAppError({
+        source: "corporate-inquiry",
+        message: error.message ?? "Resend failed",
+        meta: { inboxId: inboxRow.id },
+      });
       return NextResponse.json(
         { error: error.message ?? "Could not send inquiry" },
         { status: 502 }
       );
     }
+    await prisma.inboxSubmission.update({
+      where: { id: inboxRow.id },
+      data: { emailSent: true },
+    });
     return NextResponse.json({ ok: true, id: data?.id });
   } catch (e) {
     console.error(e);
+    await logAppError({
+      source: "corporate-inquiry",
+      message: e instanceof Error ? e.message : "Corporate send failed",
+      meta: { inboxId: inboxRow.id },
+    });
     return NextResponse.json(
       { error: "Could not send inquiry — try again shortly." },
       { status: 502 }

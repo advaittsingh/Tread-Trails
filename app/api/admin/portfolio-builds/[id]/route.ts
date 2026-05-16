@@ -5,6 +5,7 @@ import { Prisma as PrismaNamespace } from "@prisma/client";
 import { prismaPortfolioBuildToBuild } from "@/lib/catalog/map-portfolio-build";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth/request-user";
+import { logAdminAction } from "@/lib/server/admin-audit";
 import {
   assertPortfolioBuildVehicleSlug,
   replacePortfolioBuildProductLinks,
@@ -134,6 +135,13 @@ export async function PATCH(req: Request, context: RouteCtx) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
 
+    await logAdminAction({
+      adminId: gate.auth.userId,
+      action: "build.update",
+      entity: "portfolio_build",
+      entityId: id,
+    });
+
     return NextResponse.json({
       id: row.id,
       legacyId: row.legacyId ?? null,
@@ -173,6 +181,12 @@ export async function DELETE(_req: Request, context: RouteCtx) {
 
   try {
     await prisma.portfolioBuild.delete({ where: { id } });
+    await logAdminAction({
+      adminId: gate.auth.userId,
+      action: "build.delete",
+      entity: "portfolio_build",
+      entityId: id,
+    });
     return NextResponse.json({ ok: true });
   } catch (e) {
     if (

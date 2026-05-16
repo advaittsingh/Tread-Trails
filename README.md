@@ -1,5 +1,16 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## Admin catalog sync (production)
+
+After editing static fleet data (`data/cars.ts`, `data/builds.ts`, compatibility edges) or vehicle images under `public/vehicles/`, sync Neon:
+
+```bash
+npm run seed          # full catalog + orders of compatibility
+npm run seed:admin    # admin user only (SEED_ADMIN_PASSWORD in .env.local)
+```
+
+Vehicle and brand hubs can also be maintained in **Admin → Vehicles / Brands** without a full redeploy; run `npm run seed` when you need static files and DB to match.
+
 ## Getting Started
 
 First, run the development server:

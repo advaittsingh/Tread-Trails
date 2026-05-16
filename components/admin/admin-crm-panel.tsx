@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 
 import { toastError, toastSuccess } from "@/lib/toast";
 
@@ -8,14 +9,41 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
+const TEMPLATES = [
+  "complete_order",
+  "interest",
+  "booking_confirmed",
+  "order_shipped",
+] as const;
+
+type TemplateId = (typeof TEMPLATES)[number];
+
+const TEMPLATE_LABELS: Record<TemplateId, string> = {
+  complete_order: "Complete your order",
+  interest: "We noticed your interest",
+  booking_confirmed: "Booking confirmed",
+  order_shipped: "Order shipped",
+};
+
 export function AdminCrmPanel() {
+  const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
   const [firstName, setFirstName] = useState("");
-  const [template, setTemplate] = useState<"complete_order" | "interest">(
-    "complete_order"
-  );
+  const [template, setTemplate] = useState<TemplateId>("complete_order");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    const prefill = searchParams.get("email")?.trim();
+    const prefillTemplate = searchParams.get("template")?.trim();
+    if (prefill) setEmail(prefill);
+    if (
+      prefillTemplate &&
+      TEMPLATES.includes(prefillTemplate as TemplateId)
+    ) {
+      setTemplate(prefillTemplate as TemplateId);
+    }
+  }, [searchParams]);
 
   async function send(e: React.FormEvent) {
     e.preventDefault();
@@ -34,8 +62,7 @@ export function AdminCrmPanel() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Send failed");
-      const queued = `Queued · provider id ${data.id ?? "n/a"}`;
-      setMessage(queued);
+      setMessage(`Queued · provider id ${data.id ?? "n/a"}`);
       toastSuccess("Email queued", data.id ? String(data.id) : undefined);
       setEmail("");
       setFirstName("");
@@ -55,13 +82,15 @@ export function AdminCrmPanel() {
           CRM · transactional send
         </h1>
         <p className="mt-2 text-sm text-zinc-400">
-          Uses Resend when <code className="text-emerald-300">RESEND_API_KEY</code> and a verified{" "}
-          <code className="text-emerald-300">RESEND_FROM_EMAIL</code> are set. Copy for each template lives in{" "}
-          <code className="text-emerald-300">/api/admin/email</code> (inline HTML — not Resend Dashboard templates unless you extend the route).
+          Pre-fill from abandoned carts via query{" "}
+          <code className="text-emerald-300">?email=</code>. Requires Resend env vars.
         </p>
       </header>
 
-      <form onSubmit={send} className="space-y-6 rounded-2xl border border-zinc-800 bg-zinc-900/40 p-6">
+      <form
+        onSubmit={send}
+        className="space-y-6 rounded-2xl border border-zinc-800 bg-zinc-900/40 p-6"
+      >
         <div className="space-y-2">
           <Label htmlFor="crm-email" className="text-zinc-300">
             Recipient email
@@ -93,13 +122,14 @@ export function AdminCrmPanel() {
           <select
             id="crm-template"
             value={template}
-            onChange={(e) =>
-              setTemplate(e.target.value as "complete_order" | "interest")
-            }
+            onChange={(e) => setTemplate(e.target.value as TemplateId)}
             className="h-11 w-full rounded-xl border border-zinc-700 bg-zinc-950 px-3 text-sm text-zinc-100 outline-none focus:ring-2 focus:ring-emerald-500/40"
           >
-            <option value="complete_order">Complete your order</option>
-            <option value="interest">We noticed your interest</option>
+            {TEMPLATES.map((t) => (
+              <option key={t} value={t}>
+                {TEMPLATE_LABELS[t]}
+              </option>
+            ))}
           </select>
         </div>
 

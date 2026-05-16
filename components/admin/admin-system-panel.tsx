@@ -11,22 +11,41 @@ type Payload = {
   stripeConfigured: boolean;
   webhookConfigured: boolean;
   resendConfigured: boolean;
+  razorpayConfigured: boolean;
+  juspayConfigured: boolean;
   nodeEnv: string;
   recentErrors: { id: string; source: string; message: string; createdAt?: string }[];
 };
 
+type AuditRow = {
+  id: string;
+  adminId: string;
+  action: string;
+  entity: string;
+  entityId: string;
+  createdAt: string;
+};
+
 export function AdminSystemPanel() {
   const [data, setData] = useState<Payload | null>(null);
+  const [audit, setAudit] = useState<AuditRow[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
       try {
-        const res = await fetch("/api/admin/system", { credentials: "include" });
-        const json = await res.json();
-        if (!res.ok) throw new Error(json.error ?? "Failed");
-        if (!cancelled) setData(json as Payload);
+        const [sysRes, auditRes] = await Promise.all([
+          fetch("/api/admin/system", { credentials: "include" }),
+          fetch("/api/admin/audit?limit=30", { credentials: "include" }),
+        ]);
+        const sysJson = await sysRes.json();
+        const auditJson = await auditRes.json();
+        if (!sysRes.ok) throw new Error(sysJson.error ?? "Failed");
+        if (!cancelled) {
+          setData(sysJson as Payload);
+          if (auditRes.ok) setAudit(auditJson.logs as AuditRow[]);
+        }
       } catch (e) {
         if (!cancelled) setError(e instanceof Error ? e.message : "Error");
       }
@@ -43,7 +62,7 @@ export function AdminSystemPanel() {
           System health
         </h1>
         <p className="mt-2 max-w-2xl text-sm text-zinc-400">
-          Operational probes — extend with central logging when you wire Datadog / Sentry.
+          Env probes, captured errors, and recent admin audit events.
         </p>
       </header>
 
@@ -84,6 +103,16 @@ export function AdminSystemPanel() {
             ok={data.resendConfigured}
             detail="API key + RESEND_FROM_EMAIL"
           />
+          <FlagCard
+            title="Razorpay"
+            ok={data.razorpayConfigured}
+            detail="RAZORPAY_KEY_ID + RAZORPAY_KEY_SECRET"
+          />
+          <FlagCard
+            title="Juspay"
+            ok={data.juspayConfigured}
+            detail="JUSPAY_API_KEY + JUSPAY_MERCHANT_ID"
+          />
           <div className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-5">
             <p className="text-[11px] tracking-[0.2em] text-zinc-500 uppercase">
               Runtime
@@ -96,9 +125,6 @@ export function AdminSystemPanel() {
       <section className="rounded-2xl border border-zinc-800 bg-zinc-900/30">
         <div className="border-b border-zinc-800 px-5 py-4">
           <p className="text-sm font-medium text-zinc-200">Recent captured errors</p>
-          <p className="text-xs text-zinc-500">
-            Populate via <code className="text-emerald-300">AppErrorLog</code> inserts from workers/webhooks.
-          </p>
         </div>
         <div className="divide-y divide-zinc-800/80">
           {!data ? (
@@ -116,6 +142,37 @@ export function AdminSystemPanel() {
                 <p className="mt-1 text-sm text-zinc-200">{l.message}</p>
                 <p className="mt-1 text-[11px] text-zinc-600">
                   {l.createdAt ? new Date(l.createdAt).toLocaleString() : ""}
+                </p>
+              </div>
+            ))
+          )}
+        </div>
+      </section>
+
+      <section className="rounded-2xl border border-zinc-800 bg-zinc-900/30">
+        <div className="border-b border-zinc-800 px-5 py-4">
+          <p className="text-sm font-medium text-zinc-200">Admin audit log</p>
+          <p className="text-xs text-zinc-500">
+            Order, booking, product, build, vehicle, brand, and user role changes.
+          </p>
+        </div>
+        <div className="max-h-80 divide-y divide-zinc-800/80 overflow-y-auto">
+          {audit.length === 0 ? (
+            <p className="px-5 py-10 text-center text-sm text-zinc-500">
+              No audit events yet.
+            </p>
+          ) : (
+            audit.map((l) => (
+              <div key={l.id} className="px-5 py-3 text-sm">
+                <p className="text-zinc-200">
+                  <span className="text-emerald-400">{l.action}</span>{" "}
+                  <span className="text-zinc-500">{l.entity}</span>{" "}
+                  <span className="font-mono text-xs text-zinc-600">
+                    {l.entityId.slice(-8)}
+                  </span>
+                </p>
+                <p className="mt-0.5 text-[11px] text-zinc-600">
+                  {new Date(l.createdAt).toLocaleString()} · admin {l.adminId.slice(-6)}
                 </p>
               </div>
             ))

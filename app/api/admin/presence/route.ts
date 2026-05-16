@@ -7,8 +7,12 @@ export async function GET() {
   const gate = await requireAdmin();
   if ("response" in gate) return gate.response;
 
+  const ttlMs = 3 * 60 * 1000;
+  const since = new Date(Date.now() - ttlMs);
+
   try {
     const sessions = await prisma.presenceSession.findMany({
+      where: { lastSeenAt: { gte: since } },
       orderBy: { lastSeenAt: "desc" },
       take: 200,
       select: {

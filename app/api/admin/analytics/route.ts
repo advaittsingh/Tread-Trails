@@ -1,3 +1,4 @@
+import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 
 import { requireAdmin } from "@/lib/auth/request-user";
@@ -7,7 +8,7 @@ function dayKey(d: Date): string {
   return d.toISOString().slice(0, 10);
 }
 
-function bucketCounts<T extends { createdAt?: Date; updatedAt?: Date }>(
+function bucketCounts<T>(
   rows: T[],
   getDate: (r: T) => Date | undefined,
   days: string[]
@@ -33,12 +34,47 @@ function lastNDaysKeys(n: number): string[] {
   return out;
 }
 
-export async function GET() {
+function parseWindowDays(searchParams: URLSearchParams): number {
+  const raw = Number(searchParams.get("days"));
+  if ([7, 30, 90].includes(raw)) return raw;
+  return 30;
+}
+
+type CartLine = { slug?: string; name?: string; qty?: number; variantId?: string };
+
+function topSkusFromCarts(
+  carts: { lines: unknown }[],
+  limit: number
+): { slug: string; name: string; count: number }[] {
+  const counts = new Map<string, { name: string; count: number }>();
+  for (const c of carts) {
+    const lines = Array.isArray(c.lines) ? (c.lines as CartLine[]) : [];
+    for (const line of lines) {
+      const slug = line.slug?.trim();
+      if (!slug) continue;
+      const prev = counts.get(slug);
+      const qty = typeof line.qty === "number" && line.qty > 0 ? line.qty : 1;
+      counts.set(slug, {
+        name: line.name?.trim() || slug,
+        count: (prev?.count ?? 0) + qty,
+      });
+    }
+  }
+  return Array.from(counts.entries())
+    .map(([slug, v]) => ({ slug, name: v.name, count: v.count }))
+    .sort((a, b) => b.count - a.count)
+    .slice(0, limit);
+}
+
+export async function GET(req: NextRequest) {
   const gate = await requireAdmin();
   if ("response" in gate) return gate.response;
 
+  const { searchParams } = new URL(req.url);
+  const windowDays = parseWindowDays(searchParams);
+
   try {
-    const days = lastNDaysKeys(30);
+    const days = lastNDaysKeys(windowDays);
     const start = new Date(`${days[0]}T00:00:00.000Z`);
 
     const [orders, bookings, hits, carts] = await Promise.all([
@@ -65,13 +101,17 @@ export async function GET() {
       ).length,
     }));
 
-    const bookingsByDay = bucketCounts(bookings, (b) =>
-      b.createdAt ? new Date(b.createdAt) : undefined
-    , days).map((count, i) => ({ date: days[i], count }));
+    const bookingsByDay = bucketCounts(
+      bookings,
+      (b) => (b.createdAt ? new Date(b.createdAt) : undefined),
+      days
+    ).map((count, i) => ({ date: days[i], count }));
 
-    const visitsByDay = bucketCounts(hits, (h) =>
-      h.createdAt ? new Date(h.createdAt) : undefined
-    , days).map((count, i) => ({ date: days[i], views: count }));
+    const visitsByDay = bucketCounts(
+      hits,
+      (h) => (h.createdAt ? new Date(h.createdAt) : undefined),
+      days
+    ).map((count, i) => ({ date: days[i], views: count }));
 
     const distinctSessions = new Set(hits.map((h) => h.sessionId)).size;
     const paidCount = orders.filter((o) => o.status === "paid").length;
@@ -83,11 +123,25 @@ export async function GET() {
       distinctSessions > 0 ? (paidCount / distinctSessions) * 100 : 0;
 
     const abandonedCandidates = carts.filter(
-      (c) => c.itemCount > 0 && Date.now() - new Date(c.updatedAt).getTime() > 30 * 60 * 1000
+      (c) =>
+        c.itemCount > 0 &&
+        Date.now() - new Date(c.updatedAt).getTime() > 30 * 60 * 1000
     ).length;
 
+    const pathCounts = new Map<string, number>();
+    for (const h of hits) {
+      const p = h.path || "/";
+      pathCounts.set(p, (pathCounts.get(p) ?? 0) + 1);
+    }
+    const topPages = Array.from(pathCounts.entries())
+      .map(([path, views]) => ({ path, views }))
+      .sort((a, b) => b.views - a.views)
+      .slice(0, 10);
+
+    const topSkus = topSkusFromCarts(carts, 10);
+
     return NextResponse.json({
-      windowDays: 30,
+      windowDays,
       totals: {
         pageViews: hits.length,
         uniqueSessions: distinctSessions,
@@ -111,6 +165,8 @@ export async function GET() {
         bookingsByDay,
         visitsByDay,
       },
+      topPages,
+      topSkus,
     });
   } catch (e) {
     console.error(e);

@@ -3,19 +3,31 @@
 import { useCallback, useEffect, useState } from "react";
 import { CalendarClock } from "lucide-react";
 
-import { toastError } from "@/lib/toast";
+import { useConfirmation } from "@/contexts/confirmation-context";
+import { toastError, toastSuccess } from "@/lib/toast";
 
+import { ADMIN_CONFIRM_DIALOG_CLASS } from "@/components/admin/admin-confirm-styles";
 import { AdminEmptyState } from "@/components/admin/admin-empty-state";
+import { AdminExportButton } from "@/components/admin/admin-export-button";
 import { AdminPaginationBar } from "@/components/admin/admin-pagination-bar";
 import { AdminStatusBadge } from "@/components/admin/admin-status-badge";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
 
 type Row = {
   id: string;
   contactEmail: string;
   contactName: string;
+  contactPhone: string;
   vehicleName: string;
+  vehicleSlug?: string;
   service: string;
   date: string;
   time: string;
@@ -23,7 +35,10 @@ type Row = {
   createdAt?: string;
 };
 
+type Detail = Row & { userId?: string | null; updatedAt?: string };
+
 export function AdminBookingsTable() {
+  const { confirmAction } = useConfirmation();
   const [rows, setRows] = useState<Row[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -34,6 +49,10 @@ export function AdminBookingsTable() {
   const [searchDraft, setSearchDraft] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [updatingId, setUpdatingId] = useState<string | null>(null);
+  const [detailId, setDetailId] = useState<string | null>(null);
+  const [detail, setDetail] = useState<Detail | null>(null);
+  const [detailLoading, setDetailLoading] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -76,15 +95,116 @@ export function AdminBookingsTable() {
     return () => window.clearTimeout(t);
   }, [searchDraft]);
 
+  useEffect(() => {
+    if (!detailId) {
+      setDetail(null);
+      return;
+    }
+    let cancelled = false;
+    setDetailLoading(true);
+    (async () => {
+      try {
+        const res = await fetch(`/api/admin/bookings/${detailId}`, {
+          credentials: "include",
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error ?? "Failed");
+        if (!cancelled) setDetail(data.booking as Detail);
+      } catch (e) {
+        if (!cancelled) {
+          toastError(
+            "Could not load booking",
+            e instanceof Error ? e.message : "Error"
+          );
+          setDetailId(null);
+        }
+      } finally {
+        if (!cancelled) setDetailLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [detailId]);
+
+  async function patchStatus(id: string, nextStatus: string, prevStatus: string) {
+    if (nextStatus === prevStatus) return;
+    if (nextStatus === "cancelled") {
+      const ok = await confirmAction({
+        title: "Cancel this booking?",
+        description: "Marks the bay request as cancelled for the team.",
+        confirmLabel: "Mark cancelled",
+        cancelLabel: "Keep status",
+        contentClassName: ADMIN_CONFIRM_DIALOG_CLASS,
+      });
+      if (!ok) return;
+    }
+    setUpdatingId(id);
+    try {
+      const res = await fetch(`/api/admin/bookings/${id}`, {
+        method: "PATCH",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: nextStatus }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Update failed");
+      await load();
+      if (detailId === id) {
+        setDetail((d) => (d ? { ...d, status: nextStatus } : d));
+      }
+      toastSuccess("Booking updated", nextStatus);
+    } catch (e) {
+      toastError(
+        "Could not update booking",
+        e instanceof Error ? e.message : "Error"
+      );
+    } finally {
+      setUpdatingId(null);
+    }
+  }
+
+  const exportRows = rows.map((r) => [
+    r.id,
+    r.contactName,
+    r.contactEmail,
+    r.contactPhone,
+    r.vehicleName,
+    r.service,
+    r.date,
+    r.time,
+    r.status,
+    r.createdAt ?? "",
+  ]);
+
   return (
     <div className="space-y-8 p-6 lg:p-10">
-      <header className="border-b border-zinc-800 pb-6">
-        <h1 className="font-heading text-2xl tracking-tight text-white md:text-3xl">
-          Bookings
-        </h1>
-        <p className="mt-2 max-w-2xl text-sm text-zinc-400">
-          Installation & bay scheduling requests captured from the booking wizard.
-        </p>
+      <header className="flex flex-wrap items-end justify-between gap-4 border-b border-zinc-800 pb-6">
+        <div>
+          <h1 className="font-heading text-2xl tracking-tight text-white md:text-3xl">
+            Bookings
+          </h1>
+          <p className="mt-2 max-w-2xl text-sm text-zinc-400">
+            Installation & bay scheduling — update status when the studio confirms slots.
+          </p>
+        </div>
+        <AdminExportButton
+          filename="bookings.csv"
+          headers={[
+            "id",
+            "name",
+            "email",
+            "phone",
+            "vehicle",
+            "service",
+            "date",
+            "time",
+            "status",
+            "created",
+          ]}
+          rows={exportRows}
+          disabled={loading}
+        />
       </header>
 
       {error ? (
@@ -127,22 +247,24 @@ export function AdminBookingsTable() {
 
       <div className="overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-900/30">
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[880px] text-left text-sm">
+          <table className="w-full min-w-[1000px] text-left text-sm">
             <thead className="border-b border-zinc-800 bg-zinc-900/80 text-[11px] tracking-wide text-zinc-500 uppercase">
               <tr>
                 <th className="px-4 py-3 font-medium">Booking</th>
                 <th className="px-4 py-3 font-medium">Customer</th>
+                <th className="px-4 py-3 font-medium">Phone</th>
                 <th className="px-4 py-3 font-medium">Vehicle</th>
                 <th className="px-4 py-3 font-medium">Service</th>
                 <th className="px-4 py-3 font-medium">Slot</th>
                 <th className="px-4 py-3 font-medium">Status</th>
+                <th className="px-4 py-3 font-medium">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-800/80">
               {loading
                 ? Array.from({ length: 6 }).map((_, i) => (
                     <tr key={i}>
-                      <td className="px-4 py-4" colSpan={6}>
+                      <td className="px-4 py-4" colSpan={8}>
                         <Skeleton className="h-10 w-full rounded-lg bg-zinc-800" />
                       </td>
                     </tr>
@@ -161,6 +283,9 @@ export function AdminBookingsTable() {
                         <p className="font-medium text-zinc-100">{r.contactEmail}</p>
                         <p className="text-xs text-zinc-500">{r.contactName}</p>
                       </td>
+                      <td className="px-4 py-4 text-xs text-zinc-300">
+                        {r.contactPhone || "—"}
+                      </td>
                       <td className="px-4 py-4 text-zinc-200">{r.vehicleName}</td>
                       <td className="px-4 py-4 text-zinc-300">{r.service}</td>
                       <td className="px-4 py-4 text-xs text-zinc-400">
@@ -168,6 +293,31 @@ export function AdminBookingsTable() {
                       </td>
                       <td className="px-4 py-4">
                         <AdminStatusBadge status={r.status} />
+                      </td>
+                      <td className="px-4 py-4">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <select
+                            disabled={updatingId === r.id}
+                            value={r.status}
+                            onChange={(e) =>
+                              void patchStatus(r.id, e.target.value, r.status)
+                            }
+                            className="h-9 rounded-lg border border-zinc-700 bg-zinc-950 px-2 text-xs text-zinc-100 outline-none focus:ring-2 focus:ring-emerald-500/40 disabled:opacity-50"
+                          >
+                            <option value="requested">Requested</option>
+                            <option value="confirmed">Confirmed</option>
+                            <option value="cancelled">Cancelled</option>
+                          </select>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="h-9 text-xs text-zinc-400 hover:text-emerald-300"
+                            onClick={() => setDetailId(r.id)}
+                          >
+                            Details
+                          </Button>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -202,6 +352,55 @@ export function AdminBookingsTable() {
           onNext={() => setPage((p) => p + 1)}
         />
       </div>
+
+      <Sheet open={Boolean(detailId)} onOpenChange={(o) => !o && setDetailId(null)}>
+        <SheetContent className="w-full border-zinc-800 bg-zinc-950 text-zinc-100 sm:max-w-lg">
+          <SheetHeader>
+            <SheetTitle className="text-white">Booking detail</SheetTitle>
+          </SheetHeader>
+          {detailLoading ? (
+            <Skeleton className="mt-6 h-40 w-full rounded-lg bg-zinc-800" />
+          ) : detail ? (
+            <dl className="mt-6 space-y-4 text-sm">
+              <DetailRow label="ID" value={detail.id} mono />
+              <DetailRow label="Status" value={detail.status} />
+              <DetailRow label="Name" value={detail.contactName} />
+              <DetailRow label="Email" value={detail.contactEmail} />
+              <DetailRow label="Phone" value={detail.contactPhone} />
+              <DetailRow label="Vehicle" value={detail.vehicleName} />
+              <DetailRow
+                label="Vehicle slug"
+                value={detail.vehicleSlug ?? "—"}
+                mono
+              />
+              <DetailRow label="Service" value={detail.service} />
+              <DetailRow label="Slot" value={`${detail.date} · ${detail.time}`} />
+              {detail.userId ? (
+                <DetailRow label="User ID" value={detail.userId} mono />
+              ) : null}
+            </dl>
+          ) : null}
+        </SheetContent>
+      </Sheet>
+    </div>
+  );
+}
+
+function DetailRow({
+  label,
+  value,
+  mono,
+}: {
+  label: string;
+  value: string;
+  mono?: boolean;
+}) {
+  return (
+    <div>
+      <dt className="text-[11px] tracking-wide text-zinc-500 uppercase">{label}</dt>
+      <dd className={`mt-1 text-zinc-200 ${mono ? "font-mono text-xs break-all" : ""}`}>
+        {value}
+      </dd>
     </div>
   );
 }

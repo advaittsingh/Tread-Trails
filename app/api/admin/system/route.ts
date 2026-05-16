@@ -50,6 +50,12 @@ export async function GET() {
     resendConfigured: Boolean(
       process.env.RESEND_API_KEY && process.env.RESEND_FROM_EMAIL?.trim()
     ),
+    razorpayConfigured: Boolean(
+      process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET
+    ),
+    juspayConfigured: Boolean(
+      process.env.JUSPAY_API_KEY && process.env.JUSPAY_MERCHANT_ID
+    ),
     nodeEnv: process.env.NODE_ENV ?? "development",
     recentErrors,
   });

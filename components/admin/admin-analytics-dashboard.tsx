@@ -19,6 +19,9 @@ import { formatInr } from "@/lib/format";
 import { Skeleton } from "@/components/ui/skeleton";
 
 type AnalyticsPayload = {
+  windowDays: number;
+  topPages: { path: string; views: number }[];
+  topSkus: { slug: string; name: string; count: number }[];
   totals: {
     pageViews: number;
     uniqueSessions: number;
@@ -39,14 +42,16 @@ type AnalyticsPayload = {
 };
 
 export function AdminAnalyticsDashboard() {
+  const [windowDays, setWindowDays] = useState(30);
   const [data, setData] = useState<AnalyticsPayload | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
+    setData(null);
     (async () => {
       try {
-        const res = await fetch("/api/admin/analytics", {
+        const res = await fetch(`/api/admin/analytics?days=${windowDays}`, {
           credentials: "include",
         });
         const json = await res.json();
@@ -59,7 +64,7 @@ export function AdminAnalyticsDashboard() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [windowDays]);
 
   const funnelData = data
     ? [
@@ -79,8 +84,24 @@ export function AdminAnalyticsDashboard() {
           Revenue & behaviour
         </h1>
         <p className="mt-2 max-w-2xl text-sm text-zinc-400">
-          Rolling 30-day window sourced from Postgres telemetry + transactional collections.
+          Window sourced from Postgres telemetry + transactional collections.
         </p>
+        <div className="mt-4 flex flex-wrap gap-2">
+          {[7, 30, 90].map((d) => (
+            <button
+              key={d}
+              type="button"
+              onClick={() => setWindowDays(d)}
+              className={`rounded-lg px-3 py-1.5 text-xs font-medium transition ${
+                windowDays === d
+                  ? "bg-emerald-500/20 text-emerald-200 ring-1 ring-emerald-500/30"
+                  : "bg-zinc-800 text-zinc-400 hover:text-zinc-200"
+              }`}
+            >
+              {d} days
+            </button>
+          ))}
+        </div>
       </header>
 
       {error ? (
@@ -223,6 +244,41 @@ export function AdminAnalyticsDashboard() {
           )}
         </ChartCard>
       </section>
+
+      {data ? (
+        <section className="grid gap-8 lg:grid-cols-2">
+          <div className="rounded-2xl border border-zinc-800 bg-zinc-900/30 p-5">
+            <p className="mb-4 text-sm font-medium text-zinc-200">Top pages</p>
+            <ul className="space-y-2 text-sm">
+              {data.topPages.map((p) => (
+                <li
+                  key={p.path}
+                  className="flex justify-between gap-4 text-zinc-300"
+                >
+                  <span className="truncate font-mono text-xs">{p.path}</span>
+                  <span className="tabular-nums text-zinc-500">{p.views}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div className="rounded-2xl border border-zinc-800 bg-zinc-900/30 p-5">
+            <p className="mb-4 text-sm font-medium text-zinc-200">
+              Top cart SKUs (telemetry)
+            </p>
+            <ul className="space-y-2 text-sm">
+              {data.topSkus.map((s) => (
+                <li
+                  key={s.slug}
+                  className="flex justify-between gap-4 text-zinc-300"
+                >
+                  <span className="truncate">{s.name}</span>
+                  <span className="tabular-nums text-zinc-500">{s.count}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </section>
+      ) : null}
     </div>
   );
 }

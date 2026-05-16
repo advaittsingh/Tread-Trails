@@ -24,6 +24,11 @@ enum BookingStatus {
   cancelled
 }
 
+enum InboxKind {
+  contact
+  corporate
+}
+
 model User {
   id           String   @id @default(cuid())
   email        String   @unique
@@ -212,6 +217,8 @@ model Order {
   razorpayPaymentId      String?
   juspayGatewayOrderId   String?
   juspayCheckoutOrderRef String?
+  /// Internal fulfilment / refund notes — admin only.
+  fulfilmentNotes        String      @default("")
   createdAt              DateTime    @default(now())
   updatedAt              DateTime    @updatedAt
 
@@ -285,5 +292,30 @@ model AppErrorLog {
   createdAt DateTime @default(now())
 
   @@index([createdAt])
+}
+
+model InboxSubmission {
+  id        String    @id @default(cuid())
+  kind      InboxKind
+  payload   Json
+  emailSent Boolean   @default(false)
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([kind, createdAt])
+}
+
+model AdminAuditLog {
+  id        String   @id @default(cuid())
+  adminId   String
+  action    String
+  entity    String
+  entityId  String
+  meta      Json?
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([entity, entityId])
+  @@index([adminId])
 }
 

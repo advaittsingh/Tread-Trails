@@ -9,7 +9,10 @@ import { toastError, toastSuccess } from "@/lib/toast";
 
 import { ADMIN_CONFIRM_DIALOG_CLASS } from "@/components/admin/admin-confirm-styles";
 import { AdminEmptyState } from "@/components/admin/admin-empty-state";
+import { AdminExportButton } from "@/components/admin/admin-export-button";
+import { AdminOrderDetailSheet } from "@/components/admin/admin-order-detail-sheet";
 import { AdminPaginationBar } from "@/components/admin/admin-pagination-bar";
+import { Button } from "@/components/ui/button";
 import { AdminStatusBadge } from "@/components/admin/admin-status-badge";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -38,6 +41,7 @@ export function AdminOrdersTable() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
+  const [detailOrderId, setDetailOrderId] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -121,13 +125,29 @@ export function AdminOrdersTable() {
 
   return (
     <div className="space-y-8 p-6 lg:p-10">
-      <header className="border-b border-zinc-800 pb-6">
-        <h1 className="font-heading text-2xl tracking-tight text-white md:text-3xl">
-          Orders
-        </h1>
-        <p className="mt-2 max-w-2xl text-sm text-zinc-400">
-          Filter by fulfilment state — totals reconcile against Stripe webhooks and COD intake.
-        </p>
+      <header className="flex flex-wrap items-end justify-between gap-4 border-b border-zinc-800 pb-6">
+        <div>
+          <h1 className="font-heading text-2xl tracking-tight text-white md:text-3xl">
+            Orders
+          </h1>
+          <p className="mt-2 max-w-2xl text-sm text-zinc-400">
+            Filter by fulfilment state — open details for line items, shipping, and PSP ids.
+          </p>
+        </div>
+        <AdminExportButton
+          filename="orders.csv"
+          headers={["id", "email", "name", "total", "status", "payment", "created"]}
+          rows={rows.map((r) => [
+            r.id,
+            r.customerEmail,
+            r.customerName,
+            r.total,
+            r.status,
+            r.paymentMethod ?? "",
+            r.createdAt ?? "",
+          ])}
+          disabled={loading}
+        />
       </header>
 
       {error ? (
@@ -199,7 +219,7 @@ export function AdminOrdersTable() {
                 <th className="px-4 py-3 font-medium">Status</th>
                 <th className="px-4 py-3 font-medium">Payment</th>
                 <th className="px-4 py-3 font-medium">Created</th>
-                <th className="px-4 py-3 font-medium">Advance</th>
+                <th className="px-4 py-3 font-medium">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-800/80">
@@ -235,19 +255,30 @@ export function AdminOrdersTable() {
                           : "—"}
                       </td>
                       <td className="px-4 py-4">
-                        <select
-                          disabled={updatingId === r.id}
-                          value={r.status}
-                          onChange={(e) =>
-                            void onStatusChange(r.id, r.status, e.target.value)
-                          }
-                          className="h-9 rounded-lg border border-zinc-700 bg-zinc-950 px-2 text-xs text-zinc-100 outline-none focus:ring-2 focus:ring-emerald-500/40 disabled:opacity-50"
-                        >
-                          <option value="pending">Pending</option>
-                          <option value="paid">Paid</option>
-                          <option value="shipped">Shipped</option>
-                          <option value="cancelled">Cancelled</option>
-                        </select>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <select
+                            disabled={updatingId === r.id}
+                            value={r.status}
+                            onChange={(e) =>
+                              void onStatusChange(r.id, r.status, e.target.value)
+                            }
+                            className="h-9 rounded-lg border border-zinc-700 bg-zinc-950 px-2 text-xs text-zinc-100 outline-none focus:ring-2 focus:ring-emerald-500/40 disabled:opacity-50"
+                          >
+                            <option value="pending">Pending</option>
+                            <option value="paid">Paid</option>
+                            <option value="shipped">Shipped</option>
+                            <option value="cancelled">Cancelled</option>
+                          </select>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="h-9 text-xs text-zinc-400 hover:text-emerald-300"
+                            onClick={() => setDetailOrderId(r.id)}
+                          >
+                            Details
+                          </Button>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -282,6 +313,12 @@ export function AdminOrdersTable() {
           onNext={() => setPage((p) => p + 1)}
         />
       </div>
+
+      <AdminOrderDetailSheet
+        orderId={detailOrderId}
+        onClose={() => setDetailOrderId(null)}
+        onUpdated={load}
+      />
     </div>
   );
 }

@@ -3,6 +3,7 @@ import type { Prisma } from "@prisma/client";
 import { Prisma as PrismaNamespace } from "@prisma/client";
 
 import { requireAdmin } from "@/lib/auth/request-user";
+import { logAdminAction } from "@/lib/server/admin-audit";
 import {
   prismaProductToDTO,
   productWithVehicleCompatInclude,
@@ -139,6 +140,13 @@ export async function PATCH(req: Request, context: RouteCtx) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
 
+    await logAdminAction({
+      adminId: gate.auth.userId,
+      action: "product.update",
+      entity: "product",
+      entityId: id,
+    });
+
     return NextResponse.json({
       id: row.id,
       product: prismaProductToDTO(row),
@@ -171,6 +179,12 @@ export async function DELETE(_req: Request, context: RouteCtx) {
 
   try {
     await prisma.product.delete({ where: { id } });
+    await logAdminAction({
+      adminId: gate.auth.userId,
+      action: "product.delete",
+      entity: "product",
+      entityId: id,
+    });
     return NextResponse.json({ ok: true });
   } catch (e) {
     if (
