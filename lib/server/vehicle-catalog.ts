@@ -4,6 +4,7 @@ import {
   getProductsForVehicle as getStaticProductsForVehicle,
 } from "@/data/vehicle";
 import type { Car, Product } from "@/data/types";
+import { sortCarsByCategory } from "@/lib/vehicle-categories";
 import { prisma } from "@/lib/prisma";
 
 import {
@@ -43,11 +44,11 @@ function prismaVehicleToCar(v: {
 export async function listVehicles(): Promise<Car[]> {
   try {
     const rows = await prisma.vehicle.findMany({ orderBy: { name: "asc" } });
-    if (rows.length > 0) return rows.map(prismaVehicleToCar);
+    if (rows.length > 0) return sortCarsByCategory(rows.map(prismaVehicleToCar));
   } catch {
     /* DATABASE_URL missing / unreachable */
   }
-  return staticCars;
+  return sortCarsByCategory(staticCars);
 }
 
 /** Single vehicle from Neon when present; otherwise static catalog. */

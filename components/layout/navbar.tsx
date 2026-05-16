@@ -3,7 +3,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, ShoppingBag, User } from "lucide-react";
+import { ChevronDown, Menu, ShoppingBag, User } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { useCart } from "@/contexts/cart-context";
@@ -16,19 +16,42 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+import { CartSheet } from "@/components/cart/cart-sheet";
+import { NavCatalogueMegaMenu } from "@/components/layout/nav-catalogue-mega-menu";
 import { NavbarSearch } from "@/components/layout/navbar-search";
+import type { NavCatalogueData } from "@/lib/server/nav-catalogue-data";
 
-const nav = [
-  { href: "/vehicles", label: "Vehicles" },
-  { href: "/brands", label: "Brands" },
-  { href: "/products", label: "Products" },
-  { href: "/builds", label: "Builds" },
-  { href: "/booking", label: "Booking" },
-  { href: "/about", label: "About" },
-  { href: "/youtube", label: "Youtube" },
-  { href: "/corporate-inquiry", label: "Corporate" },
-  { href: "/contact", label: "Contact" },
+type NavEntry =
+  | { kind: "link"; href: string; label: string }
+  | { kind: "catalogue" };
+
+function isCatalogueActive(pathname: string): boolean {
+  return (
+    pathname.startsWith("/brands") ||
+    pathname.startsWith("/builds") ||
+    pathname.startsWith("/build/") ||
+    pathname.startsWith("/products") ||
+    pathname.startsWith("/vehicles") ||
+    pathname.startsWith("/vehicle/")
+  );
+}
+
+/** Primary nav — alphabetical by label (Catalogue between Booking and Contact). */
+const primaryNav: NavEntry[] = [
+  { kind: "link", href: "/about", label: "About" },
+  { kind: "link", href: "/booking", label: "Booking" },
+  { kind: "catalogue" },
+  { kind: "link", href: "/contact", label: "Contact" },
+  { kind: "link", href: "/corporate-inquiry", label: "Corporate" },
+  { kind: "link", href: "/youtube", label: "Youtube" },
 ];
+
+const mobileUtilityLinks = [
+  { href: "/", label: "Home" },
+  { href: "/account", label: "Account" },
+  { href: "/login", label: "Login" },
+  { href: "/signup", label: "Sign up" },
+].sort((a, b) => a.label.localeCompare(b.label));
 
 function NavLink({
   href,
@@ -36,12 +59,14 @@ function NavLink({
   pathname,
   onClick,
   stacked,
+  indented,
 }: {
   href: string;
   label: ReactNode;
   pathname: string;
   onClick?: () => void;
   stacked?: boolean;
+  indented?: boolean;
 }) {
   const active =
     href === "/"
@@ -56,16 +81,15 @@ function NavLink({
         "text-sm tracking-wide transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
         !stacked && [
           // Full-height tap target; underline sits on inner label only (just below text).
-          "group/navlink inline-flex h-16 items-center rounded-md",
-          "hover:text-[#128C7E]",
-          active ? "font-medium text-[#128C7E]" : "text-muted-foreground",
+          "group/navlink inline-flex h-16 items-center rounded-md text-black",
+          "hover:text-black",
+          active && "font-medium",
         ],
         stacked && [
-          "inline-flex min-h-11 items-center rounded-lg px-3 py-3 font-medium focus-visible:ring-offset-0",
-          "hover:bg-[#25D366]/10 hover:text-[#128C7E]",
-          active
-            ? "bg-[#25D366]/10 text-[#128C7E]"
-            : "text-muted-foreground",
+          "inline-flex min-h-11 items-center rounded-lg px-3 py-3 font-medium text-black focus-visible:ring-offset-0",
+          indented && "ms-3 border-s border-border/50 ps-5",
+          "hover:bg-[#25D366]/10 hover:text-black",
+          active && "bg-[#25D366]/10",
         ]
       )}
     >
@@ -87,10 +111,75 @@ function NavLink({
   );
 }
 
-export function Navbar() {
+function NavCatalogueTrigger({
+  pathname,
+  catalogue,
+  onNavigate,
+}: {
+  pathname: string;
+  catalogue: NavCatalogueData;
+  onNavigate?: () => void;
+}) {
+  const active = isCatalogueActive(pathname);
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  return (
+    <div
+      className="relative h-16"
+      onMouseEnter={() => setMenuOpen(true)}
+      onFocus={() => setMenuOpen(true)}
+      onBlur={(e) => {
+        if (!e.currentTarget.contains(e.relatedTarget as Node | null)) {
+          setMenuOpen(false);
+        }
+      }}
+    >
+      <button
+        type="button"
+        aria-haspopup="true"
+        aria-expanded={menuOpen}
+        className={cn(
+          "inline-flex h-16 items-center rounded-md text-sm tracking-wide text-black transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+          "hover:text-black",
+          active && "font-medium"
+        )}
+      >
+        <span
+          className={cn(
+            "relative inline-flex items-center gap-1 pb-0.5",
+            "after:pointer-events-none after:absolute after:inset-x-0 after:bottom-0 after:h-[2px] after:origin-left after:scale-x-0 after:rounded-full after:bg-[#25D366] after:transition-transform after:duration-200 after:ease-out",
+            (menuOpen || active) && "after:scale-x-100"
+          )}
+        >
+          Catalogue
+          <ChevronDown
+            className={cn(
+              "size-3.5 opacity-70 transition-transform duration-200",
+              menuOpen && "rotate-180"
+            )}
+            aria-hidden
+          />
+        </span>
+      </button>
+
+      <NavCatalogueMegaMenu
+        data={catalogue}
+        open={menuOpen}
+        onOpenChange={setMenuOpen}
+        onNavigate={() => {
+          setMenuOpen(false);
+          onNavigate?.();
+        }}
+      />
+    </div>
+  );
+}
+
+export function Navbar({ catalogue }: { catalogue: NavCatalogueData }) {
   const pathname = usePathname();
   const [solid, setSolid] = useState(false);
   const [open, setOpen] = useState(false);
+  const [cartOpen, setCartOpen] = useState(false);
   const { totalQuantity } = useCart();
 
   useEffect(() => {
@@ -103,7 +192,7 @@ export function Navbar() {
   return (
     <header
       className={cn(
-        "fixed inset-x-0 top-0 z-40 transition-[background-color,box-shadow,border-color] duration-300",
+        "fixed inset-x-0 top-0 z-50 transition-[background-color,box-shadow,border-color] duration-300",
         solid
           ? "border-b border-border/80 bg-background/95 shadow-card backdrop-blur-md"
           : "border-b border-transparent bg-background/80 backdrop-blur-sm"
@@ -146,14 +235,22 @@ export function Navbar() {
             "flex-nowrap gap-x-5 whitespace-nowrap xl:gap-x-6"
           )}
         >
-          {nav.map((item) => (
-            <NavLink
-              key={item.href}
-              href={item.href}
-              label={item.label}
-              pathname={pathname}
-            />
-          ))}
+          {primaryNav.map((entry) =>
+            entry.kind === "catalogue" ? (
+              <NavCatalogueTrigger
+                key="catalogue"
+                pathname={pathname}
+                catalogue={catalogue}
+              />
+            ) : (
+              <NavLink
+                key={entry.href}
+                href={entry.href}
+                label={entry.label}
+                pathname={pathname}
+              />
+            )
+          )}
         </nav>
 
         <div
@@ -174,13 +271,13 @@ export function Navbar() {
           >
             <User className="size-[18px]" />
           </Link>
-          <Link
-            href="/cart"
-            className={cn(
-              buttonVariants({ variant: "outline", size: "icon-sm" }),
-              "relative shrink-0 border-border/80"
-            )}
+          <Button
+            type="button"
+            variant="outline"
+            size="icon-sm"
+            className="relative shrink-0 border-border/80"
             aria-label={`Shopping cart${totalQuantity ? `, ${totalQuantity} items` : ", empty"}`}
+            onClick={() => setCartOpen(true)}
           >
             <ShoppingBag className="size-[18px]" />
             {totalQuantity > 0 ? (
@@ -188,7 +285,8 @@ export function Navbar() {
                 {totalQuantity > 99 ? "99+" : totalQuantity}
               </Badge>
             ) : null}
-          </Link>
+          </Button>
+          <CartSheet open={cartOpen} onOpenChange={setCartOpen} />
 
           <Button
             variant="outline"
@@ -217,56 +315,61 @@ export function Navbar() {
                 <NavbarSearch onNavigate={() => setOpen(false)} />
               </div>
               <nav aria-label="Mobile" className="mt-6 flex flex-col gap-1 px-2">
-                <NavLink
-                  href="/"
-                  label="Home"
-                  pathname={pathname}
-                  stacked
-                  onClick={() => setOpen(false)}
-                />
-                {nav.map((item) => (
+                {primaryNav.map((entry) =>
+                  entry.kind === "catalogue" ? (
+                    <NavCatalogueMegaMenu
+                      key="catalogue"
+                      data={catalogue}
+                      open
+                      variant="mobile"
+                      onNavigate={() => setOpen(false)}
+                    />
+                  ) : (
+                    <NavLink
+                      key={entry.href}
+                      href={entry.href}
+                      label={entry.label}
+                      pathname={pathname}
+                      stacked
+                      onClick={() => setOpen(false)}
+                    />
+                  )
+                )}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setOpen(false);
+                    setCartOpen(true);
+                  }}
+                  className={cn(
+                    "inline-flex min-h-11 w-full items-center rounded-lg px-3 py-3 text-left text-sm font-medium tracking-wide text-black transition-colors",
+                    "hover:bg-[#25D366]/10 hover:text-black focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-0"
+                  )}
+                >
+                  Cart
+                  {totalQuantity > 0 ? (
+                    <Badge className="ms-auto">{totalQuantity > 99 ? "99+" : totalQuantity}</Badge>
+                  ) : null}
+                </button>
+                {mobileUtilityLinks.map((item) => (
                   <NavLink
                     key={item.href}
                     href={item.href}
-                    label={item.label}
+                    label={
+                      item.href === "/account" ? (
+                        <>
+                          <User className="size-5 shrink-0" />
+                          <span className="sr-only">Account</span>
+                        </>
+                      ) : (
+                        item.label
+                      )
+                    }
                     pathname={pathname}
                     stacked
                     onClick={() => setOpen(false)}
                   />
                 ))}
-                <NavLink
-                  href="/cart"
-                  label="Cart"
-                  pathname={pathname}
-                  stacked
-                  onClick={() => setOpen(false)}
-                />
-                <NavLink
-                  href="/account"
-                  label={
-                    <>
-                      <User className="size-5 shrink-0" />
-                      <span className="sr-only">Account</span>
-                    </>
-                  }
-                  pathname={pathname}
-                  stacked
-                  onClick={() => setOpen(false)}
-                />
-                <NavLink
-                  href="/login"
-                  label="Login"
-                  pathname={pathname}
-                  stacked
-                  onClick={() => setOpen(false)}
-                />
-                <NavLink
-                  href="/signup"
-                  label="Sign up"
-                  pathname={pathname}
-                  stacked
-                  onClick={() => setOpen(false)}
-                />
               </nav>
             </SheetContent>
           </Sheet>

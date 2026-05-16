@@ -35,7 +35,7 @@ export type SiteSocialProfile = {
 export function siteSocialProfiles(): SiteSocialProfile[] {
   const ig = resolvedSocialUrl(
     "NEXT_PUBLIC_SOCIAL_INSTAGRAM_URL",
-    "https://www.instagram.com/treadtrails"
+    "https://www.instagram.com/treadtrailsindia/"
   );
   const yt = resolvedSocialUrl(
     "NEXT_PUBLIC_SOCIAL_YOUTUBE_URL",

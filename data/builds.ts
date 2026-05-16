@@ -41,7 +41,7 @@ export const builds: Build[] = [
     id: "b3",
     slug: "wrangler-vector-nightfall",
     title: "Nightfall Wrangler",
-    vehicleSlug: "jeep-wrangler",
+    vehicleSlug: "jeep-wrangler-jk",
     summary: "Locked differentials, synthetic recovery, long-travel damping.",
     description:
       "This JK-era platform runs our Vector suspension paired with Cipher locker logic — controlled aggression with predictable yaw.",
@@ -58,8 +58,8 @@ export const builds: Build[] = [
   {
     id: "b4",
     slug: "defender-helios-expedition",
-    title: "Helios Expedition Defender",
-    vehicleSlug: "land-rover-defender",
+    title: "Helios Expedition Cruiser",
+    vehicleSlug: "toyota-land-cruiser-300-series",
     summary: "Silent touring rack + snorkel + layered lighting.",
     description:
       "Camp-forward ergonomics — dual-zone lighting lets rear occupants configure flood without blinding forward optics.",
@@ -75,8 +75,8 @@ export const builds: Build[] = [
   {
     id: "b5",
     slug: "bronco-dune-vector",
-    title: "Vector Dune Bronco",
-    vehicleSlug: "ford-bronco",
+    title: "Vector Dune Endeavour",
+    vehicleSlug: "ford-endeavour-3200cc",
     summary: "Sand modes unlocked through suspension stroke + traction.",
     description:
       "We lengthen rebound windows for loaded dunes while preserving turn-in on packed gravel — winch tucked behind satin skid.",
@@ -93,7 +93,7 @@ export const builds: Build[] = [
     id: "b6",
     slug: "fortuner-summit-suite",
     title: "Summit Suite Fortuner",
-    vehicleSlug: "toyota-fortuner",
+    vehicleSlug: "toyota-fortuner-gen2",
     summary: "Executive interior aura with roof autonomy.",
     description:
       "Rear-seat thermal zoning retained — rack accepts flush solar without piercing OEM drip rails.",

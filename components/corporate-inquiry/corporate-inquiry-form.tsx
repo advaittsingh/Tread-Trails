@@ -7,6 +7,7 @@ import {
   corporateInquirySchema,
   type CorporateInquiryValues,
 } from "@/lib/validations/corporate-inquiry";
+import { withPlainAmpersand } from "@/lib/plain-ampersand";
 import { validatePhone } from "@/lib/validations/phone";
 import { whatsappHref } from "@/lib/whatsapp";
 
@@ -149,7 +150,7 @@ export function CorporateInquiryForm() {
       <Card className="border-border/70 shadow-card">
         <CardHeader className="space-y-1">
           <CardTitle className="font-heading text-xl tracking-tight md:text-2xl">
-            Corporate & fleet inquiries
+            {withPlainAmpersand("Corporate & fleet inquiries")}
           </CardTitle>
           <CardDescription>
             Brief our team on volumes, timelines, and platform mix — we&apos;ll route you to the

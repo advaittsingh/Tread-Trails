@@ -61,4 +61,22 @@
   html {
     @apply font-sans scroll-smooth;
   }
+  /* Playfair Display joins fi/fl etc. by default — keep headline letters distinct */
+  .font-heading {
+    font-variant-ligatures: none;
+    font-feature-settings: "liga" 0, "clig" 0, "dlig" 0;
+  }
+  /* Upright “&” sized to match Playfair heading words (Playfair’s own & glyph is swash italic) */
+  .plain-amp {
+    font-family: Georgia, Cambria, "Times New Roman", Times, serif;
+    font-style: normal;
+    font-weight: inherit;
+    font-size: inherit;
+    line-height: inherit;
+    letter-spacing: inherit;
+    vertical-align: baseline;
+    font-feature-settings: "liga" 0, "clig" 0, "dlig" 0, "salt" 0, "ss01" 0,
+      "ss02" 0, "calt" 0;
+    font-variant-ligatures: none;
+  }
 }

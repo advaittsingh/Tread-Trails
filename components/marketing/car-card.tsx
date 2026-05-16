@@ -18,6 +18,7 @@ type CarCardProps = {
   href?: string;
   /** Narrow card for horizontal strips (e.g. homepage). */
   variant?: "default" | "compact";
+  className?: string;
 };
 
 export const CarCard = memo(function CarCard({
@@ -25,6 +26,7 @@ export const CarCard = memo(function CarCard({
   index = 0,
   href,
   variant = "default",
+  className,
 }: CarCardProps) {
   const dest = href ?? `/vehicle/${car.slug}`;
   const reduceMotion = useReducedMotion();
@@ -41,7 +43,11 @@ export const CarCard = memo(function CarCard({
         ease: [0.22, 1, 0.36, 1],
       }}
       whileHover={reduceMotion ? undefined : { y: -4 }}
-      className={cn("group relative", compact && "w-[min(240px,78vw)] shrink-0 snap-start sm:w-[260px]")}
+      className={cn(
+        "group relative",
+        compact && !className && "w-[min(240px,78vw)] shrink-0 snap-start sm:w-[260px]",
+        className
+      )}
     >
       <Link
         href={dest}

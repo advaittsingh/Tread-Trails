@@ -76,12 +76,12 @@ export default async function VehicleDetailPage({ params }: Props) {
           sizes="100vw"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/70 to-background/10" />
-        <div className="absolute inset-x-0 bottom-0 mx-auto max-w-7xl px-4 pb-16 sm:px-6 lg:px-8">
+        <div className="absolute inset-x-0 bottom-0 z-10 mx-auto max-w-7xl px-4 pb-16 sm:px-6 lg:px-8">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
             <div className="max-w-4xl">
-              <p className="font-heading text-xs tracking-[0.4em] text-primary uppercase">
+              <span className="inline-flex items-center rounded-full border border-border/80 bg-background/95 px-4 py-1.5 font-heading text-sm font-medium tracking-[0.2em] text-foreground uppercase shadow-sm backdrop-blur-sm sm:text-base md:text-lg">
                 {car.category}
-              </p>
+              </span>
               <h1 className="mt-4 font-heading text-5xl tracking-tight text-foreground md:text-7xl">
                 {car.name}
               </h1>

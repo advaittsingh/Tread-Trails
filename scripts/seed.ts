@@ -64,6 +64,14 @@ async function main() {
   }
   console.info(`Vehicles upserted: ${vehiclesUpserted}`);
 
+  const keepVehicleSlugs = staticCars.map((c) => c.slug);
+  const removedVehicles = await prisma.vehicle.deleteMany({
+    where: { slug: { notIn: keepVehicleSlugs } },
+  });
+  if (removedVehicles.count > 0) {
+    console.info(`Removed stale vehicles: ${removedVehicles.count}`);
+  }
+
   let upserted = 0;
   for (const p of staticProducts) {
     const prod = await prisma.product.upsert({

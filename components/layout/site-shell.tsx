@@ -4,12 +4,9 @@ import dynamic from "next/dynamic";
 import { usePathname } from "next/navigation";
 
 import { useCompare } from "@/contexts/compare-context";
-import { useSelectedVehicle } from "@/contexts/selected-vehicle-context";
 import { cn } from "@/lib/utils";
 
 import { Footer } from "@/components/layout/footer";
-import { Navbar } from "@/components/layout/navbar";
-import { SelectedVehicleBanner } from "@/components/layout/selected-vehicle-banner";
 
 const ComparisonTray = dynamic(
   () =>
@@ -38,9 +35,7 @@ const WhatsAppFloat = dynamic(
 export function SiteShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const isAdmin = pathname?.startsWith("/admin") ?? false;
-  const { slug, hydrated } = useSelectedVehicle();
   const { hydrated: compareHydrated, count: compareCount } = useCompare();
-  const showVehicleBanner = hydrated && Boolean(slug);
   const compareTrayPad =
     compareHydrated &&
     compareCount > 0 &&
@@ -69,13 +64,10 @@ export function SiteShell({ children }: { children: React.ReactNode }) {
         aria-hidden
         className="pointer-events-none fixed inset-0 -z-10 bg-lux-grid bg-grid opacity-[0.35]"
       />
-      <Navbar />
-      <SelectedVehicleBanner />
       <main
         id="main-content"
         className={cn(
-          "min-h-[70vh]",
-          showVehicleBanner ? "pt-[calc(4rem+2.75rem)]" : "pt-16",
+          "min-h-[70vh] pt-16",
           compareTrayPad && "pb-24 sm:pb-[5.5rem]"
         )}
       >

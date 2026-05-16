@@ -4,6 +4,7 @@ import { buildPageMetadata } from "@/lib/seo/page-metadata";
 
 import { CorporateInquiryForm } from "@/components/corporate-inquiry/corporate-inquiry-form";
 import { SectionHeading } from "@/components/marketing/section-heading";
+import { withPlainAmpersand } from "@/lib/plain-ampersand";
 
 const description =
   "Fleet programmes, reseller partnerships, and corporate procurement for expedition-grade upgrades. Brief us on volumes, vehicle platforms, regions, and timelines — our partnerships desk typically replies within two business days.";
@@ -21,7 +22,7 @@ export default function CorporateInquiryPage() {
         titleAs="h1"
         align="center"
         eyebrow="Partnerships"
-        title="Corporate & fleet"
+        title={withPlainAmpersand("Corporate & fleet")}
         description={description}
         className="mx-auto mb-12 max-w-2xl lg:mb-14"
       />

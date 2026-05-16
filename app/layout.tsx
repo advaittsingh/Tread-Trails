@@ -5,8 +5,11 @@ import { Inter, Playfair_Display } from "next/font/google";
 
 import { absoluteUrl, siteUrl } from "@/lib/site";
 import { cn } from "@/lib/utils";
+import { Suspense } from "react";
+
+import { getNavCatalogueData } from "@/lib/server/nav-catalogue-data";
 import { AppProviders } from "@/components/providers/app-providers";
-import { SiteShell } from "@/components/layout/site-shell";
+import { SiteChrome } from "@/components/layout/site-chrome";
 import { SiteJsonLd } from "@/components/seo/site-json-ld";
 
 const playfair = Playfair_Display({
@@ -79,17 +82,21 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const catalogue = await getNavCatalogueData();
+
   return (
     <html lang="en" className={cn(playfair.variable, inter.variable)}>
       <body className="min-h-screen bg-background font-sans antialiased">
         <SiteJsonLd />
         <AppProviders>
-          <SiteShell>{children}</SiteShell>
+          <Suspense fallback={null}>
+            <SiteChrome catalogue={catalogue}>{children}</SiteChrome>
+          </Suspense>
         </AppProviders>
       </body>
     </html>

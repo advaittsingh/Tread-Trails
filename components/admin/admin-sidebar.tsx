@@ -20,20 +20,20 @@ import {
 import { cn } from "@/lib/utils";
 
 const core = [
+  { href: "/admin/bookings", label: "Bookings", icon: Wrench },
+  { href: "/admin/builds", label: "Builds", icon: Boxes },
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
   { href: "/admin/orders", label: "Orders", icon: Package },
   { href: "/admin/products", label: "Products", icon: Layers },
-  { href: "/admin/builds", label: "Builds", icon: Boxes },
-  { href: "/admin/bookings", label: "Bookings", icon: Wrench },
 ];
 
 const advanced = [
-  { href: "/admin/analytics", label: "Analytics", icon: BarChart3 },
-  { href: "/admin/live", label: "Live map", icon: MapPin },
   { href: "/admin/carts", label: "Abandoned carts", icon: ShoppingCart },
+  { href: "/admin/analytics", label: "Analytics", icon: BarChart3 },
   { href: "/admin/crm", label: "CRM email", icon: Mail },
-  { href: "/admin/users", label: "Users", icon: Users },
+  { href: "/admin/live", label: "Live map", icon: MapPin },
   { href: "/admin/system", label: "System", icon: Activity },
+  { href: "/admin/users", label: "Users", icon: Users },
 ];
 
 function NavBlock({

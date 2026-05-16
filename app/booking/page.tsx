@@ -16,13 +16,13 @@ export const metadata: Metadata = buildPageMetadata({
 
 function BookingFallback() {
   return (
-    <div className="mx-auto max-w-xl space-y-4 rounded-xl border border-border/70 bg-card p-8 shadow-card">
+    <div className="mx-auto max-w-2xl space-y-4 rounded-xl border border-border/70 bg-card p-8 shadow-card">
       <Skeleton className="h-8 w-48 rounded-lg" />
-      <Skeleton className="h-2 w-full rounded-full" />
+      <Skeleton className="h-24 w-full rounded-xl" />
+      <Skeleton className="h-24 w-full rounded-xl" />
       <Skeleton className="h-32 w-full rounded-xl" />
-      <div className="flex justify-between pt-4">
-        <Skeleton className="h-9 w-20 rounded-lg" />
-        <Skeleton className="h-9 w-28 rounded-lg" />
+      <div className="flex justify-end pt-4">
+        <Skeleton className="h-10 w-36 rounded-lg" />
       </div>
     </div>
   );

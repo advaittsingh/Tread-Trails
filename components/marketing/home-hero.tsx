@@ -4,7 +4,9 @@ import Image from "next/image";
 import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
 
-import { PrimaryCta, WhatsAppCta } from "@/components/marketing/cta-buttons";
+import { cn } from "@/lib/utils";
+import { PrimaryCta } from "@/components/marketing/cta-buttons";
+import { buttonVariants } from "@/components/ui/button";
 
 export function HomeHero() {
   const reduceMotion = useReducedMotion();
@@ -61,15 +63,12 @@ export function HomeHero() {
             <PrimaryCta href="/booking" className="h-11 px-6 text-base shadow-card">
               Book appointment
             </PrimaryCta>
-            <WhatsAppCta
-              message="Hi — I'd like to discuss a build with Tread Trails."
-              label="WhatsApp concierge"
-              className="h-11 px-6 text-base"
-              variant="outline"
-            />
             <Link
               href="/vehicles"
-              className="inline-flex h-11 items-center rounded-md px-4 text-sm tracking-wide text-muted-foreground underline-offset-4 outline-none hover:text-foreground hover:underline focus-visible:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+              className={cn(
+                buttonVariants({ variant: "outline" }),
+                "h-11 px-6 text-base"
+              )}
             >
               Explore vehicles
             </Link>

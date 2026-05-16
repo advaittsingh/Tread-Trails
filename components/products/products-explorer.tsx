@@ -6,7 +6,7 @@ import { useSelectedVehicle } from "@/contexts/selected-vehicle-context";
 
 import type { Product } from "@/data/types";
 import { cars } from "@/data/cars";
-import { productBrands } from "@/data/index";
+import { productBrands, productCategories } from "@/data/index";
 
 import { FilterControls } from "@/components/products/filter-controls";
 import { ProductCard } from "@/components/marketing/product-card";
@@ -22,14 +22,20 @@ type ProductsExplorerProps = {
   products: Product[];
   /** URL `?q=` from SearchAction / organic deep links */
   initialQuery?: string;
+  /** URL `?category=` from catalogue mega-menu */
+  initialCategory?: string;
 };
 
 export function ProductsExplorer({
   products,
   initialQuery = "",
+  initialCategory = "",
 }: ProductsExplorerProps) {
   const [brands, setBrands] = useState<string[]>([]);
   const [vehicles, setVehicles] = useState<string[]>([]);
+  const [categories, setCategories] = useState<string[]>(() =>
+    initialCategory.trim() ? [initialCategory.trim()] : []
+  );
   const [textQuery, setTextQuery] = useState(() => initialQuery.trim());
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const { slug: storedVehicleSlug, hydrated } = useSelectedVehicle();
@@ -44,6 +50,11 @@ export function ProductsExplorer({
   useEffect(() => {
     setTextQuery(initialQuery.trim());
   }, [initialQuery]);
+
+  useEffect(() => {
+    const cat = initialCategory.trim();
+    setCategories(cat ? [cat] : []);
+  }, [initialCategory]);
 
   const carOptions = useMemo(
     () => cars.map((c) => ({ slug: c.slug, name: c.name })),
@@ -69,9 +80,11 @@ export function ProductsExplorer({
       const vehicleOk =
         vehicles.length === 0 ||
         p.compatibleCars.some((slug) => vehicles.includes(slug));
-      return brandOk && vehicleOk;
+      const categoryOk =
+        categories.length === 0 || categories.includes(p.category);
+      return brandOk && vehicleOk && categoryOk;
     });
-  }, [textFiltered, brands, vehicles]);
+  }, [textFiltered, brands, vehicles, categories]);
 
   function toggleBrand(b: string) {
     setBrands((prev) =>
@@ -85,17 +98,29 @@ export function ProductsExplorer({
     );
   }
 
+  function toggleCategory(category: string) {
+    setCategories((prev) =>
+      prev.includes(category)
+        ? prev.filter((x) => x !== category)
+        : [...prev, category]
+    );
+  }
+
   function clearAll() {
     setBrands([]);
     setVehicles([]);
+    setCategories([]);
   }
 
   const filterProps = {
     brands: productBrands,
+    categories: productCategories,
     cars: carOptions,
     selectedBrands: brands,
+    selectedCategories: categories,
     selectedVehicles: vehicles,
     toggleBrand,
+    toggleCategory,
     toggleVehicle,
     clearAll,
   };
@@ -109,21 +134,46 @@ export function ProductsExplorer({
       </aside>
 
       <div className="flex-1 space-y-8">
-        {textQuery ? (
-          <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-border/70 bg-muted/25 px-4 py-3 text-sm">
-            <span className="text-muted-foreground">
-              Search:{" "}
-              <span className="font-medium text-foreground">&ldquo;{textQuery}&rdquo;</span>
-            </span>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              className="h-8"
-              onClick={() => setTextQuery("")}
-            >
-              Clear search
-            </Button>
+        {textQuery || categories.length > 0 ? (
+          <div className="flex flex-col gap-2 rounded-xl border border-border/70 bg-muted/25 px-4 py-3 text-sm">
+            {textQuery ? (
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <span className="text-muted-foreground">
+                  Search:{" "}
+                  <span className="font-medium text-foreground">
+                    &ldquo;{textQuery}&rdquo;
+                  </span>
+                </span>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-8"
+                  onClick={() => setTextQuery("")}
+                >
+                  Clear search
+                </Button>
+              </div>
+            ) : null}
+            {categories.length > 0 ? (
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <span className="text-muted-foreground">
+                  Categories:{" "}
+                  <span className="font-medium text-foreground">
+                    {categories.join(", ")}
+                  </span>
+                </span>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-8"
+                  onClick={() => setCategories([])}
+                >
+                  Clear categories
+                </Button>
+              </div>
+            ) : null}
           </div>
         ) : null}
         <div className="flex flex-wrap items-center justify-between gap-3">
@@ -162,7 +212,7 @@ export function ProductsExplorer({
           <div className="rounded-2xl border border-dashed border-border/70 bg-muted/15 px-6 py-20 text-center text-sm text-muted-foreground">
             {textQuery.trim()
               ? `No products match “${textQuery.trim()}”. Try another keyword or adjust filters.`
-              : "No products match these filters. Adjust brand or vehicle selection."}
+              : "No products match these filters. Adjust brand, category, or vehicle selection."}
           </div>
         ) : (
           <div className="grid gap-8 sm:grid-cols-2 xl:grid-cols-3">

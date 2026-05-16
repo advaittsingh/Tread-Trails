@@ -10,14 +10,17 @@ import {
 import { Separator } from "@/components/ui/separator";
 
 const links = [
-  { label: "Vehicles", href: "/vehicles" },
-  { label: "Brands", href: "/brands" },
-  { label: "Products", href: "/products" },
-  { label: "Builds", href: "/builds" },
-  { label: "Booking", href: "/booking" },
   { label: "About", href: "/about" },
-  { label: "Corporate", href: "/corporate-inquiry" },
+  { label: "Booking", href: "/booking" },
+  { label: "Brands", href: "/brands" },
+  { label: "Builds", href: "/builds" },
   { label: "Contact", href: "/contact" },
+  { label: "Corporate", href: "/corporate-inquiry" },
+  { label: "Login", href: "/login" },
+  { label: "Products", href: "/products" },
+  { label: "Sign up", href: "/signup" },
+  { label: "Vehicles", href: "/vehicles" },
+  { label: "Youtube", href: "/youtube" },
 ];
 
 function InstagramGlyph({ className }: { className?: string }) {
@@ -58,9 +61,15 @@ function SocialIcon({ label }: { label: SiteSocialProfile["label"] }) {
   }
 }
 
+const EXPLORE_COLUMN_SIZE = 5;
+
 export function Footer() {
   const email = siteContactEmail();
   const social = siteSocialProfiles();
+  const exploreColOne = links.slice(0, EXPLORE_COLUMN_SIZE);
+  const exploreColTwo = links.slice(EXPLORE_COLUMN_SIZE);
+  const exploreColumnClass =
+    "flex h-[8.5rem] min-w-0 flex-1 flex-col justify-between text-sm leading-5";
 
   return (
     <footer className="border-t border-border/80 bg-background/80">
@@ -79,34 +88,32 @@ export function Footer() {
             <p className="font-heading text-sm tracking-widest text-foreground uppercase">
               Explore
             </p>
-            <ul className="mt-4 space-y-2 text-sm text-muted-foreground">
-              {links.map((item) => (
-                <li key={item.href}>
-                  <Link
-                    href={item.href}
-                    className="rounded-sm outline-none transition hover:text-primary focus-visible:text-primary focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-                  >
-                    {item.label}
-                  </Link>
-                </li>
-              ))}
-              <li>
-                <Link
-                  href="/login"
-                  className="rounded-sm outline-none transition hover:text-primary focus-visible:text-primary focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-                >
-                  Login
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/signup"
-                  className="rounded-sm outline-none transition hover:text-primary focus-visible:text-primary focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-                >
-                  Sign up
-                </Link>
-              </li>
-            </ul>
+            <div className="mt-4 flex gap-x-5 text-muted-foreground">
+              <ul className={exploreColumnClass}>
+                {exploreColOne.map((item) => (
+                  <li key={item.href}>
+                    <Link
+                      href={item.href}
+                      className="block rounded-sm outline-none transition hover:text-primary focus-visible:text-primary focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                    >
+                      {item.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+              <ul className={exploreColumnClass}>
+                {exploreColTwo.map((item) => (
+                  <li key={item.href}>
+                    <Link
+                      href={item.href}
+                      className="block rounded-sm outline-none transition hover:text-primary focus-visible:text-primary focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                    >
+                      {item.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
           </div>
           <div>
             <p className="font-heading text-sm tracking-widest text-foreground uppercase">
@@ -143,8 +150,24 @@ export function Footer() {
           </div>
         </div>
         <Separator className="my-10 bg-border/60" />
-        <p className="text-center text-xs text-muted-foreground">
-          © {new Date().getFullYear()} Tread Trails. All rights reserved.
+        <p className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-center text-xs text-muted-foreground">
+          <span>
+            © {new Date().getFullYear()} Tread Trails. All rights reserved.
+          </span>
+          <span className="text-border/80" aria-hidden>
+            ·
+          </span>
+          <span>
+            Developed by{" "}
+            <a
+              href="https://www.curvvtech.com/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="rounded-sm text-foreground underline-offset-4 outline-none transition hover:text-primary hover:underline focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+            >
+              Curvvtech
+            </a>
+          </span>
         </p>
       </div>
     </footer>

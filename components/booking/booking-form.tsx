@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 
@@ -15,7 +15,6 @@ import {
 
 import { useSelectedVehicle } from "@/contexts/selected-vehicle-context";
 
-import { BookingWizardSteps } from "@/components/booking/booking-wizard-steps";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import {
@@ -27,7 +26,6 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Progress } from "@/components/ui/progress";
 
 import {
   BOOKING_SOON_BUFFER_MINUTES,
@@ -50,12 +48,66 @@ const SERVICES = [
   "Full expedition conversion",
 ];
 
+function FormSection({
+  title,
+  children,
+}: {
+  title: string;
+  children: ReactNode;
+}) {
+  return (
+    <section className="space-y-4 border-t border-border/60 pt-6 first:border-t-0 first:pt-0">
+      <h3 className="font-heading text-sm tracking-[0.2em] text-primary uppercase">
+        {title}
+      </h3>
+      {children}
+    </section>
+  );
+}
+
+function RequiredLabel({
+  htmlFor,
+  children,
+}: {
+  htmlFor?: string;
+  children: ReactNode;
+}) {
+  return (
+    <Label htmlFor={htmlFor}>
+      {children}
+      <span className="text-destructive" aria-hidden>
+        {" "}
+        *
+      </span>
+    </Label>
+  );
+}
+
+function isBookingFormComplete(
+  values: {
+    carSlug: string;
+    service: string;
+    date: string;
+    time: string;
+    name: string;
+    email: string;
+    phone: string;
+  },
+  utcOffsetMinutes: number
+) {
+  const { carSlug, service, date, time, name, email, phone } = values;
+  if (!carSlug || !service || !date || !time) return false;
+  if (!name.trim() || !email.trim() || !phone.trim()) return false;
+  return (
+    validateBookingSlot(date, time, { utcOffsetMinutes }) === null
+  );
+}
+
 export function BookingForm() {
   const searchParams = useSearchParams();
   const { setSelectedSlug, slug: globalSlug, hydrated } = useSelectedVehicle();
   const didApplyStoredVehicle = useRef(false);
   const submitLock = useRef(false);
-  const [step, setStep] = useState(0);
   const [carSlug, setCarSlug] = useState("");
   const [service, setService] = useState("");
   const [date, setDate] = useState("");
@@ -67,6 +119,13 @@ export function BookingForm() {
   const [prefilled, setPrefilled] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+
+  const [
+    vehicleSectionTitle,
+    serviceSectionTitle,
+    scheduleSectionTitle,
+    contactSectionTitle,
+  ] = BOOKING_VEHICLE_FLOW_STEP_TITLES;
 
   useEffect(() => {
     const vehicle = searchParams.get("vehicle");
@@ -109,8 +168,6 @@ export function BookingForm() {
     if (globalSlug) setCarSlug(globalSlug);
   }, [hydrated, globalSlug, searchParams]);
 
-  const progress = useMemo(() => ((step + 1) / 4) * 100, [step]);
-
   const bookingClock = useMemo(() => bookingStudioClockContextClient(), []);
 
   const datePickerBounds = useMemo(() => {
@@ -124,7 +181,9 @@ export function BookingForm() {
 
   const slotValidationIssue = useMemo(() => {
     if (!date || !time) return null;
-    return validateBookingSlot(date, time, { utcOffsetMinutes: bookingClock.utcOffsetMinutes });
+    return validateBookingSlot(date, time, {
+      utcOffsetMinutes: bookingClock.utcOffsetMinutes,
+    });
   }, [date, time, bookingClock.utcOffsetMinutes]);
 
   const contextBadges = useMemo(() => {
@@ -141,27 +200,73 @@ export function BookingForm() {
   useEffect(() => {
     if (!date || !time) return;
     if (
-      validateBookingSlot(date, time, { utcOffsetMinutes: bookingClock.utcOffsetMinutes }) !== null
+      validateBookingSlot(date, time, {
+        utcOffsetMinutes: bookingClock.utcOffsetMinutes,
+      }) !== null
     ) {
       setTime("");
     }
   }, [date, time, bookingClock.utcOffsetMinutes]);
 
-  function next() {
-    setStep((s) => Math.min(s + 1, 3));
-  }
+  const formComplete = useMemo(
+    () =>
+      isBookingFormComplete(
+        { carSlug, service, date, time, name, email, phone },
+        bookingClock.utcOffsetMinutes
+      ),
+    [
+      carSlug,
+      service,
+      date,
+      time,
+      name,
+      email,
+      phone,
+      bookingClock.utcOffsetMinutes,
+    ]
+  );
 
-  function back() {
-    setStep((s) => Math.max(s - 1, 0));
-  }
-
-  async function submit(e: React.FormEvent) {
+  async function submit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (submitLock.current || submitting) return;
+
+    const form = e.currentTarget;
+    if (!form.reportValidity()) {
+      setSubmitError("Complete all required fields before submitting.");
+      return;
+    }
+
+    if (
+      !isBookingFormComplete(
+        { carSlug, service, date, time, name, email, phone },
+        bookingClock.utcOffsetMinutes
+      )
+    ) {
+      if (!time) {
+        setSubmitError("Choose a time window.");
+        document.getElementById("time-slots-label")?.scrollIntoView({
+          behavior: "smooth",
+          block: "center",
+        });
+        return;
+      }
+      const slotIssue = validateBookingSlot(date, time, {
+        utcOffsetMinutes: bookingClock.utcOffsetMinutes,
+      });
+      if (slotIssue) {
+        setSubmitError(bookingSlotErrorMessage(slotIssue));
+        return;
+      }
+      setSubmitError("Complete all required fields before submitting.");
+      return;
+    }
+
     setSubmitError(null);
     const vehicleName = cars.find((c) => c.slug === carSlug)?.name ?? "";
-    if (!vehicleName) {
-      setSubmitError("Choose a vehicle platform.");
+    const trimmedName = name.trim();
+    const trimmedEmail = email.trim();
+    if (!vehicleName || !trimmedName || !trimmedEmail) {
+      setSubmitError("Complete all required fields before submitting.");
       return;
     }
     const slotIssue = validateBookingSlot(date, time, {
@@ -189,8 +294,8 @@ export function BookingForm() {
           service,
           date,
           time,
-          contactName: name.trim(),
-          contactEmail: email.trim(),
+          contactName: trimmedName,
+          contactEmail: trimmedEmail,
           contactPhone: phoneResult.normalized,
         }),
       });
@@ -218,8 +323,8 @@ export function BookingForm() {
         </CardHeader>
         <CardContent className="space-y-4 text-sm text-muted-foreground">
           <p>
-            Thank you, {name || "driver"}. Your bay request is saved — our crew will confirm timing via{" "}
-            {email}.
+            Thank you, {name || "driver"}. Your bay request is saved — our crew
+            will confirm timing via {email}.
           </p>
           <p>
             <span className="font-medium text-foreground">{service}</span> for{" "}
@@ -231,7 +336,10 @@ export function BookingForm() {
           </p>
           <Link
             href="/account"
-            className={cn(buttonVariants({ variant: "outline" }), "inline-flex w-full justify-center")}
+            className={cn(
+              buttonVariants({ variant: "outline" }),
+              "inline-flex w-full justify-center"
+            )}
           >
             View account
           </Link>
@@ -241,16 +349,11 @@ export function BookingForm() {
   }
 
   return (
-    <Card className="mx-auto max-w-xl border-border/70 shadow-card">
+    <Card className="mx-auto max-w-2xl border-border/70 shadow-card">
       <CardHeader className="gap-4">
         <CardTitle as="h2" className="font-heading text-2xl tracking-tight">
           Book installation
         </CardTitle>
-        <Progress value={progress} />
-        <BookingWizardSteps
-          titles={BOOKING_VEHICLE_FLOW_STEP_TITLES}
-          currentStep={step}
-        />
         {(prefilled || contextBadges.length > 0) && (
           <div className="flex flex-wrap gap-2 rounded-xl border border-primary/15 bg-primary/5 px-3 py-2">
             <span className="w-full text-[11px] font-medium tracking-widest text-primary uppercase">
@@ -264,54 +367,54 @@ export function BookingForm() {
           </div>
         )}
       </CardHeader>
-      <form onSubmit={step === 3 ? submit : (e) => e.preventDefault()}>
-        <CardContent className="space-y-6">
+      <form onSubmit={submit}>
+        <CardContent className="space-y-0">
           {submitError ? (
-            <p className="rounded-xl border border-destructive/35 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+            <p className="mb-6 rounded-xl border border-destructive/35 bg-destructive/10 px-4 py-3 text-sm text-destructive">
               {submitError}
             </p>
           ) : null}
-          {step === 0 ? (
-            <div className="space-y-3">
-              <div>
-                <Label htmlFor="car">Vehicle platform</Label>
-                <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-                  Required — pick the chassis we&apos;re scheduling for (same slugs as vehicle hub URLs).
-                  {searchParams.get("vehicle") ? (
-                    <>
-                      {" "}
-                      <span className="text-foreground/90">
-                        Pre-filled from the link you followed — change if needed.
-                      </span>
-                    </>
-                  ) : null}
-                </p>
-              </div>
-              <select
-                id="car"
-                required
-                disabled={submitting}
-                value={carSlug}
-                onChange={(e) => {
-                  const v = e.target.value;
-                  setCarSlug(v);
-                  setSelectedSlug(v || null);
-                }}
-                className="flex h-11 w-full rounded-xl border border-input bg-background px-3 text-sm shadow-card outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                <option value="">{VEHICLE_PLATFORM_SELECT_PLACEHOLDER}</option>
-                {cars.map((c) => (
-                  <option key={c.slug} value={c.slug}>
-                    {c.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-          ) : null}
 
-          {step === 1 ? (
+          <FormSection title={vehicleSectionTitle}>
+            <div>
+              <RequiredLabel htmlFor="car">Vehicle platform</RequiredLabel>
+              <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+                Required — pick the chassis we&apos;re scheduling for (same
+                slugs as vehicle hub URLs).
+                {searchParams.get("vehicle") ? (
+                  <>
+                    {" "}
+                    <span className="text-foreground/90">
+                      Pre-filled from the link you followed — change if needed.
+                    </span>
+                  </>
+                ) : null}
+              </p>
+            </div>
+            <select
+              id="car"
+              required
+              disabled={submitting}
+              value={carSlug}
+              onChange={(e) => {
+                const v = e.target.value;
+                setCarSlug(v);
+                setSelectedSlug(v || null);
+              }}
+              className="flex h-11 w-full rounded-xl border border-input bg-background px-3 text-sm shadow-card outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              <option value="">{VEHICLE_PLATFORM_SELECT_PLACEHOLDER}</option>
+              {cars.map((c) => (
+                <option key={c.slug} value={c.slug}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+          </FormSection>
+
+          <FormSection title={serviceSectionTitle}>
             <div className="space-y-3">
-              <Label htmlFor="service">Service focus</Label>
+              <RequiredLabel htmlFor="service">Service focus</RequiredLabel>
               <select
                 id="service"
                 required
@@ -328,17 +431,19 @@ export function BookingForm() {
                 ))}
               </select>
             </div>
-          ) : null}
+          </FormSection>
 
-          {step === 2 ? (
+          <FormSection title={scheduleSectionTitle}>
             <div className="space-y-5">
               <p className="text-xs leading-relaxed text-muted-foreground">
-                Times use the studio clock ({bookingClock.timeZone.replace(/_/g, " ")}). Same-day visits need at least{" "}
-                {BOOKING_SOON_BUFFER_MINUTES} minutes&apos; notice. Sundays are blocked — pick another day.
+                Times use the studio clock (
+                {bookingClock.timeZone.replace(/_/g, " ")}). Same-day visits
+                need at least {BOOKING_SOON_BUFFER_MINUTES} minutes&apos;
+                notice. Sundays are blocked — pick another day.
               </p>
               <div className="grid gap-6 sm:grid-cols-2">
                 <div className="space-y-3">
-                  <Label htmlFor="date">Preferred date</Label>
+                  <RequiredLabel htmlFor="date">Preferred date</RequiredLabel>
                   <Input
                     id="date"
                     type="date"
@@ -353,17 +458,30 @@ export function BookingForm() {
                     className="font-medium tabular-nums"
                   />
                   <p className="text-[11px] text-muted-foreground">
-                    Choose between {datePickerBounds.min} and {datePickerBounds.max}.
+                    Choose between {datePickerBounds.min} and{" "}
+                    {datePickerBounds.max}.
                   </p>
                 </div>
                 <div className="space-y-3">
-                  <span id="time-slots-label" className="text-sm font-medium leading-none">
-                    Time window
-                  </span>
+                  <RequiredLabel htmlFor="booking-time">
+                    <span id="time-slots-label">Time window</span>
+                  </RequiredLabel>
+                  <input
+                    id="booking-time"
+                    type="text"
+                    tabIndex={-1}
+                    required
+                    value={time}
+                    readOnly
+                    aria-hidden
+                    className="sr-only"
+                    onChange={() => undefined}
+                  />
                   <div
                     role="radiogroup"
                     aria-labelledby="time-slots-label"
-                    className="grid grid-cols-2 gap-2 sm:grid-cols-1"
+                    aria-required
+                    className="grid grid-cols-2 gap-2"
                   >
                     {BOOKING_TIME_SLOTS.map((slot) => {
                       const disabled =
@@ -379,15 +497,19 @@ export function BookingForm() {
                           role="radio"
                           aria-checked={selected}
                           disabled={disabled || submitting}
-                          onClick={() => !disabled && !submitting && setTime(slot)}
+                          onClick={() =>
+                            !disabled && !submitting && setTime(slot)
+                          }
                           className={cn(
                             "rounded-xl border px-3 py-2.5 text-left text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-45",
                             selected
                               ? "border-primary bg-primary/10 font-medium text-foreground"
-                              : "border-input bg-background hover:border-primary/40 hover:bg-muted/40",
+                              : "border-input bg-background hover:border-primary/40 hover:bg-muted/40"
                           )}
                         >
-                          <span className="tabular-nums">{formatBookingSlotLabel(slot)}</span>
+                          <span className="tabular-nums">
+                            {formatBookingSlotLabel(slot)}
+                          </span>
                           <span className="mt-0.5 block text-[11px] font-normal text-muted-foreground">
                             {slot}
                           </span>
@@ -406,12 +528,12 @@ export function BookingForm() {
                 </p>
               ) : null}
             </div>
-          ) : null}
+          </FormSection>
 
-          {step === 3 ? (
+          <FormSection title={contactSectionTitle}>
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-3 sm:col-span-2">
-                <Label htmlFor="name">Full name</Label>
+                <RequiredLabel htmlFor="name">Full name</RequiredLabel>
                 <Input
                   id="name"
                   required
@@ -422,7 +544,7 @@ export function BookingForm() {
                 />
               </div>
               <div className="space-y-3">
-                <Label htmlFor="email">Email</Label>
+                <RequiredLabel htmlFor="email">Email</RequiredLabel>
                 <Input
                   id="email"
                   type="email"
@@ -434,7 +556,7 @@ export function BookingForm() {
                 />
               </div>
               <div className="space-y-3">
-                <Label htmlFor="phone">Phone</Label>
+                <RequiredLabel htmlFor="phone">Phone</RequiredLabel>
                 <Input
                   id="phone"
                   type="tel"
@@ -450,35 +572,16 @@ export function BookingForm() {
                 />
               </div>
             </div>
-          ) : null}
+          </FormSection>
         </CardContent>
-        <CardFooter className="flex flex-wrap justify-between gap-3 border-t border-border/60 bg-muted/20">
-          <Button type="button" variant="ghost" onClick={back} disabled={step === 0 || submitting}>
-            Back
+        <CardFooter className="flex justify-end border-t border-border/60 bg-muted/20">
+          <Button
+            type="submit"
+            disabled={submitting || !formComplete}
+            className="min-w-[10rem]"
+          >
+            {submitting ? "Sending…" : "Submit request"}
           </Button>
-          {step < 3 ? (
-            <Button
-              type="button"
-              onClick={next}
-              disabled={
-                submitting ||
-                (step === 0 && !carSlug) ||
-                (step === 1 && !service) ||
-                (step === 2 &&
-                  (!date ||
-                    !time ||
-                    validateBookingSlot(date, time, {
-                      utcOffsetMinutes: bookingClock.utcOffsetMinutes,
-                    }) !== null))
-              }
-            >
-              Continue
-            </Button>
-          ) : (
-            <Button type="submit" disabled={submitting}>
-              {submitting ? "Sending…" : "Submit request"}
-            </Button>
-          )}
         </CardFooter>
       </form>
     </Card>

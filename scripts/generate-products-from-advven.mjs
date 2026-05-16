@@ -52,16 +52,22 @@ function platformToCars(brand) {
   const b = String(brand || "")
     .toLowerCase()
     .replace(/\s+/g, "_");
-  if (b.includes("mahindra") || b.includes("thar")) return ["mahindra-thar"];
+  if (b.includes("mahindra") || b.includes("thar"))
+    return ["mahindra-thar-gen1-crde", "mahindra-thar", "mahindra-thar-roxx"];
   if (b.includes("jimny") || b.includes("suzuki"))
-    return ["jeep-wrangler", "mahindra-thar"];
-  if (b.includes("fortuner")) return ["toyota-fortuner"];
+    return ["maruti-suzuki-jimny", "mahindra-thar", "jeep-wrangler-jk", "jeep-wrangler-jl"];
+  if (b.includes("fortuner"))
+    return ["toyota-fortuner-gen1", "toyota-fortuner-gen2", "toyota-fortuner-gen3"];
   if (b.includes("hilux")) return ["toyota-hilux"];
-  if (b === "toyota") return ["toyota-hilux", "toyota-fortuner"];
-  if (b.includes("wrangler") || b.includes("jeep")) return ["jeep-wrangler"];
-  if (b.includes("defender") || b.includes("land")) return ["land-rover-defender"];
-  if (b.includes("bronco") || b.includes("ford")) return ["ford-bronco"];
-  return ["toyota-hilux", "jeep-wrangler", "ford-bronco", "land-rover-defender"];
+  if (b === "toyota")
+    return ["toyota-hilux", "toyota-fortuner-gen2", "toyota-land-cruiser-200-series"];
+  if (b.includes("wrangler") || b.includes("jeep"))
+    return ["jeep-wrangler-jk", "jeep-wrangler-jl"];
+  if (b.includes("defender") || b.includes("land"))
+    return ["toyota-land-cruiser-200-series", "toyota-land-cruiser-300-series"];
+  if (b.includes("bronco") || b.includes("endeavour") || b.includes("ford"))
+    return ["ford-endeavour-3200cc", "ford-endeavour-2000cc-10speed"];
+  return ["toyota-hilux", "jeep-wrangler-jl", "ford-endeavour-3200cc"];
 }
 
 function descToSpecs(description) {
@@ -146,10 +152,10 @@ function pickFor(slug, cats) {
 const buildPick = {
   b1: pickFor("toyota-hilux", ["Wheels", "Suspension", "Winches", "Protection"]),
   b2: pickFor("mahindra-thar", ["Protection", "Wheels", "Suspension"]),
-  b3: pickFor("jeep-wrangler", ["Wheels", "Protection", "Winches", "Suspension"]),
-  b4: pickFor("land-rover-defender", ["Wheels", "Winches", "Protection"]),
-  b5: pickFor("ford-bronco", ["Wheels", "Protection", "Winches", "Suspension"]),
-  b6: pickFor("toyota-fortuner", ["Wheels", "Winches", "Protection"]),
+  b3: pickFor("jeep-wrangler-jk", ["Wheels", "Protection", "Winches", "Suspension"]),
+  b4: pickFor("toyota-land-cruiser-300-series", ["Wheels", "Winches", "Protection"]),
+  b5: pickFor("ford-endeavour-3200cc", ["Wheels", "Protection", "Winches", "Suspension"]),
+  b6: pickFor("toyota-fortuner-gen2", ["Wheels", "Winches", "Protection"]),
 };
 
 const lines = [];

@@ -22,15 +22,86 @@ import { buttonVariants } from "@/components/ui/button";
 type ProductCardProps = {
   product: Product;
   index?: number;
+  /** Larger brand logo and price overlay (e.g. homepage featured row). */
+  emphasizeOverlay?: boolean;
 };
 
 export const ProductCard = memo(function ProductCard({
   product,
   index = 0,
+  emphasizeOverlay = false,
 }: ProductCardProps) {
   const reduceMotion = useReducedMotion();
   const priceLabel = formatInr(product.price);
   const brandVis = getBrandVisualForProduct(product);
+
+  const brandStrip = (
+    <Badge
+      className={cn(
+        "grid w-full grid-cols-2 overflow-hidden rounded-full border border-border/60 bg-background p-0 tracking-normal shadow-none",
+        emphasizeOverlay ? "min-h-14" : "min-h-11"
+      )}
+    >
+      <div className="flex min-w-0 items-center justify-center border-r border-border/50 px-2 py-2">
+        {brandVis.logoSrc ? (
+          <Image
+            src={brandVis.logoSrc}
+            alt=""
+            width={120}
+            height={48}
+            className={cn(
+              "h-full max-h-full w-full max-w-full object-contain object-center",
+              emphasizeOverlay ? "max-h-11" : "max-h-8"
+            )}
+          />
+        ) : (
+          <span
+            className={cn(
+              "font-heading font-medium text-black",
+              emphasizeOverlay ? "text-xl" : "text-base"
+            )}
+          >
+            {brandVis.label.charAt(0)}
+          </span>
+        )}
+      </div>
+      <div className="flex min-w-0 items-center justify-center px-2 py-2">
+        <span
+          className={cn(
+            "line-clamp-2 text-center font-medium leading-tight text-black",
+            emphasizeOverlay ? "text-sm" : "text-xs"
+          )}
+        >
+          {brandVis.label}
+        </span>
+      </div>
+    </Badge>
+  );
+
+  const metaLabelClass =
+    "text-[10px] font-medium tracking-widest text-muted-foreground uppercase";
+
+  const priceBadge = priceLabel ? (
+    <Badge
+      variant="secondary"
+      className={cn(
+        "w-fit rounded-full shadow-none",
+        emphasizeOverlay ? "px-3 py-1.5 text-sm font-semibold" : "text-xs font-medium"
+      )}
+    >
+      {priceLabel}
+    </Badge>
+  ) : (
+    <Badge
+      variant="outline"
+      className={cn(
+        "w-fit rounded-full border-border/80 shadow-none",
+        emphasizeOverlay ? "px-3 py-1.5 text-sm font-semibold" : "text-xs font-medium"
+      )}
+    >
+      POA
+    </Badge>
+  );
 
   return (
     <motion.article
@@ -60,53 +131,37 @@ export const ProductCard = memo(function ProductCard({
             loading="lazy"
           />
         </Link>
-        <div className="absolute top-3 right-3 z-10 flex flex-col gap-2">
-          <WishlistToggle productSlug={product.slug} label={product.name} className="shadow-card" />
-          <CompareToggle productSlug={product.slug} label={product.name} className="shadow-card" />
-        </div>
-        <div className="pointer-events-none absolute inset-x-3 bottom-3 z-[1] flex flex-wrap items-center gap-2">
-          <Badge className="flex max-w-[calc(100%-5rem)] items-center gap-1.5 rounded-full bg-background/95 py-1 pr-2 pl-1.5 text-[10px] tracking-wide uppercase shadow-card backdrop-blur">
-            {brandVis.logoSrc ? (
-              <Image
-                src={brandVis.logoSrc}
-                alt=""
-                width={22}
-                height={22}
-                className="size-[22px] shrink-0 object-contain"
-              />
-            ) : null}
-            <span className="truncate normal-case">{brandVis.label}</span>
-          </Badge>
-          {priceLabel ? (
-            <Badge variant="secondary" className="rounded-full text-[10px] shadow-card">
-              {priceLabel}
-            </Badge>
-          ) : (
-            <Badge variant="outline" className="rounded-full border-border/80 bg-background/95 text-[10px] shadow-card">
-              POA
-            </Badge>
-          )}
-        </div>
       </div>
-      <div className="relative z-[2] flex flex-1 flex-col gap-4 bg-card p-5">
+      <div className="relative z-[2] flex flex-1 flex-col gap-4 bg-card px-5 pt-4 pb-5">
+        <div className="flex items-center justify-end gap-2">
+          <WishlistToggle productSlug={product.slug} label={product.name} className="shadow-none" />
+          <CompareToggle productSlug={product.slug} label={product.name} className="shadow-none" />
+        </div>
+        {brandStrip}
         <div className="space-y-2">
           <h3 className="font-heading text-lg leading-snug tracking-tight text-foreground">
             {product.name}
           </h3>
           <p className="line-clamp-2 text-sm text-muted-foreground">{product.description}</p>
         </div>
-        {product.compatibleCars.length > 0 ? (
-          <div className="space-y-1.5">
-            <p className="text-[10px] font-medium tracking-widest text-muted-foreground uppercase">
-              Vehicle fit
-            </p>
-            <VehicleCompatibilityTags
-              slugs={product.compatibleCars}
-              maxVisible={3}
-              link
-            />
+        <div className="flex items-start justify-between gap-3">
+          {product.compatibleCars.length > 0 ? (
+            <div className="min-w-0 flex-1 space-y-1.5">
+              <p className={metaLabelClass}>Vehicle fit</p>
+              <VehicleCompatibilityTags
+                slugs={product.compatibleCars}
+                maxVisible={3}
+                link
+              />
+            </div>
+          ) : (
+            <div className="min-w-0 flex-1" />
+          )}
+          <div className="flex shrink-0 flex-col items-start space-y-1.5">
+            <p className={metaLabelClass}>Price</p>
+            {priceBadge}
           </div>
-        ) : null}
+        </div>
         <div className="mt-auto flex flex-wrap gap-2">
           <AddToCartButton product={product} className="flex-1 shadow-none" />
           <a

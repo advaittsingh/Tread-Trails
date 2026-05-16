@@ -17,10 +17,9 @@ import { config } from "dotenv";
 config({ path: ".env.local" });
 config({ path: ".env" });
 
-import { hashPassword } from "../lib/auth/password";
-import { prisma } from "../lib/prisma";
-
 async function main() {
+  const { hashPassword } = await import("../lib/auth/password");
+  const { prisma } = await import("../lib/prisma");
   if (!process.env.DATABASE_URL) {
     console.error("DATABASE_URL is required (.env.local or environment)");
     process.exit(1);
