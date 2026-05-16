@@ -104,7 +104,12 @@ export async function buildAnalyticsReport(
     >`
       SELECT
         COALESCE(line->>'productSlug', line->>'slug', 'unknown') AS slug,
-        COALESCE(MAX(line->>'name'), COALESCE(line->>'productSlug', 'Product')) AS name,
+        COALESCE(
+          MAX(line->>'name'),
+          MAX(line->>'productSlug'),
+          MAX(line->>'slug'),
+          'Product'
+        ) AS name,
         SUM(GREATEST(COALESCE((line->>'quantity')::int, 1), 1))::int AS units,
         SUM(
           GREATEST(COALESCE((line->>'unitPrice')::int, 0), 0)
@@ -114,7 +119,7 @@ export async function buildAnalyticsReport(
       LATERAL jsonb_array_elements(o.items::jsonb) AS line
       WHERE o."createdAt" >= ${start} AND o."createdAt" < ${endExclusive}
         AND o.status = 'paid'
-      GROUP BY slug
+      GROUP BY 1
       ORDER BY revenue DESC
       LIMIT 15`,
 
