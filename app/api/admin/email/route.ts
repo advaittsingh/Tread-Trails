@@ -1,14 +1,19 @@
 /**
- * Admin-only transactional sends via Resend (`resend` npm package).
+ * Admin-only transactional sends via Resend or SendGrid.
  */
 import { NextResponse } from "next/server";
-import { Resend } from "resend";
 import { z } from "zod";
 
 import { requireAdmin } from "@/lib/auth/request-user";
+import {
+  emailProviderLabel,
+  sendTransactionalEmail,
+} from "@/lib/email/transactional";
+import { logAdminAction } from "@/lib/server/admin-audit";
 
 const TEMPLATES = [
   "complete_order",
+  "cart_waiting",
   "interest",
   "booking_confirmed",
   "order_shipped",
@@ -32,6 +37,11 @@ function htmlForTemplate(
       return {
         subject: "Complete your Tread Trails order",
         html: `<p>Hi ${name},</p><p>We saved your build sheet — reply when you are ready to resume checkout.</p><p>— Tread Trails Concierge</p>`,
+      };
+    case "cart_waiting":
+      return {
+        subject: "Your cart is waiting — Tread Trails",
+        html: `<p>Hi ${name},</p><p>Your expedition gear is still in cart. Finish checkout when you are ready — we are here for fitment questions.</p><p>— Tread Trails</p>`,
       };
     case "interest":
       return {
@@ -60,13 +70,11 @@ export async function POST(req: Request) {
   const gate = await requireAdmin();
   if ("response" in gate) return gate.response;
 
-  const apiKey = process.env.RESEND_API_KEY;
-  const from = process.env.RESEND_FROM_EMAIL;
-  if (!apiKey || !from) {
+  if (emailProviderLabel() === "none") {
     return NextResponse.json(
       {
         error:
-          "Email not configured — set RESEND_API_KEY and RESEND_FROM_EMAIL (verified sender).",
+          "Email not configured — set RESEND_API_KEY or SENDGRID_API_KEY plus a verified from address.",
       },
       { status: 503 }
     );
@@ -87,25 +95,28 @@ export async function POST(req: Request) {
     );
   }
 
-  const resend = new Resend(apiKey);
   const { subject, html } = htmlForTemplate(
     parsed.data.template,
     parsed.data.firstName
   );
 
-  try {
-    const { data, error } = await resend.emails.send({
-      from,
-      to: parsed.data.to,
-      subject,
-      html,
-    });
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 502 });
-    }
-    return NextResponse.json({ ok: true, id: data?.id });
-  } catch (e) {
-    console.error(e);
-    return NextResponse.json({ error: "Resend send failed" }, { status: 502 });
+  const sent = await sendTransactionalEmail({
+    to: parsed.data.to,
+    subject,
+    html,
+  });
+
+  if (!sent.ok) {
+    return NextResponse.json({ error: sent.error }, { status: 502 });
   }
+
+  await logAdminAction({
+    adminId: gate.auth.userId,
+    action: "crm.email_sent",
+    entity: "crm",
+    entityId: parsed.data.to,
+    meta: { template: parsed.data.template, provider: sent.provider },
+  });
+
+  return NextResponse.json({ ok: true, id: sent.id, provider: sent.provider });
 }

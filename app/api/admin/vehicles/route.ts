@@ -3,9 +3,13 @@ import { NextResponse } from "next/server";
 import type { Prisma } from "@prisma/client";
 import { Prisma as PrismaNamespace } from "@prisma/client";
 
-import { prismaVehicleToCar } from "@/lib/catalog/map-vehicle";
+import {
+  buildVehicleWhere,
+  mapVehicleRowToCar,
+} from "@/lib/catalog/vehicle-hierarchy";
 import { requireAdmin } from "@/lib/auth/request-user";
 import { logAdminAction } from "@/lib/server/admin-audit";
+import { revalidateVehicleCatalog } from "@/lib/server/revalidate-vehicle-catalog";
 import { prisma } from "@/lib/prisma";
 import {
   adminVehicleCreateSchema,
@@ -31,23 +35,50 @@ export async function GET(req: NextRequest) {
   const skip = (page - 1) * limit;
   const search = searchParams.get("search")?.trim();
   const category = searchParams.get("category")?.trim();
+  const makeId = searchParams.get("makeId")?.trim();
+  const modelId = searchParams.get("modelId")?.trim();
 
-  const where: Prisma.VehicleWhereInput = {};
-  if (category) where.category = category;
-  if (search) {
-    where.OR = [
-      { name: { contains: search, mode: "insensitive" } },
-      { slug: { contains: search, mode: "insensitive" } },
-    ];
-  }
+  const where = buildVehicleWhere({
+    search,
+    category,
+    makeId,
+    modelId,
+  }) as Prisma.VehicleWhereInput;
 
   try {
     const [rows, total] = await Promise.all([
       prisma.vehicle.findMany({
         where,
-        orderBy: [{ category: "asc" }, { name: "asc" }],
+        orderBy: [
+          { sortOrder: "asc" },
+          { model: { make: { name: "asc" } } },
+          { model: { name: "asc" } },
+          { name: "asc" },
+        ],
         skip,
         take: limit,
+        select: {
+          id: true,
+          legacyId: true,
+          slug: true,
+          name: true,
+          tagline: true,
+          description: true,
+          heroImage: true,
+          thumbnail: true,
+          category: true,
+          engineSummary: true,
+          modelYearsLabel: true,
+          trimSummary: true,
+          generationKey: true,
+          model: {
+            select: {
+              slug: true,
+              name: true,
+              make: { select: { slug: true, name: true } },
+            },
+          },
+        },
       }),
       prisma.vehicle.count({ where }),
     ]);
@@ -55,7 +86,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({
       vehicles: rows.map((v) => ({
         id: v.id,
-        vehicle: prismaVehicleToCar(v),
+        vehicle: mapVehicleRowToCar(v),
       })),
       total,
       page,
@@ -103,9 +134,13 @@ export async function POST(req: NextRequest) {
         modelYearsLabel: body.modelYearsLabel,
         trimSummary: body.trimSummary,
         legacyId: body.legacyId ?? null,
+        modelId: body.modelId ?? null,
+        generationKey: body.generationKey ?? null,
+        sortOrder: body.sortOrder ?? 0,
       },
     });
 
+    revalidateVehicleCatalog();
     await logAdminAction({
       adminId: gate.auth.userId,
       action: "vehicle.create",
@@ -116,7 +151,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({
       id: created.id,
-      vehicle: prismaVehicleToCar(created),
+      vehicle: mapVehicleRowToCar(created),
     });
   } catch (e) {
     const conflict = mapUniqueSlugResponse(e);

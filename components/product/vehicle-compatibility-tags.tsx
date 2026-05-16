@@ -2,7 +2,9 @@
 
 import Link from "next/link";
 
-import { cars } from "@/data/cars";
+import type { Car } from "@/data/types";
+import { cars as staticCars } from "@/data/cars";
+import { useVehicleCatalog } from "@/hooks/use-vehicle-catalog";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
@@ -24,10 +26,13 @@ function humanizeSlug(slug: string) {
     .join(" ");
 }
 
-export function sortedVehicleCompatLabels(slugs: string[]) {
+export function sortedVehicleCompatLabels(
+  slugs: string[],
+  catalog: Car[] = staticCars
+) {
   return [...slugs]
     .map((slug) => {
-      const car = cars.find((c) => c.slug === slug);
+      const car = catalog.find((c) => c.slug === slug);
       return { slug, label: car?.name ?? humanizeSlug(slug) };
     })
     .sort((a, b) => a.label.localeCompare(b.label));
@@ -39,9 +44,10 @@ export function VehicleCompatibilityTags({
   className,
   link = false,
 }: VehicleCompatibilityTagsProps) {
+  const { vehicles: catalog } = useVehicleCatalog();
   if (!slugs.length) return null;
 
-  const entries = sortedVehicleCompatLabels(slugs);
+  const entries = sortedVehicleCompatLabels(slugs, catalog);
   const limit =
     maxVisible === undefined
       ? entries.length

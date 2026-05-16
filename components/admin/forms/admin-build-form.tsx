@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
-import { cars } from "@/data/cars";
+import { useVehicleCatalog } from "@/hooks/use-vehicle-catalog";
 import type { Build } from "@/data/types";
 import { useConfirmation } from "@/contexts/confirmation-context";
 import { parseTokens } from "@/lib/admin/parse-tokens";
@@ -42,6 +42,7 @@ function emptyForm() {
 export function AdminBuildForm({ recordId }: { recordId: string | null }) {
   const router = useRouter();
   const { confirmDelete } = useConfirmation();
+  const { vehicles: cars } = useVehicleCatalog();
   const isNew = recordId === null;
 
   const [form, setForm] = useState(emptyForm);

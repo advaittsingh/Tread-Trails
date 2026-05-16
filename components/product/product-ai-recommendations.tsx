@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 
-import { getProductBySlug } from "@/data/index";
+import { useProductCatalog } from "@/contexts/product-catalog-context";
 import type { Product } from "@/data/types";
 import { useSelectedVehicle } from "@/contexts/selected-vehicle-context";
 import {
@@ -19,20 +19,21 @@ type ApiPayload = ProductRecommendationsPayload & {
   source?: string;
 };
 
-function resolveEntries(
-  entries: { productSlug: string; rationale: string; badge?: string }[]
-): { product: Product; rationale: string; badge?: string }[] {
-  const out: { product: Product; rationale: string; badge?: string }[] = [];
-  for (const e of entries) {
-    const p = getProductBySlug(e.productSlug);
-    if (p) out.push({ product: p, rationale: e.rationale, badge: e.badge });
-  }
-  return out;
-}
-
 export function ProductAiRecommendations({ productSlug }: { productSlug: string }) {
+  const { getProductBySlug } = useProductCatalog();
   const { slug: vehicleSlug, vehicleName, hydrated: vehicleHydrated } =
     useSelectedVehicle();
+
+  function resolveEntries(
+    entries: { productSlug: string; rationale: string; badge?: string }[]
+  ): { product: Product; rationale: string; badge?: string }[] {
+    const out: { product: Product; rationale: string; badge?: string }[] = [];
+    for (const e of entries) {
+      const p = getProductBySlug(e.productSlug);
+      if (p) out.push({ product: p, rationale: e.rationale, badge: e.badge });
+    }
+    return out;
+  }
   const [payload, setPayload] = useState<ProductRecommendationsPayload | null>(null);
   const [source, setSource] = useState<"api" | "mock">("mock");
   const [loading, setLoading] = useState(true);
@@ -59,7 +60,7 @@ export function ProductAiRecommendations({ productSlug }: { productSlug: string 
         setSource(remoteSource === "api" ? "api" : "mock");
       } catch {
         if (cancelled) return;
-        setPayload(buildRecommendationsPayload(productSlug));
+        setPayload(await buildRecommendationsPayload(productSlug));
         setSource("mock");
       } finally {
         if (!cancelled) setLoading(false);
@@ -79,11 +80,11 @@ export function ProductAiRecommendations({ productSlug }: { productSlug: string 
       r.product.compatibleCars.includes(vehicleSlug)
     );
     return filtered.length > 0 ? filtered : resolved;
-  }, [payload, vehicleHydrated, vehicleSlug]);
+  }, [payload, vehicleHydrated, vehicleSlug, getProductBySlug]);
 
   const alsoBoughtResolved = useMemo(
     () => (payload ? resolveEntries(payload.alsoBought) : []),
-    [payload]
+    [payload, getProductBySlug]
   );
 
   const upgradeResolved = useMemo(() => {
@@ -107,7 +108,7 @@ export function ProductAiRecommendations({ productSlug }: { productSlug: string 
       badge?: string;
       step: number;
     }[];
-  }, [payload]);
+  }, [payload, getProductBySlug]);
 
   if (loading || !payload) {
     return (

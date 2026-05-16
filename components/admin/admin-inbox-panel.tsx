@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { Inbox } from "lucide-react";
 
@@ -17,6 +18,7 @@ type Submission = {
   emailSent: boolean;
   readAt: string | null;
   createdAt: string;
+  lead?: { id: string; status: string } | null;
 };
 
 export function AdminInboxPanel() {
@@ -83,7 +85,11 @@ export function AdminInboxPanel() {
           Inbox
         </h1>
         <p className="mt-2 max-w-2xl text-sm text-zinc-400">
-          Contact and corporate submissions stored when forms are submitted.
+          Raw inbox archive. Manage pipeline status, assignment, and email from{" "}
+          <Link href="/admin/leads" className="text-emerald-400 hover:underline">
+            Leads
+          </Link>
+          .
         </p>
       </header>
 
@@ -187,6 +193,14 @@ export function AdminInboxPanel() {
                   {selected.readAt ? "Mark unread" : "Mark read"}
                 </Button>
               </div>
+              {selected.lead?.id ? (
+                <Link
+                  href={`/admin/leads/${selected.lead.id}`}
+                  className="mb-3 inline-flex text-sm text-emerald-400 hover:underline"
+                >
+                  Open in lead pipeline →
+                </Link>
+              ) : null}
               <pre className="max-h-[480px] overflow-auto rounded-lg border border-zinc-800 bg-zinc-950 p-4 text-xs text-zinc-300">
                 {JSON.stringify(selected.payload, null, 2)}
               </pre>

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 
 import type { Car, Product } from "@/data/types";
-import { getProductBySlug } from "@/data/index";
+import { useProductCatalog } from "@/contexts/product-catalog-context";
 import { getCarBySlug } from "@/lib/vehicle";
 import { formatInr } from "@/lib/format";
 import { useSavedVehicles } from "@/contexts/saved-vehicles-context";
@@ -47,6 +47,7 @@ type ApiBooking = {
 };
 
 export function AccountDashboard() {
+  const { getProductBySlug } = useProductCatalog();
   const {
     slugs: wishSlugs,
     isRemoteHydrating: wishlistHydrating,

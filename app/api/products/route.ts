@@ -1,23 +1,14 @@
 import { NextResponse } from "next/server";
 
-import { getProductBySlug } from "@/data/index";
-import { products as staticProducts } from "@/data/products";
 import {
-  prismaProductToDTO,
-  productWithVehicleCompatInclude,
-} from "@/lib/catalog/map-product";
-import { prisma } from "@/lib/prisma";
-import { listProductsForVehicleSlug } from "@/lib/server/vehicle-catalog";
-
-function staticCatalogSorted() {
-  return [...staticProducts].sort((a, b) => a.name.localeCompare(b.name));
-}
+  getProductBySlug,
+  listProducts,
+  listProductsForVehicleSlug,
+} from "@/lib/server/product-catalog";
 
 /**
- * Product catalog (Neon). Vehicle filtering uses `@/lib/server/vehicle-catalog`
- * (join table + static fallback) — same as `GET /api/compatibility?vehicleSlug=`.
- * Full list (`GET /api/products`): DB when rows exist; otherwise sorted static `data/products`.
- * Vehicle filters use `ProductVehicleCompatibility` or explicit `product-vehicle-compatibility-edges.ts`.
+ * Product catalog (Neon). Vehicle filtering uses the same join-backed DTOs as storefront pages.
+ * Full list: DB when rows exist; otherwise sorted static `data/products` fallback.
  */
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
@@ -26,18 +17,11 @@ export async function GET(req: Request) {
 
   try {
     if (slug) {
-      const p = await prisma.product.findUnique({
-        where: { slug },
-        include: productWithVehicleCompatInclude,
-      });
-      if (p) {
-        return NextResponse.json({ product: prismaProductToDTO(p) });
+      const product = await getProductBySlug(slug);
+      if (!product) {
+        return NextResponse.json({ error: "Not found" }, { status: 404 });
       }
-      const fallback = getProductBySlug(slug);
-      if (fallback) {
-        return NextResponse.json({ product: fallback });
-      }
-      return NextResponse.json({ error: "Not found" }, { status: 404 });
+      return NextResponse.json({ product });
     }
 
     if (vehicleSlug) {
@@ -45,25 +29,20 @@ export async function GET(req: Request) {
       return NextResponse.json({ products });
     }
 
-    try {
-      const rows = await prisma.product.findMany({
-        include: productWithVehicleCompatInclude,
-        orderBy: { name: "asc" },
-      });
-      if (rows.length > 0) {
-        return NextResponse.json({
-          products: rows.map(prismaProductToDTO),
-        });
-      }
-    } catch {
-      /* DATABASE_URL missing / unreachable */
-    }
-
-    return NextResponse.json({ products: staticCatalogSorted() });
+    const products = await listProducts();
+    return NextResponse.json({ products });
   } catch (e) {
     console.error(e);
     if (!slug && !vehicleSlug) {
-      return NextResponse.json({ products: staticCatalogSorted() });
+      try {
+        const products = await listProducts();
+        return NextResponse.json({ products });
+      } catch {
+        return NextResponse.json(
+          { error: "Failed to load products" },
+          { status: 500 }
+        );
+      }
     }
     return NextResponse.json({ error: "Failed to load products" }, { status: 500 });
   }

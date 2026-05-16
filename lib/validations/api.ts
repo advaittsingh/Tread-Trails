@@ -59,6 +59,7 @@ export const bookingCreateSchema = z
     contactName: z.string().trim().min(1, "Name is required").max(120),
     contactEmail: z.string().trim().email("Enter a valid email address"),
     contactPhone: phoneSchema,
+    customerMessage: z.string().trim().max(2000).optional(),
   })
   .superRefine((data, ctx) => {
     const { utcOffsetMinutes } = bookingStudioClockContextServer();

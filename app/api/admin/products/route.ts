@@ -13,6 +13,8 @@ import {
   replaceProductVehicleCompatibilityBySlug,
 } from "@/lib/server/admin-sync-product-compatibility";
 import { prisma } from "@/lib/prisma";
+import { revalidateProductCatalog } from "@/lib/server/product-catalog";
+import { revalidateVehicleCatalog } from "@/lib/server/revalidate-vehicle-catalog";
 import { adminProductCreateSchema } from "@/lib/validations/admin-product";
 
 function mapUniqueSlugResponse(e: unknown): NextResponse | null {
@@ -147,6 +149,8 @@ export async function POST(req: NextRequest) {
       include: productWithVehicleCompatInclude,
     });
 
+    revalidateProductCatalog();
+    revalidateVehicleCatalog();
     return NextResponse.json({
       id: full.id,
       product: prismaProductToDTO(full),

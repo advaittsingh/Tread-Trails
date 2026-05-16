@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
+import { logPaymentFailure } from "@/lib/logger";
 import { verifyRazorpayPaymentSignature } from "@/lib/razorpay/verify-signature";
 import { prisma } from "@/lib/prisma";
 
@@ -47,6 +48,11 @@ export async function POST(req: Request) {
   );
 
   if (!okSig) {
+    void logPaymentFailure(req, "Razorpay signature verification failed", {
+      severity: "warn",
+      provider: "razorpay",
+      orderId: treadTrailsOrderId,
+    });
     return NextResponse.json({ error: "Invalid payment signature" }, { status: 400 });
   }
 
@@ -71,6 +77,7 @@ export async function POST(req: Request) {
       where: { id: order.id },
       data: {
         status: "paid",
+        paidAt: new Date(),
         razorpayOrderId: razorpay_order_id,
         razorpayPaymentId: razorpay_payment_id,
       },
@@ -78,7 +85,11 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ ok: true });
   } catch (e) {
-    console.error(e);
+    void logPaymentFailure(req, "Razorpay finalize failed", {
+      error: e,
+      provider: "razorpay",
+      orderId: treadTrailsOrderId,
+    });
     return NextResponse.json({ error: "Could not finalize payment" }, { status: 500 });
   }
 }

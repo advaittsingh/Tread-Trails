@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { getOptionalAuth } from "@/lib/auth/request-user";
+import { logBookingFailure } from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
 import { bookingCreateSchema } from "@/lib/validations/api";
 
@@ -35,7 +36,8 @@ export async function POST(req: Request) {
         contactName: body.contactName,
         contactEmail: body.contactEmail,
         contactPhone: body.contactPhone,
-        status: "requested",
+        customerMessage: body.customerMessage?.trim() ?? "",
+        status: "pending",
       },
     });
 
@@ -55,7 +57,11 @@ export async function POST(req: Request) {
       },
     });
   } catch (e) {
-    console.error(e);
+    void logBookingFailure(req, "Booking create failed", {
+      userId: auth?.userId,
+      error: e,
+      meta: { vehicleSlug: body.vehicleSlug, service: body.service },
+    });
     return NextResponse.json({ error: "Could not save booking" }, { status: 500 });
   }
 }

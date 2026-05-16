@@ -13,6 +13,12 @@ export type Car = {
   modelYearsLabel: string;
   /** Trims / packages we commonly reference when fitting parts. */
   trimSummary: string;
+  /** OEM hierarchy (from DB when available). */
+  makeSlug?: string;
+  makeName?: string;
+  modelSlug?: string;
+  modelName?: string;
+  generationKey?: string;
 };
 
 /** Persisted on `Product.variants` (JSON / Prisma); drives PDP variant selector and checkout line pricing. */

@@ -3,6 +3,7 @@ import { InboxKind } from "@prisma/client";
 import { Resend } from "resend";
 
 import { prisma } from "@/lib/prisma";
+import { createLeadFromContact } from "@/lib/server/create-lead";
 import { logAppError } from "@/lib/server/log-app-error";
 import { contactFormSchema } from "@/lib/validations/contact";
 
@@ -44,6 +45,19 @@ export async function POST(req: Request) {
     },
   });
 
+  try {
+    await createLeadFromContact({
+      name,
+      email,
+      phone,
+      subject,
+      message,
+      inboxSubmissionId: inboxRow.id,
+    });
+  } catch (e) {
+    console.error("[contact] lead create failed", e);
+  }
+
   if (!apiKey || !from || !to) {
     return NextResponse.json(
       {
@@ -82,6 +96,7 @@ export async function POST(req: Request) {
       await logAppError({
         source: "contact",
         message: error.message ?? "Resend failed",
+        route: "/api/contact",
         meta: { inboxId: inboxRow.id },
       });
       return NextResponse.json(
@@ -99,6 +114,8 @@ export async function POST(req: Request) {
     await logAppError({
       source: "contact",
       message: e instanceof Error ? e.message : "Contact send failed",
+      route: "/api/contact",
+      error: e,
       meta: { inboxId: inboxRow.id },
     });
     return NextResponse.json(

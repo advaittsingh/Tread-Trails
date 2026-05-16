@@ -15,7 +15,9 @@ import {
   Package,
   ShoppingCart,
   Tag,
+  ImageIcon,
   Users,
+  UserPlus,
   Wrench,
   Shield,
 } from "lucide-react";
@@ -30,9 +32,11 @@ const core = [
   { href: "/admin/builds", label: "Builds", icon: Boxes },
   { href: "/admin/vehicles", label: "Vehicles", icon: Car },
   { href: "/admin/brands", label: "Brands", icon: Tag },
+  { href: "/admin/media", label: "Media", icon: ImageIcon },
 ];
 
 const advanced = [
+  { href: "/admin/leads", label: "Leads", icon: UserPlus },
   { href: "/admin/inbox", label: "Inbox", icon: Inbox },
   { href: "/admin/carts", label: "Abandoned carts", icon: ShoppingCart },
   { href: "/admin/analytics", label: "Analytics", icon: BarChart3 },

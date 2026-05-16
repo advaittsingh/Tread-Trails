@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { Suspense } from "react";
 
 import { getNavCatalogueData } from "@/lib/server/nav-catalogue-data";
+import { listProducts } from "@/lib/server/product-catalog";
 import { AppProviders } from "@/components/providers/app-providers";
 import { SiteChrome } from "@/components/layout/site-chrome";
 import { SiteJsonLd } from "@/components/seo/site-json-ld";
@@ -87,13 +88,16 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const catalogue = await getNavCatalogueData();
+  const [catalogue, catalogProducts] = await Promise.all([
+    getNavCatalogueData(),
+    listProducts(),
+  ]);
 
   return (
     <html lang="en" className={cn(playfair.variable, inter.variable)}>
       <body className="min-h-screen bg-background font-sans antialiased">
         <SiteJsonLd />
-        <AppProviders>
+        <AppProviders catalogProducts={catalogProducts}>
           <Suspense fallback={null}>
             <SiteChrome catalogue={catalogue}>{children}</SiteChrome>
           </Suspense>

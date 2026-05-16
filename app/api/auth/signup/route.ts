@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { hashPassword } from "@/lib/auth/password";
 import { signAuthToken } from "@/lib/auth/jwt";
 import { setAuthCookie } from "@/lib/auth/session-cookie";
+import { logAuthFailure } from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
 import { signupSchema } from "@/lib/validations/api";
 
@@ -60,7 +61,7 @@ export async function POST(req: Request) {
         { status: 409 }
       );
     }
-    console.error(e);
+    void logAuthFailure(req, "Signup failed", { severity: "error", error: e });
     return NextResponse.json({ error: "Signup failed" }, { status: 500 });
   }
 }

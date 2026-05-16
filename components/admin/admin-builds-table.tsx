@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { Layers } from "lucide-react";
 
-import { cars } from "@/data/cars";
+import { useVehicleCatalog } from "@/hooks/use-vehicle-catalog";
 import type { Build } from "@/data/types";
 import { useConfirmation } from "@/contexts/confirmation-context";
 import { toastError, toastSuccess } from "@/lib/toast";
@@ -25,6 +25,7 @@ type ListRow = {
 };
 
 export function AdminBuildsTable() {
+  const { vehicles: cars } = useVehicleCatalog();
   const { confirmDelete } = useConfirmation();
   const [rows, setRows] = useState<ListRow[]>([]);
   const [total, setTotal] = useState(0);

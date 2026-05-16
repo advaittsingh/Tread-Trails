@@ -23,6 +23,10 @@ export {
   getProductsForVehicle,
 };
 
+/**
+ * @deprecated Storefront and APIs use `@/lib/server/product-catalog` (Prisma + fallback).
+ * Kept for seed scripts and legacy tooling only.
+ */
 export function getProductBySlug(slug: string): Product | undefined {
   return products.find((p) => p.slug === slug);
 }
@@ -55,26 +59,30 @@ export function getBrandEntryBySlug(slug: string): BrandEntry | undefined {
   return getBrandEntries().find((b) => b.slug === slug);
 }
 
-/** Resolve products for an Advven partner brand slug only. */
+/** @deprecated Use `listProductsForBrandSlug` from product-catalog. */
 export function getProductsForBrandSlug(slug: string): Product[] {
   const partner = ADVVEN_PARTNER_BRANDS.find((b) => b.slug === slug);
   if (!partner) return [];
   return products.filter((p) => productBelongsToPartnerSlug(p, slug));
 }
 
+/** @deprecated Use `getProductsByTokens` from product-catalog. */
 export function getProductsByIds(ids: string[]): Product[] {
   const map = new Map(products.map((p) => [p.id, p]));
   return ids.map((id) => map.get(id)).filter(Boolean) as Product[];
 }
 
+/** @deprecated Use `listProductBrands` from product-catalog. */
 export const productBrands = Array.from(
   new Set(products.map((p) => p.brand))
 ).sort();
 
+/** @deprecated Use `listProductCategories` from product-catalog. */
 export const productCategories = Array.from(
   new Set(products.map((p) => p.category))
 ).sort();
 
+/** @deprecated Use `getRelatedProducts` from product-catalog. */
 export function getRelatedProducts(slug: string, limit = 4) {
   const p = getProductBySlug(slug);
   if (!p) return [];
@@ -87,6 +95,7 @@ export function getRelatedProducts(slug: string, limit = 4) {
     .slice(0, limit);
 }
 
+/** @deprecated Use `getBundleSuggestion` from product-catalog. */
 export function getBundleSuggestion(slug: string, limit = 2) {
   const p = getProductBySlug(slug);
   if (!p) return [];

@@ -1,7 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
+
+import { PRESENCE_HEARTBEAT_MS } from "@/lib/presence/constants";
 
 function ensureSessionId(): string {
   if (typeof window === "undefined") return "";
@@ -13,50 +15,86 @@ function ensureSessionId(): string {
   return id;
 }
 
+function sendPing(sessionId: string, path: string, useBeacon = false): void {
+  if (!sessionId || path.startsWith("/admin")) return;
+  const body = JSON.stringify({ sessionId, path });
+
+  if (useBeacon && navigator.sendBeacon) {
+    const blob = new Blob([body], { type: "application/json" });
+    navigator.sendBeacon("/api/track/ping", blob);
+    return;
+  }
+
+  void fetch("/api/track/ping", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body,
+    keepalive: true,
+  }).catch(() => {});
+}
+
+function sendPageHit(sessionId: string, path: string): void {
+  if (!sessionId || path.startsWith("/admin")) return;
+  void fetch("/api/track/page", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ sessionId, path }),
+    keepalive: true,
+  }).catch(() => {});
+}
+
 export function SiteTelemetry() {
   const pathname = usePathname();
-  const [sessionId, setSessionId] = useState<string>("");
+  const sessionRef = useRef("");
+  const lastPathRef = useRef("");
 
   useEffect(() => {
-    setSessionId(ensureSessionId());
+    sessionRef.current = ensureSessionId();
   }, []);
 
   useEffect(() => {
+    const sessionId = sessionRef.current;
     if (!sessionId || !pathname || pathname.startsWith("/admin")) return;
 
-    const body = JSON.stringify({ sessionId, path: pathname });
-
-    void fetch("/api/track/page", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body,
-      keepalive: true,
-    }).catch(() => {});
-
-    void fetch("/api/track/ping", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body,
-      keepalive: true,
-    }).catch(() => {});
-  }, [pathname, sessionId]);
+    if (lastPathRef.current !== pathname) {
+      lastPathRef.current = pathname;
+      sendPageHit(sessionId, pathname);
+      sendPing(sessionId, pathname);
+    }
+  }, [pathname]);
 
   useEffect(() => {
+    const sessionId = sessionRef.current;
     if (!sessionId) return;
-    const id = window.setInterval(() => {
+
+    const heartbeat = () => {
       const path = window.location.pathname;
       if (path.startsWith("/admin")) return;
-      const sid = window.localStorage.getItem("tt_sess");
-      if (!sid) return;
-      void fetch("/api/track/ping", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sessionId: sid, path }),
-        keepalive: true,
-      }).catch(() => {});
-    }, 45_000);
-    return () => window.clearInterval(id);
-  }, [sessionId]);
+      sendPing(sessionId, path);
+    };
+
+    const intervalId = window.setInterval(heartbeat, PRESENCE_HEARTBEAT_MS);
+
+    const onVisible = () => {
+      if (document.visibilityState === "visible") {
+        heartbeat();
+      }
+    };
+
+    const onPageHide = () => {
+      const path = window.location.pathname;
+      sendPing(sessionId, path, true);
+    };
+
+    document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("pagehide", onPageHide);
+
+    return () => {
+      window.clearInterval(intervalId);
+      document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("pagehide", onPageHide);
+    };
+  }, []);
 
   return null;
 }

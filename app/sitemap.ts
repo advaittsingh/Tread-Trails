@@ -1,9 +1,9 @@
 import type { MetadataRoute } from "next";
 
-import { products } from "@/data/index";
 import { siteUrl } from "@/lib/site";
 import { listBrandEntries } from "@/lib/server/brand-catalog";
 import { listBuilds } from "@/lib/server/build-catalog";
+import { listProductSlugs } from "@/lib/server/product-catalog";
 import { listVehicles } from "@/lib/server/vehicle-catalog";
 
 const STATIC = [
@@ -32,9 +32,12 @@ const STATIC = [
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const base = siteUrl.replace(/\/$/, "");
   const lastModified = new Date();
-  const cars = await listVehicles();
-  const builds = await listBuilds();
-  const hubBrands = await listBrandEntries();
+  const [cars, builds, hubBrands, productSlugs] = await Promise.all([
+    listVehicles(),
+    listBuilds(),
+    listBrandEntries(),
+    listProductSlugs(),
+  ]);
 
   const staticEntries: MetadataRoute.Sitemap = STATIC.map((path) => ({
     url: `${base}${path || "/"}`,
@@ -64,8 +67,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.78,
   }));
 
-  const productEntries: MetadataRoute.Sitemap = products.map((p) => ({
-    url: `${base}/product/${p.slug}`,
+  const productEntries: MetadataRoute.Sitemap = productSlugs.map((slug) => ({
+    url: `${base}/product/${slug}`,
     lastModified,
     changeFrequency: "weekly",
     priority: 0.85,

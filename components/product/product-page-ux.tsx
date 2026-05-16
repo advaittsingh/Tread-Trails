@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-import { getProductBySlug } from "@/data/index";
+import { useProductCatalog } from "@/contexts/product-catalog-context";
 import type { Product } from "@/data/types";
 import {
   getRecentProductSlugs,
@@ -13,6 +13,7 @@ import { ProductCard } from "@/components/marketing/product-card";
 import { SectionHeading } from "@/components/marketing/section-heading";
 
 export function ProductPageUx({ currentSlug }: { currentSlug: string }) {
+  const { getProductBySlug } = useProductCatalog();
   const [recentProducts, setRecentProducts] = useState<Product[]>([]);
 
   useEffect(() => {
@@ -22,7 +23,7 @@ export function ProductPageUx({ currentSlug }: { currentSlug: string }) {
       .map((s) => getProductBySlug(s))
       .filter(Boolean) as Product[];
     setRecentProducts(resolved);
-  }, [currentSlug]);
+  }, [currentSlug, getProductBySlug]);
 
   if (recentProducts.length === 0) return null;
 

@@ -62,7 +62,11 @@ export function AdminSystemPanel() {
           System health
         </h1>
         <p className="mt-2 max-w-2xl text-sm text-zinc-400">
-          Env probes, captured errors, and recent admin audit events.
+          Env probes and admin audit. Full error log with filters at{" "}
+          <a href="/admin/system/errors" className="text-emerald-400 hover:underline">
+            /admin/system/errors
+          </a>
+          .
         </p>
       </header>
 
@@ -123,8 +127,14 @@ export function AdminSystemPanel() {
       )}
 
       <section className="rounded-2xl border border-zinc-800 bg-zinc-900/30">
-        <div className="border-b border-zinc-800 px-5 py-4">
+        <div className="flex items-center justify-between border-b border-zinc-800 px-5 py-4">
           <p className="text-sm font-medium text-zinc-200">Recent captured errors</p>
+          <a
+            href="/admin/system/errors"
+            className="text-xs text-emerald-400 hover:underline"
+          >
+            View all →
+          </a>
         </div>
         <div className="divide-y divide-zinc-800/80">
           {!data ? (

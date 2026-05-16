@@ -5,8 +5,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useSelectedVehicle } from "@/contexts/selected-vehicle-context";
 
 import type { Product } from "@/data/types";
-import { cars } from "@/data/cars";
-import { productBrands, productCategories } from "@/data/index";
+import { useVehicleCatalog } from "@/hooks/use-vehicle-catalog";
 
 import { FilterControls } from "@/components/products/filter-controls";
 import { ProductCard } from "@/components/marketing/product-card";
@@ -20,6 +19,8 @@ import {
 
 type ProductsExplorerProps = {
   products: Product[];
+  brandOptions: string[];
+  categoryOptions: string[];
   /** URL `?q=` from SearchAction / organic deep links */
   initialQuery?: string;
   /** URL `?category=` from catalogue mega-menu */
@@ -28,6 +29,8 @@ type ProductsExplorerProps = {
 
 export function ProductsExplorer({
   products,
+  brandOptions,
+  categoryOptions,
   initialQuery = "",
   initialCategory = "",
 }: ProductsExplorerProps) {
@@ -39,6 +42,7 @@ export function ProductsExplorer({
   const [textQuery, setTextQuery] = useState(() => initialQuery.trim());
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const { slug: storedVehicleSlug, hydrated } = useSelectedVehicle();
+  const { vehicles: catalogCars } = useVehicleCatalog();
   const didApplyStoredFilter = useRef(false);
 
   useEffect(() => {
@@ -57,8 +61,8 @@ export function ProductsExplorer({
   }, [initialCategory]);
 
   const carOptions = useMemo(
-    () => cars.map((c) => ({ slug: c.slug, name: c.name })),
-    []
+    () => catalogCars.map((c) => ({ slug: c.slug, name: c.name })),
+    [catalogCars]
   );
 
   const textFiltered = useMemo(() => {
@@ -113,8 +117,8 @@ export function ProductsExplorer({
   }
 
   const filterProps = {
-    brands: productBrands,
-    categories: productCategories,
+    brands: brandOptions,
+    categories: categoryOptions,
     cars: carOptions,
     selectedBrands: brands,
     selectedCategories: categories,

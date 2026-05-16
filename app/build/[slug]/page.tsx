@@ -3,7 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import { getProductsByIds } from "@/data/index";
+import { resolvePortfolioLinkedProducts } from "@/lib/server/portfolio-products";
 import {
   getBuildBySlug,
   listBuildSlugs,
@@ -74,7 +74,10 @@ export default async function BuildDetailPage({ params }: Props) {
   if (!build) notFound();
 
   const vehicle = await getVehicleBySlug(build.vehicleSlug);
-  const parts = getProductsByIds(build.productIds);
+  const parts = await resolvePortfolioLinkedProducts(
+    build.slug,
+    build.productIds
+  );
 
   const bookingParams = new URLSearchParams();
   bookingParams.set("build", build.slug);

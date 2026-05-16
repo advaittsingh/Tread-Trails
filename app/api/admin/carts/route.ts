@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import type { Prisma } from "@prisma/client";
 
 import { requireAdmin } from "@/lib/auth/request-user";
+import { mapCartTelemetryRow } from "@/lib/server/cart-recovery";
 import { prisma } from "@/lib/prisma";
 
 export async function GET(req: NextRequest) {
@@ -14,23 +15,34 @@ export async function GET(req: NextRequest) {
   const limit = Math.min(100, Math.max(1, Number(searchParams.get("limit")) || 25));
   const skip = (page - 1) * limit;
   const search = searchParams.get("search")?.trim();
+  const view = searchParams.get("view")?.trim();
 
-  let where: Prisma.CartTelemetryWhereInput;
+  let where: Prisma.CartTelemetryWhereInput = { itemCount: { gt: 0 } };
+
   if (search) {
     where = {
       AND: [
-        { itemCount: { gt: 0 } },
+        where,
         {
           OR: [
             { sessionId: { contains: search, mode: "insensitive" } },
             { userEmail: { contains: search, mode: "insensitive" } },
+            { customerName: { contains: search, mode: "insensitive" } },
             { lastPath: { contains: search, mode: "insensitive" } },
           ],
         },
       ],
     };
-  } else {
-    where = { itemCount: { gt: 0 } };
+  }
+
+  if (view === "recoverable") {
+    where = {
+      AND: [where, { convertedAt: null }, { userEmail: { not: null } }],
+    };
+  } else if (view === "emailed") {
+    where = { AND: [where, { recoveryEmailSentAt: { not: null } }] };
+  } else if (view === "converted") {
+    where = { AND: [where, { convertedAt: { not: null } }] };
   }
 
   try {
@@ -44,23 +56,17 @@ export async function GET(req: NextRequest) {
       prisma.cartTelemetry.count({ where }),
     ]);
 
+    const carts = await Promise.all(rows.map((r) => mapCartTelemetryRow(r)));
+
     return NextResponse.json({
-      carts: rows.map((c) => ({
-        sessionId: c.sessionId,
-        itemCount: c.itemCount,
-        subtotalHint: c.subtotalHint,
-        userEmail: c.userEmail || null,
-        lastPath: c.lastPath,
-        updatedAt: c.updatedAt,
-        lines: c.lines,
-      })),
+      carts,
       total,
       page,
       limit,
       totalPages: Math.ceil(total / limit) || 1,
     });
   } catch (e) {
-    console.error(e);
+    console.error("[admin/carts] list failed", e);
     return NextResponse.json({ error: "Failed to load carts" }, { status: 500 });
   }
 }

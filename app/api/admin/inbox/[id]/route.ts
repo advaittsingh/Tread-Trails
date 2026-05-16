@@ -1,7 +1,10 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
+import { LeadStatus } from "@prisma/client";
+
 import { requireAdmin } from "@/lib/auth/request-user";
+import { logAdminAction } from "@/lib/server/admin-audit";
 import { prisma } from "@/lib/prisma";
 
 const patchSchema = z.object({
@@ -39,6 +42,29 @@ export async function PATCH(
       where: { id: context.params.id },
       data,
     });
+
+    if (parsed.data.read === true) {
+      const linked = await prisma.lead.findFirst({
+        where: { inboxSubmissionId: context.params.id },
+      });
+      if (linked && linked.status === LeadStatus.new) {
+        await prisma.lead.update({
+          where: { id: linked.id },
+          data: {
+            status: LeadStatus.contacted,
+            contactedAt: new Date(),
+          },
+        });
+      }
+    }
+
+    await logAdminAction({
+      adminId: gate.auth.userId,
+      action: parsed.data.read ? "inbox.mark_read" : "inbox.mark_unread",
+      entity: "inbox_submission",
+      entityId: context.params.id,
+    });
+
     return NextResponse.json({ submission: row });
   } catch (e) {
     console.error(e);

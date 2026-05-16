@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
-import { products } from "@/data/index";
 import { buildPageMetadata } from "@/lib/seo/page-metadata";
 import { listBrandEntries } from "@/lib/server/brand-catalog";
 import { listHomeFeaturedBuilds } from "@/lib/server/build-catalog";
+import { listFeaturedProducts } from "@/lib/server/product-catalog";
 import { listVehicles } from "@/lib/server/vehicle-catalog";
 
 import { PrimaryCta, WhatsAppCta } from "@/components/marketing/cta-buttons";
@@ -27,7 +27,7 @@ export default async function HomePage() {
   const brandEntries = await listBrandEntries();
   const featuredBrands = brandEntries.slice(0, 6);
   const featuredBuilds = await listHomeFeaturedBuilds(3);
-  const featuredProducts = products.slice(0, 4);
+  const featuredProducts = await listFeaturedProducts(4);
 
   return (
     <>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import Link from "next/link";
 import { ShoppingBag } from "lucide-react";
 
 import { useConfirmation } from "@/contexts/confirmation-context";
@@ -10,9 +11,8 @@ import { toastError, toastSuccess } from "@/lib/toast";
 import { ADMIN_CONFIRM_DIALOG_CLASS } from "@/components/admin/admin-confirm-styles";
 import { AdminEmptyState } from "@/components/admin/admin-empty-state";
 import { AdminExportButton } from "@/components/admin/admin-export-button";
-import { AdminOrderDetailSheet } from "@/components/admin/admin-order-detail-sheet";
 import { AdminPaginationBar } from "@/components/admin/admin-pagination-bar";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { AdminStatusBadge } from "@/components/admin/admin-status-badge";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -41,7 +41,6 @@ export function AdminOrdersTable() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
-  const [detailOrderId, setDetailOrderId] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -173,6 +172,7 @@ export function AdminOrdersTable() {
             <option value="pending">Pending</option>
             <option value="paid">Paid</option>
             <option value="shipped">Shipped</option>
+            <option value="delivered">Delivered</option>
             <option value="cancelled">Cancelled</option>
           </select>
         </div>
@@ -233,8 +233,13 @@ export function AdminOrdersTable() {
                   ))
                 : rows.map((r) => (
                     <tr key={r.id} className="hover:bg-zinc-800/40">
-                      <td className="px-4 py-4 font-mono text-xs text-zinc-300">
-                        {r.id.slice(-10)}
+                      <td className="px-4 py-4 font-mono text-xs">
+                        <Link
+                          href={`/admin/orders/${r.id}`}
+                          className="text-emerald-400/90 hover:text-emerald-300 hover:underline"
+                        >
+                          {r.id.slice(-10)}
+                        </Link>
                       </td>
                       <td className="px-4 py-4">
                         <p className="font-medium text-zinc-100">{r.customerEmail}</p>
@@ -267,17 +272,20 @@ export function AdminOrdersTable() {
                             <option value="pending">Pending</option>
                             <option value="paid">Paid</option>
                             <option value="shipped">Shipped</option>
+                            <option value="delivered">Delivered</option>
                             <option value="cancelled">Cancelled</option>
                           </select>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            className="h-9 text-xs text-zinc-400 hover:text-emerald-300"
-                            onClick={() => setDetailOrderId(r.id)}
+                          <Link
+                            href={`/admin/orders/${r.id}`}
+                            className={buttonVariants({
+                              variant: "ghost",
+                              size: "sm",
+                              className:
+                                "h-9 text-xs text-zinc-400 hover:text-emerald-300",
+                            })}
                           >
-                            Details
-                          </Button>
+                            Open
+                          </Link>
                         </div>
                       </td>
                     </tr>
@@ -314,11 +322,6 @@ export function AdminOrdersTable() {
         />
       </div>
 
-      <AdminOrderDetailSheet
-        orderId={detailOrderId}
-        onClose={() => setDetailOrderId(null)}
-        onUpdated={load}
-      />
     </div>
   );
 }

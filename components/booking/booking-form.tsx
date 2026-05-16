@@ -4,8 +4,8 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 
-import { cars } from "@/data/cars";
-import { getProductBySlug } from "@/data/index";
+import { useVehicleCatalog } from "@/hooks/use-vehicle-catalog";
+import { useProductCatalog } from "@/contexts/product-catalog-context";
 import { getBuildBySlug } from "@/lib/build";
 import { cn } from "@/lib/utils";
 import {
@@ -105,7 +105,9 @@ function isBookingFormComplete(
 
 export function BookingForm() {
   const searchParams = useSearchParams();
+  const { getProductBySlug } = useProductCatalog();
   const { setSelectedSlug, slug: globalSlug, hydrated } = useSelectedVehicle();
+  const { vehicles: cars } = useVehicleCatalog();
   const didApplyStoredVehicle = useRef(false);
   const submitLock = useRef(false);
   const [carSlug, setCarSlug] = useState("");
@@ -115,6 +117,7 @@ export function BookingForm() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
+  const [customerMessage, setCustomerMessage] = useState("");
   const [done, setDone] = useState(false);
   const [prefilled, setPrefilled] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -158,7 +161,7 @@ export function BookingForm() {
       setService(inferred);
       setPrefilled(true);
     }
-  }, [searchParams, setSelectedSlug]);
+  }, [searchParams, setSelectedSlug, getProductBySlug]);
 
   useEffect(() => {
     if (!hydrated || didApplyStoredVehicle.current) return;
@@ -195,7 +198,7 @@ export function BookingForm() {
     if (p) out.push(p.name);
     if (b) out.push(b.title);
     return out;
-  }, [searchParams]);
+  }, [searchParams, getProductBySlug]);
 
   useEffect(() => {
     if (!date || !time) return;
@@ -297,6 +300,7 @@ export function BookingForm() {
           contactName: trimmedName,
           contactEmail: trimmedEmail,
           contactPhone: phoneResult.normalized,
+          customerMessage: customerMessage.trim() || undefined,
         }),
       });
       const data = (await res.json()) as { error?: string };
@@ -569,6 +573,20 @@ export function BookingForm() {
                     const r = validatePhone(phone);
                     if (r.ok) setPhone(r.normalized);
                   }}
+                />
+              </div>
+              <div className="space-y-3 sm:col-span-2">
+                <Label htmlFor="customer-message">
+                  Message for the studio (optional)
+                </Label>
+                <textarea
+                  id="customer-message"
+                  rows={3}
+                  disabled={submitting}
+                  value={customerMessage}
+                  onChange={(e) => setCustomerMessage(e.target.value)}
+                  placeholder="Vehicle details, goals for the visit, parts already on hand…"
+                  className="w-full resize-y rounded-xl border border-input bg-background px-3 py-2.5 text-sm shadow-card outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-60"
                 />
               </div>
             </div>

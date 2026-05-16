@@ -3,6 +3,7 @@ import { InboxKind } from "@prisma/client";
 import { Resend } from "resend";
 
 import { prisma } from "@/lib/prisma";
+import { createLeadFromCorporate } from "@/lib/server/create-lead";
 import { logAppError } from "@/lib/server/log-app-error";
 import { corporateInquirySchema } from "@/lib/validations/corporate-inquiry";
 
@@ -58,6 +59,20 @@ export async function POST(req: Request) {
       emailSent: false,
     },
   });
+
+  try {
+    await createLeadFromCorporate({
+      companyName,
+      contactPerson,
+      email,
+      phone,
+      businessType,
+      requirements,
+      inboxSubmissionId: inboxRow.id,
+    });
+  } catch (e) {
+    console.error("[corporate-inquiry] lead create failed", e);
+  }
 
   if (!apiKey || !from || !to) {
     return NextResponse.json(

@@ -1,13 +1,13 @@
-import {
-  getBundleSuggestion,
-  getProductBySlug,
-  getRelatedProducts,
-} from "@/data/index";
 import type { Product } from "@/data/types";
 import {
   getProductSlugsForVehicleSlug,
   getVehicleSlugsForProductSlug,
 } from "@/lib/compatibility/product-vehicle-map";
+import {
+  getBundleSuggestion,
+  getProductBySlug,
+  getRelatedProducts,
+} from "@/lib/server/product-catalog";
 
 export type RecommendationEntry = {
   productSlug: string;
@@ -68,10 +68,10 @@ function shuffleStable(slugs: string[], seed: string): string[] {
   return arr;
 }
 
-export function buildRecommendationsPayload(
+export async function buildRecommendationsPayload(
   productSlug: string
-): ProductRecommendationsPayload {
-  const current = getProductBySlug(productSlug);
+): Promise<ProductRecommendationsPayload> {
+  const current = await getProductBySlug(productSlug);
   if (!current) {
     return { forVehicle: [], alsoBought: [], upgradePath: { intro: "", steps: [] } };
   }
@@ -89,7 +89,7 @@ export function buildRecommendationsPayload(
     `${productSlug}:vehicle`
   ).slice(0, 4);
 
-  const related = getRelatedProducts(productSlug, 12);
+  const related = await getRelatedProducts(productSlug, 12);
   if (forVehicleSlugs.length === 0) {
     forVehicleSlugs = related.slice(0, 4).map((p) => p.slug);
   }
@@ -100,7 +100,7 @@ export function buildRecommendationsPayload(
     badge: i === 0 ? "Platform match" : undefined,
   }));
 
-  const bundle = getBundleSuggestion(productSlug);
+  const bundle = await getBundleSuggestion(productSlug);
   const alsoPool = Array.from(
     new Set([
       ...bundle.map((p) => p.slug),
@@ -119,9 +119,9 @@ export function buildRecommendationsPayload(
     badge: i === 0 ? "Studio pairing" : undefined,
   }));
 
-  const poolProducts = alsoPool
-    .map((s) => getProductBySlug(s))
-    .filter(Boolean) as Product[];
+  const poolProducts = (
+    await Promise.all(alsoPool.map((s) => getProductBySlug(s)))
+  ).filter(Boolean) as Product[];
 
   const steps: UpgradeStep[] = [];
   for (const cat of CATEGORY_PRIORITY) {

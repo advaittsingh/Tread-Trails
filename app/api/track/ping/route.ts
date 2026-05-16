@@ -3,12 +3,24 @@ import { z } from "zod";
 
 import { lookupGeo } from "@/lib/geo-ip";
 import { clientIpFromHeaders, hashIp } from "@/lib/ip-hash";
+import { parseUserAgent } from "@/lib/presence/parse-user-agent";
+import { purgeStalePresenceSessions } from "@/lib/presence/cleanup";
 import { prisma } from "@/lib/prisma";
 
 const bodySchema = z.object({
   sessionId: z.string().min(8).max(128),
   path: z.string().max(512),
 });
+
+let lastCleanupAt = 0;
+const CLEANUP_THROTTLE_MS = 90_000;
+
+async function maybePurgeStale(): Promise<void> {
+  const now = Date.now();
+  if (now - lastCleanupAt < CLEANUP_THROTTLE_MS) return;
+  lastCleanupAt = now;
+  await purgeStalePresenceSessions(now);
+}
 
 export async function POST(req: Request) {
   let json: unknown;
@@ -27,6 +39,8 @@ export async function POST(req: Request) {
   const ip = clientIpFromHeaders(req.headers);
   const ipHash = ip ? hashIp(ip) : "";
   const ua = req.headers.get("user-agent") ?? "";
+  const { deviceType, deviceLabel } = parseUserAgent(ua);
+  const now = new Date();
 
   try {
     const doc = await prisma.presenceSession.upsert({
@@ -34,16 +48,21 @@ export async function POST(req: Request) {
       create: {
         sessionId,
         path,
-        userAgent: ua,
+        userAgent: ua.slice(0, 512),
+        deviceType,
+        deviceLabel,
         ipHash,
         geoResolved: false,
-        lastSeenAt: new Date(),
+        firstSeenAt: now,
+        lastSeenAt: now,
       },
       update: {
         path,
-        userAgent: ua,
+        userAgent: ua.slice(0, 512),
+        deviceType,
+        deviceLabel,
         ipHash,
-        lastSeenAt: new Date(),
+        lastSeenAt: now,
       },
       select: {
         sessionId: true,
@@ -51,10 +70,7 @@ export async function POST(req: Request) {
       },
     });
 
-    const needsGeo =
-      doc &&
-      !doc.geoResolved &&
-      ip;
+    const needsGeo = doc && !doc.geoResolved && ip;
 
     if (needsGeo) {
       const geo = await lookupGeo(ip);
@@ -72,9 +88,11 @@ export async function POST(req: Request) {
       }
     }
 
+    void maybePurgeStale();
+
     return NextResponse.json({ ok: true });
   } catch (e) {
-    console.error(e);
+    console.error("[presence] ping failed", e);
     return NextResponse.json({ error: "Ping failed" }, { status: 500 });
   }
 }

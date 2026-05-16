@@ -32,6 +32,7 @@ export async function GET(req: NextRequest) {
         orderBy: { createdAt: "desc" },
         skip,
         take: limit,
+        include: { lead: { select: { id: true, status: true } } },
       }),
       prisma.inboxSubmission.count({ where }),
     ]);

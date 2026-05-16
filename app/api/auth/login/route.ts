@@ -4,6 +4,7 @@ import { verifyPassword } from "@/lib/auth/password";
 import { signAuthToken } from "@/lib/auth/jwt";
 import { setAuthCookie } from "@/lib/auth/session-cookie";
 import { prisma } from "@/lib/prisma";
+import { logAuthFailure } from "@/lib/logger";
 import { loginFailureResponse } from "@/lib/auth/login-errors";
 import { loginSchema } from "@/lib/validations/api";
 
@@ -28,11 +29,20 @@ export async function POST(req: Request) {
   try {
     const user = await prisma.user.findUnique({ where: { email: email.toLowerCase() } });
     if (!user) {
+      void logAuthFailure(req, "Login failed — unknown email", {
+        severity: "warn",
+        meta: { reason: "unknown_user" },
+      });
       return NextResponse.json({ error: "Invalid email or password" }, { status: 401 });
     }
 
     const ok = await verifyPassword(password, user.passwordHash);
     if (!ok) {
+      void logAuthFailure(req, "Login failed — invalid password", {
+        severity: "warn",
+        userId: user.id,
+        meta: { reason: "bad_password" },
+      });
       return NextResponse.json({ error: "Invalid email or password" }, { status: 401 });
     }
 
@@ -54,6 +64,10 @@ export async function POST(req: Request) {
     setAuthCookie(res, token);
     return res;
   } catch (e) {
+    void logAuthFailure(req, "Login infrastructure failure", {
+      severity: "error",
+      error: e,
+    });
     const { status, body } = loginFailureResponse(e);
     return NextResponse.json(body, { status });
   }

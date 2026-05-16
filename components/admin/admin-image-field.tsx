@@ -1,29 +1,17 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { ImagePlus, Loader2, X } from "lucide-react";
+import { FolderOpen, ImagePlus, Loader2, X } from "lucide-react";
 
+import { uploadMediaFile } from "@/lib/media/client-upload";
+import { mediaThumbnailUrl } from "@/lib/media/optimize-url";
 import { toastError } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 
+import { AdminMediaPicker } from "@/components/admin/admin-media-picker";
 import { adminInputClass } from "@/components/admin/admin-form-ui";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-
-async function uploadImage(file: File, folder: string): Promise<string> {
-  const fd = new FormData();
-  fd.append("file", file);
-  fd.append("folder", folder);
-  const res = await fetch("/api/admin/upload", {
-    method: "POST",
-    body: fd,
-    credentials: "include",
-  });
-  const data = (await res.json().catch(() => ({}))) as { url?: string; error?: string };
-  if (!res.ok) throw new Error(data.error ?? "Upload failed");
-  if (!data.url) throw new Error("No URL returned");
-  return data.url;
-}
 
 type AdminImageFieldProps = {
   label: string;
@@ -44,12 +32,13 @@ export function AdminImageField({
 }: AdminImageFieldProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
+  const [pickerOpen, setPickerOpen] = useState(false);
 
   async function onPick(file: File) {
     setUploading(true);
     try {
-      const url = await uploadImage(file, folder);
-      onChange(url);
+      const asset = await uploadMediaFile(file, { folder });
+      onChange(asset.url);
     } catch (e) {
       toastError(
         "Upload failed",
@@ -59,6 +48,8 @@ export function AdminImageField({
       setUploading(false);
     }
   }
+
+  const previewSrc = value ? mediaThumbnailUrl(value, 800) : "";
 
   return (
     <div className="space-y-2">
@@ -71,7 +62,7 @@ export function AdminImageField({
           )}
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={value} alt="" className="h-full w-full object-cover" />
+          <img src={previewSrc || value} alt="" className="h-full w-full object-cover" />
           <button
             type="button"
             aria-label="Remove image"
@@ -82,27 +73,54 @@ export function AdminImageField({
           </button>
         </div>
       ) : (
-        <button
-          type="button"
-          disabled={uploading}
-          onClick={() => inputRef.current?.click()}
+        <div
           className={cn(
-            "flex w-full flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-zinc-700 bg-zinc-900/50 text-zinc-500 transition hover:border-emerald-600/50 hover:bg-zinc-900 hover:text-zinc-300",
+            "flex w-full flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-zinc-700 bg-zinc-900/50",
             aspectClass
           )}
         >
-          {uploading ? (
-            <Loader2 className="size-6 animate-spin text-emerald-400" />
-          ) : (
-            <ImagePlus className="size-6" />
-          )}
-          <span className="text-xs">{uploading ? "Uploading…" : "Upload image"}</span>
-        </button>
+          <button
+            type="button"
+            disabled={uploading}
+            onClick={() => inputRef.current?.click()}
+            className="flex flex-col items-center gap-2 text-zinc-500 transition hover:text-zinc-300"
+          >
+            {uploading ? (
+              <Loader2 className="size-6 animate-spin text-emerald-400" />
+            ) : (
+              <ImagePlus className="size-6" />
+            )}
+            <span className="text-xs">{uploading ? "Uploading…" : "Upload image"}</span>
+          </button>
+        </div>
       )}
+      <div className="flex flex-wrap gap-2">
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="border-zinc-600 bg-zinc-950 text-zinc-200"
+          onClick={() => inputRef.current?.click()}
+          disabled={uploading}
+        >
+          <ImagePlus className="mr-1.5 size-3.5" />
+          Upload
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="border-zinc-600 bg-zinc-950 text-zinc-200"
+          onClick={() => setPickerOpen(true)}
+        >
+          <FolderOpen className="mr-1.5 size-3.5" />
+          Browse library
+        </Button>
+      </div>
       <Input
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        placeholder="Or paste image URL"
+        placeholder="Or paste image URL (legacy / external)"
         className={adminInputClass}
       />
       {hint ? <p className="text-[11px] text-zinc-600">{hint}</p> : null}
@@ -116,6 +134,13 @@ export function AdminImageField({
           if (file) void onPick(file);
           e.target.value = "";
         }}
+      />
+      <AdminMediaPicker
+        open={pickerOpen}
+        onOpenChange={setPickerOpen}
+        folder={folder}
+        onSelect={(url) => onChange(url)}
+        title={`Choose image — ${folder}`}
       />
     </div>
   );
@@ -138,12 +163,13 @@ export function AdminImageListField({
 }: AdminImageListFieldProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
+  const [pickerOpen, setPickerOpen] = useState(false);
 
   async function onPick(file: File) {
     setUploading(true);
     try {
-      const url = await uploadImage(file, folder);
-      onChange([...values, url]);
+      const asset = await uploadMediaFile(file, { folder });
+      onChange([...values, asset.url]);
     } catch (e) {
       toastError(
         "Upload failed",
@@ -169,7 +195,11 @@ export function AdminImageListField({
               className="relative aspect-video overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900"
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={url} alt="" className="h-full w-full object-cover" />
+              <img
+                src={mediaThumbnailUrl(url, 480) || url}
+                alt=""
+                className="h-full w-full object-cover"
+              />
               <button
                 type="button"
                 aria-label="Remove image"
@@ -182,20 +212,31 @@ export function AdminImageListField({
           ))}
         </ul>
       ) : null}
-      <Button
-        type="button"
-        variant="outline"
-        disabled={uploading}
-        className="border-zinc-600 bg-zinc-950 text-zinc-200"
-        onClick={() => inputRef.current?.click()}
-      >
-        {uploading ? (
-          <Loader2 className="mr-2 size-4 animate-spin" />
-        ) : (
-          <ImagePlus className="mr-2 size-4" />
-        )}
-        Add image
-      </Button>
+      <div className="flex flex-wrap gap-2">
+        <Button
+          type="button"
+          variant="outline"
+          disabled={uploading}
+          className="border-zinc-600 bg-zinc-950 text-zinc-200"
+          onClick={() => inputRef.current?.click()}
+        >
+          {uploading ? (
+            <Loader2 className="mr-2 size-4 animate-spin" />
+          ) : (
+            <ImagePlus className="mr-2 size-4" />
+          )}
+          Add image
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          className="border-zinc-600 bg-zinc-950 text-zinc-200"
+          onClick={() => setPickerOpen(true)}
+        >
+          <FolderOpen className="mr-2 size-4" />
+          From library
+        </Button>
+      </div>
       {hint ? <p className="text-[11px] text-zinc-600">{hint}</p> : null}
       <input
         ref={inputRef}
@@ -207,6 +248,13 @@ export function AdminImageListField({
           if (file) void onPick(file);
           e.target.value = "";
         }}
+      />
+      <AdminMediaPicker
+        open={pickerOpen}
+        onOpenChange={setPickerOpen}
+        folder={folder}
+        onSelect={(url) => onChange([...values, url])}
+        title={`Add from library — ${folder}`}
       />
     </div>
   );

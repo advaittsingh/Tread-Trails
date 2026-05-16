@@ -1,7 +1,11 @@
 import type { Metadata } from "next";
 
-import { products } from "@/data/products";
 import { buildPageMetadata } from "@/lib/seo/page-metadata";
+import {
+  listProductBrands,
+  listProductCategories,
+  listProducts,
+} from "@/lib/server/product-catalog";
 
 import { ProductsExplorer } from "@/components/products/products-explorer";
 import { SectionHeading } from "@/components/marketing/section-heading";
@@ -17,13 +21,19 @@ type Props = {
   searchParams: { q?: string; category?: string };
 };
 
-export default function ProductsPage({ searchParams }: Props) {
+export default async function ProductsPage({ searchParams }: Props) {
   const raw =
     typeof searchParams.q === "string" ? searchParams.q.slice(0, 120) : "";
   const category =
     typeof searchParams.category === "string"
       ? searchParams.category.slice(0, 80)
       : "";
+
+  const [products, brandOptions, categoryOptions] = await Promise.all([
+    listProducts(),
+    listProductBrands(),
+    listProductCategories(),
+  ]);
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
@@ -36,6 +46,8 @@ export default function ProductsPage({ searchParams }: Props) {
       />
       <ProductsExplorer
         products={products}
+        brandOptions={brandOptions}
+        categoryOptions={categoryOptions}
         initialQuery={raw}
         initialCategory={category}
       />

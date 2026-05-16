@@ -19,7 +19,10 @@ export async function GET(req: NextRequest) {
   const search = searchParams.get("search")?.trim();
 
   const where: Prisma.OrderWhereInput = {};
-  if (status && ["pending", "paid", "shipped", "cancelled"].includes(status)) {
+  if (
+    status &&
+    ["pending", "paid", "shipped", "delivered", "cancelled"].includes(status)
+  ) {
     where.status = status as OrderStatus;
   }
   const pmKnown = ["stripe", "cod", "razorpay", "juspay"] as const;

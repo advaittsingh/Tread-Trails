@@ -37,6 +37,8 @@ type VehicleFormState = {
   modelYearsLabel: string;
   trimSummary: string;
   legacyId: string;
+  modelId: string;
+  generationKey: string;
 };
 
 function emptyForm(): VehicleFormState {
@@ -52,6 +54,8 @@ function emptyForm(): VehicleFormState {
     modelYearsLabel: "",
     trimSummary: "",
     legacyId: "",
+    modelId: "",
+    generationKey: "",
   };
 }
 
@@ -74,6 +78,20 @@ export function AdminVehicleForm({ recordId }: { recordId: string | null }) {
   const [formError, setFormError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [models, setModels] = useState<
+    Array<{ id: string; name: string; make: { name: string } }>
+  >([]);
+
+  useEffect(() => {
+    async function loadModels() {
+      const res = await fetch("/api/admin/vehicle-models", {
+        credentials: "include",
+      });
+      const data = await res.json();
+      if (res.ok) setModels(data.models);
+    }
+    void loadModels();
+  }, []);
 
   const load = useCallback(async () => {
     if (!recordId) return;
@@ -99,6 +117,8 @@ export function AdminVehicleForm({ recordId }: { recordId: string | null }) {
         modelYearsLabel: v.modelYearsLabel ?? "",
         trimSummary: v.trimSummary ?? "",
         legacyId: v.id !== rowId ? v.id : "",
+        modelId: typeof data.modelId === "string" ? data.modelId : "",
+        generationKey: v.generationKey ?? "",
       });
     } catch (e) {
       setFormError(e instanceof Error ? e.message : "Load failed");
@@ -137,6 +157,8 @@ export function AdminVehicleForm({ recordId }: { recordId: string | null }) {
       engineSummary: form.engineSummary,
       modelYearsLabel: form.modelYearsLabel,
       trimSummary: form.trimSummary,
+      modelId: form.modelId.trim() || null,
+      generationKey: form.generationKey.trim() || null,
     };
 
     try {
@@ -287,6 +309,34 @@ export function AdminVehicleForm({ recordId }: { recordId: string | null }) {
               ))}
             </select>
           </AdminField>
+          <AdminFieldGrid>
+            <AdminField label="Model line" hint="OEM hierarchy">
+              <select
+                value={form.modelId}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, modelId: e.target.value }))
+                }
+                className={adminSelectClass}
+              >
+                <option value="">Unassigned</option>
+                {models.map((m) => (
+                  <option key={m.id} value={m.id}>
+                    {m.make.name} · {m.name}
+                  </option>
+                ))}
+              </select>
+            </AdminField>
+            <AdminField label="Generation key" hint="e.g. gen1">
+              <Input
+                value={form.generationKey}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, generationKey: e.target.value }))
+                }
+                className={adminInputClass}
+                placeholder="gen1"
+              />
+            </AdminField>
+          </AdminFieldGrid>
         </AdminFormSection>
 
         <AdminFormSection title="Story">

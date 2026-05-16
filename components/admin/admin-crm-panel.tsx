@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 
 const TEMPLATES = [
   "complete_order",
+  "cart_waiting",
   "interest",
   "booking_confirmed",
   "order_shipped",
@@ -20,6 +21,7 @@ type TemplateId = (typeof TEMPLATES)[number];
 
 const TEMPLATE_LABELS: Record<TemplateId, string> = {
   complete_order: "Complete your order",
+  cart_waiting: "Your cart is waiting",
   interest: "We noticed your interest",
   booking_confirmed: "Booking confirmed",
   order_shipped: "Order shipped",

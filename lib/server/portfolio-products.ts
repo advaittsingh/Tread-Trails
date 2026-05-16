@@ -4,6 +4,7 @@ import {
   prismaProductToDTO,
   productWithVehicleCompatInclude,
 } from "@/lib/catalog/map-product";
+import { getProductsByTokens } from "@/lib/server/product-catalog";
 import { prisma } from "@/lib/prisma";
 
 /**
@@ -32,59 +33,14 @@ export async function resolvePortfolioLinkedProducts(
     /* DATABASE_URL missing / unreachable */
   }
 
-  return resolvePortfolioProducts(productIdsFallback);
+  return getProductsByTokens(productIdsFallback);
 }
 
-/**
- * Resolve tokens listed on `PortfolioBuild.productIds` to full `Product` rows.
- * Tokens match static `Product.id` and seeded `Product.legacyId` (not slugs in current seed).
- */
+/** @deprecated Use `getProductsByTokens` from product-catalog. */
 export async function resolvePortfolioProducts(
   productIds: string[]
 ): Promise<Product[]> {
-  if (productIds.length === 0) return [];
-
-  const tokens = Array.from(new Set(productIds));
-  const hit = new Map<string, Product>();
-
-  try {
-    const rows = await prisma.product.findMany({
-      where: {
-        OR: [
-          { legacyId: { in: tokens } },
-          { id: { in: tokens } },
-          { slug: { in: tokens } },
-        ],
-      },
-      include: productWithVehicleCompatInclude,
-    });
-    for (const r of rows) {
-      const dto = prismaProductToDTO(r);
-      hit.set(r.id, dto);
-      if (r.legacyId) hit.set(r.legacyId, dto);
-      hit.set(r.slug, dto);
-    }
-  } catch {
-    /* DATABASE_URL missing / unreachable */
-  }
-
-  const staticById = new Map(staticProducts.map((p) => [p.id, p]));
-  const staticBySlug = new Map(staticProducts.map((p) => [p.slug, p]));
-
-  function one(token: string): Product | undefined {
-    return hit.get(token) ?? staticById.get(token) ?? staticBySlug.get(token);
-  }
-
-  const ordered: Product[] = [];
-  const seenSlug = new Set<string>();
-  for (const token of productIds) {
-    const p = one(token);
-    if (p && !seenSlug.has(p.slug)) {
-      seenSlug.add(p.slug);
-      ordered.push(p);
-    }
-  }
-  return ordered;
+  return getProductsByTokens(productIds);
 }
 
 /**

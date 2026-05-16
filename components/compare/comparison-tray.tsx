@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { X } from "lucide-react";
 
-import { getProductBySlug } from "@/data/index";
+import { useProductCatalog } from "@/contexts/product-catalog-context";
 import { useConfirmation } from "@/contexts/confirmation-context";
 import { MAX_COMPARE, useCompare } from "@/contexts/compare-context";
 import { toastSuccess } from "@/lib/toast";
@@ -15,6 +15,7 @@ import { Button, buttonVariants } from "@/components/ui/button";
 
 export function ComparisonTray() {
   const pathname = usePathname();
+  const { getProductBySlug } = useProductCatalog();
   const { confirmAction } = useConfirmation();
   const { slugs, hydrated, count, remove, clear } = useCompare();
 

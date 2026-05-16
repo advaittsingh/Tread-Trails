@@ -1,15 +1,16 @@
 import { ADVVEN_PARTNER_BRANDS, productBelongsToPartnerSlug } from "@/data/advven-brands";
 import type { BrandEntry } from "@/data/index";
-import { products as staticProducts } from "@/data/products";
 import type { Product } from "@/data/types";
 import { prismaBrandToBrandEntry } from "@/lib/catalog/map-brand";
+import { listProducts } from "@/lib/server/product-catalog";
 import { prisma } from "@/lib/prisma";
 
-function staticBrandEntries(): BrandEntry[] {
+async function staticBrandEntries(): Promise<BrandEntry[]> {
+  const catalog = await listProducts();
   return ADVVEN_PARTNER_BRANDS.map((b) => ({
     name: b.name,
     slug: b.slug,
-    productCount: staticProducts.filter((p) =>
+    productCount: catalog.filter((p) =>
       productBelongsToPartnerSlug(p, b.slug)
     ).length,
     tagline: b.tagline,
@@ -37,7 +38,8 @@ export async function getBrandBySlug(slug: string): Promise<BrandEntry | null> {
   } catch {
     /* ignore */
   }
-  return staticBrandEntries().find((b) => b.slug === slug) ?? null;
+  const entries = await staticBrandEntries();
+  return entries.find((b) => b.slug === slug) ?? null;
 }
 
 export async function listBrandSlugs(): Promise<string[]> {

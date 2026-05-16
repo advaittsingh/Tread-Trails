@@ -15,18 +15,40 @@ enum OrderStatus {
   pending
   paid
   shipped
+  delivered
   cancelled
 }
 
 enum BookingStatus {
-  requested
+  pending
   confirmed
+  completed
   cancelled
 }
 
 enum InboxKind {
   contact
   corporate
+}
+
+enum LeadSource {
+  contact
+  corporate
+}
+
+enum LeadStatus {
+  new
+  contacted
+  qualified
+  converted
+  closed
+}
+
+enum LeadPriority {
+  low
+  normal
+  high
+  urgent
 }
 
 model User {
@@ -47,8 +69,35 @@ model User {
   savedVehicles        UserSavedVehicle[]
   wishlistProducts     UserWishlistProduct[]
   passwordResetTokens  PasswordResetToken[]
+  assignedLeads        Lead[]           @relation("LeadAssignee")
+  leadEmailsSent       LeadEmailLog[]   @relation("LeadEmailSender")
+  mediaUploads         MediaAsset[]     @relation("MediaUploader")
 
   @@index([role])
+}
+
+/// Admin media library asset (Vercel Blob or Cloudinary).
+model MediaAsset {
+  id           String   @id @default(cuid())
+  url          String   @unique
+  storageKey   String?
+  provider     String   @default("blob")
+  filename     String
+  mimeType     String
+  sizeBytes    Int
+  width        Int?
+  height       Int?
+  folder       String   @default("uploads")
+  tags         String[] @default([])
+  altText      String?
+  uploadedById String?
+  uploadedBy   User?    @relation("MediaUploader", fields: [uploadedById], references: [id], onDelete: SetNull)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([folder])
+  @@index([createdAt])
+  @@index([uploadedById])
 }
 
 model UserWishlistProduct {
@@ -85,6 +134,36 @@ model UserSavedVehicle {
   @@index([userId])
 }
 
+/// OEM make (Toyota, Jeep) — not partner Brand.
+model VehicleMake {
+  id        String   @id @default(cuid())
+  slug      String   @unique
+  name      String
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  models    VehicleModel[]
+
+  @@index([sortOrder])
+}
+
+/// Model line under a make (Fortuner, Hilux).
+model VehicleModel {
+  id        String   @id @default(cuid())
+  makeId    String
+  make      VehicleMake @relation(fields: [makeId], references: [id], onDelete: Cascade)
+  slug      String
+  name      String
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  vehicles  Vehicle[]
+
+  @@unique([makeId, slug])
+  @@index([makeId])
+}
+
+/// Fitment platform / generation (URL + compatibility unit).
 model Vehicle {
   id               String   @id @default(cuid())
   legacyId         String?  @unique
@@ -98,10 +177,17 @@ model Vehicle {
   engineSummary    String   @default("")
   modelYearsLabel  String   @default("")
   trimSummary      String   @default("")
-  createdAt              DateTime @default(now())
-  updatedAt              DateTime @updatedAt
+  modelId          String?
+  model            VehicleModel? @relation(fields: [modelId], references: [id], onDelete: SetNull)
+  generationKey  String?
+  sortOrder        Int      @default(0)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 
   productCompatibilities ProductVehicleCompatibility[]
+
+  @@index([modelId])
+  @@index([category])
 }
 
 /**
@@ -219,11 +305,18 @@ model Order {
   juspayCheckoutOrderRef String?
   /// Internal fulfilment / refund notes — admin only.
   fulfilmentNotes        String      @default("")
+  trackingNumber         String?
+  shippingCarrier        String?
+  paidAt                 DateTime?
+  shippedAt              DateTime?
+  deliveredAt            DateTime?
+  cancelledAt            DateTime?
   createdAt              DateTime    @default(now())
   updatedAt              DateTime    @updatedAt
 
   @@index([userId])
   @@index([status])
+  @@index([createdAt])
 }
 
 model Booking {
@@ -235,15 +328,24 @@ model Booking {
   service      String
   date         String
   time         String
-  contactName  String
-  contactEmail String
-  contactPhone String
-  status       BookingStatus @default(requested)
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
+  contactName     String
+  contactEmail    String
+  contactPhone    String
+  /// Optional note from the customer at booking time.
+  customerMessage String        @default("")
+  /// Internal studio notes — admin only.
+  adminNotes      String        @default("")
+  status          BookingStatus @default(pending)
+  confirmedAt     DateTime?
+  completedAt     DateTime?
+  cancelledAt     DateTime?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
 
   @@index([userId])
   @@index([status])
+  @@index([date])
+  @@index([createdAt])
 }
 
 model PageHit {
@@ -261,37 +363,78 @@ model PresenceSession {
   sessionId   String   @unique
   path        String   @default("/")
   userAgent   String   @default("")
+  deviceType  String?
+  deviceLabel String?
   ipHash      String   @default("")
   city        String?
   country     String?
   lat         Float?
   lng         Float?
   geoResolved Boolean  @default(false)
+  firstSeenAt DateTime @default(now())
   lastSeenAt  DateTime @default(now())
+
+  @@index([lastSeenAt])
 }
 
 model CartTelemetry {
-  id           String   @id @default(cuid())
-  sessionId    String   @unique
-  lines        Json     @default("[]")
-  itemCount    Int      @default(0)
-  subtotalHint Int      @default(0)
-  userEmail    String?
-  lastPath     String   @default("")
-  updatedAt    DateTime @default(now())
+  id                    String   @id @default(cuid())
+  sessionId             String   @unique
+  lines                 Json     @default("[]")
+  itemCount             Int      @default(0)
+  subtotalHint          Int      @default(0)
+  userEmail             String?
+  customerName          String?
+  lastPath              String   @default("")
+  recoveryEmailSentAt   DateTime?
+  recoveryWhatsappAt    DateTime?
+  recoveryTemplate      String?
+  recoveredAt           DateTime?
+  convertedAt           DateTime?
+  convertedOrderId      String?
+  updatedAt             DateTime @default(now())
+
+  recoveryLogs CartRecoveryLog[]
 
   @@index([updatedAt])
+  @@index([recoveryEmailSentAt])
+  @@index([convertedAt])
+}
+
+/// Audit trail for abandoned-cart recovery touches (email, WhatsApp, conversions).
+model CartRecoveryLog {
+  id        String   @id @default(cuid())
+  sessionId String
+  cart      CartTelemetry @relation(fields: [sessionId], references: [sessionId], onDelete: Cascade)
+  channel   String
+  action    String
+  template  String?
+  adminId   String?
+  meta      Json?
+  createdAt DateTime @default(now())
+
+  @@index([sessionId])
+  @@index([createdAt])
+  @@index([adminId, createdAt])
 }
 
 model AppErrorLog {
   id        String   @id @default(cuid())
+  severity  String   @default("error")
+  category  String   @default("api")
   source    String
+  route     String?
   message   String
+  stack     String?
   detail    String?
+  userId    String?
   meta      Json?
   createdAt DateTime @default(now())
 
   @@index([createdAt])
+  @@index([severity, createdAt])
+  @@index([category, createdAt])
+  @@index([route])
 }
 
 model InboxSubmission {
@@ -301,8 +444,62 @@ model InboxSubmission {
   emailSent Boolean   @default(false)
   readAt    DateTime?
   createdAt DateTime  @default(now())
+  lead      Lead?
 
   @@index([kind, createdAt])
+}
+
+/// CRM lead — contact form and corporate inquiries with pipeline workflow.
+model Lead {
+  id                String       @id @default(cuid())
+  source            LeadSource
+  status            LeadStatus   @default(new)
+  priority          LeadPriority @default(normal)
+  displayName       String
+  email             String
+  phone             String?
+  subject           String?
+  message           String?
+  companyName       String?
+  contactPerson     String?
+  businessType      String?
+  requirements      String?
+  adminNotes        String       @default("")
+  assignedToId      String?
+  assignedTo        User?        @relation("LeadAssignee", fields: [assignedToId], references: [id], onDelete: SetNull)
+  inboxSubmissionId String?      @unique
+  inboxSubmission   InboxSubmission? @relation(fields: [inboxSubmissionId], references: [id], onDelete: SetNull)
+  contactedAt       DateTime?
+  qualifiedAt       DateTime?
+  convertedAt       DateTime?
+  closedAt          DateTime?
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+  emailLogs         LeadEmailLog[]
+
+  @@index([status, createdAt])
+  @@index([source, createdAt])
+  @@index([priority])
+  @@index([assignedToId])
+  @@index([email])
+}
+
+model LeadEmailLog {
+  id          String   @id @default(cuid())
+  leadId      String
+  lead        Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  adminId     String?
+  admin       User?    @relation("LeadEmailSender", fields: [adminId], references: [id], onDelete: SetNull)
+  to          String
+  subject     String
+  template    String?
+  bodyPreview String?
+  provider    String?
+  messageId   String?
+  createdAt   DateTime @default(now())
+
+  @@index([leadId, createdAt])
+  @@index([adminId])
 }
 
 model AdminAuditLog {

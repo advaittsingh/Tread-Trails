@@ -13,6 +13,8 @@ import {
   replaceProductVehicleCompatibilityBySlug,
 } from "@/lib/server/admin-sync-product-compatibility";
 import { prisma } from "@/lib/prisma";
+import { revalidateProductCatalog } from "@/lib/server/product-catalog";
+import { revalidateVehicleCatalog } from "@/lib/server/revalidate-vehicle-catalog";
 import { adminProductPatchSchema } from "@/lib/validations/admin-product";
 
 function mapUniqueSlugResponse(e: unknown): NextResponse | null {
@@ -147,6 +149,8 @@ export async function PATCH(req: Request, context: RouteCtx) {
       entityId: id,
     });
 
+    revalidateProductCatalog();
+    revalidateVehicleCatalog();
     return NextResponse.json({
       id: row.id,
       product: prismaProductToDTO(row),
@@ -185,6 +189,8 @@ export async function DELETE(_req: Request, context: RouteCtx) {
       entity: "product",
       entityId: id,
     });
+    revalidateProductCatalog();
+    revalidateVehicleCatalog();
     return NextResponse.json({ ok: true });
   } catch (e) {
     if (

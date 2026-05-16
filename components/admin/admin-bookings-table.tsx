@@ -1,25 +1,23 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import Link from "next/link";
 import { CalendarClock } from "lucide-react";
 
 import { useConfirmation } from "@/contexts/confirmation-context";
 import { toastError, toastSuccess } from "@/lib/toast";
+import { cn } from "@/lib/utils";
 
 import { ADMIN_CONFIRM_DIALOG_CLASS } from "@/components/admin/admin-confirm-styles";
 import { AdminEmptyState } from "@/components/admin/admin-empty-state";
 import { AdminExportButton } from "@/components/admin/admin-export-button";
 import { AdminPaginationBar } from "@/components/admin/admin-pagination-bar";
 import { AdminStatusBadge } from "@/components/admin/admin-status-badge";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
+
+type ViewFilter = "" | "today" | "upcoming" | "completed" | "cancelled";
 
 type Row = {
   id: string;
@@ -27,7 +25,6 @@ type Row = {
   contactName: string;
   contactPhone: string;
   vehicleName: string;
-  vehicleSlug?: string;
   service: string;
   date: string;
   time: string;
@@ -35,7 +32,13 @@ type Row = {
   createdAt?: string;
 };
 
-type Detail = Row & { userId?: string | null; updatedAt?: string };
+const VIEW_TABS: { id: ViewFilter; label: string }[] = [
+  { id: "", label: "All" },
+  { id: "today", label: "Today" },
+  { id: "upcoming", label: "Upcoming" },
+  { id: "completed", label: "Completed" },
+  { id: "cancelled", label: "Cancelled" },
+];
 
 export function AdminBookingsTable() {
   const { confirmAction } = useConfirmation();
@@ -44,15 +47,13 @@ export function AdminBookingsTable() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [limit] = useState(25);
-  const [status, setStatus] = useState<string>("");
+  const [view, setView] = useState<ViewFilter>("");
   const [search, setSearch] = useState("");
   const [searchDraft, setSearchDraft] = useState("");
+  const [studioToday, setStudioToday] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
-  const [detailId, setDetailId] = useState<string | null>(null);
-  const [detail, setDetail] = useState<Detail | null>(null);
-  const [detailLoading, setDetailLoading] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -63,7 +64,7 @@ export function AdminBookingsTable() {
         limit: String(limit),
       });
       if (search.trim()) qs.set("search", search.trim());
-      if (status) qs.set("status", status);
+      if (view) qs.set("view", view);
 
       const res = await fetch(`/api/admin/bookings?${qs}`, {
         credentials: "include",
@@ -73,6 +74,7 @@ export function AdminBookingsTable() {
       setRows(data.bookings as Row[]);
       setTotal(data.total as number);
       setTotalPages(data.totalPages as number);
+      if (data.studioToday) setStudioToday(data.studioToday as string);
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Error";
       setError(msg);
@@ -81,7 +83,7 @@ export function AdminBookingsTable() {
     } finally {
       setLoading(false);
     }
-  }, [page, limit, search, status]);
+  }, [page, limit, search, view]);
 
   useEffect(() => {
     load();
@@ -94,38 +96,6 @@ export function AdminBookingsTable() {
     }, 400);
     return () => window.clearTimeout(t);
   }, [searchDraft]);
-
-  useEffect(() => {
-    if (!detailId) {
-      setDetail(null);
-      return;
-    }
-    let cancelled = false;
-    setDetailLoading(true);
-    (async () => {
-      try {
-        const res = await fetch(`/api/admin/bookings/${detailId}`, {
-          credentials: "include",
-        });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error ?? "Failed");
-        if (!cancelled) setDetail(data.booking as Detail);
-      } catch (e) {
-        if (!cancelled) {
-          toastError(
-            "Could not load booking",
-            e instanceof Error ? e.message : "Error"
-          );
-          setDetailId(null);
-        }
-      } finally {
-        if (!cancelled) setDetailLoading(false);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [detailId]);
 
   async function patchStatus(id: string, nextStatus: string, prevStatus: string) {
     if (nextStatus === prevStatus) return;
@@ -150,9 +120,6 @@ export function AdminBookingsTable() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Update failed");
       await load();
-      if (detailId === id) {
-        setDetail((d) => (d ? { ...d, status: nextStatus } : d));
-      }
       toastSuccess("Booking updated", nextStatus);
     } catch (e) {
       toastError(
@@ -185,7 +152,10 @@ export function AdminBookingsTable() {
             Bookings
           </h1>
           <p className="mt-2 max-w-2xl text-sm text-zinc-400">
-            Installation & bay scheduling — update status when the studio confirms slots.
+            Bay scheduling — confirm slots, track completions, and manage cancellations.
+            {studioToday ? (
+              <span className="text-zinc-600"> Studio today: {studioToday}.</span>
+            ) : null}
           </p>
         </div>
         <AdminExportButton
@@ -213,36 +183,37 @@ export function AdminBookingsTable() {
         </p>
       ) : null}
 
-      <div className="flex flex-wrap items-end gap-4">
-        <div className="space-y-2">
-          <label className="text-[11px] tracking-wide text-zinc-500 uppercase">
-            Status
-          </label>
-          <select
-            value={status}
-            onChange={(e) => {
-              setStatus(e.target.value);
+      <div className="flex flex-wrap gap-2">
+        {VIEW_TABS.map((tab) => (
+          <button
+            key={tab.id || "all"}
+            type="button"
+            onClick={() => {
+              setView(tab.id);
               setPage(1);
             }}
-            className="h-10 rounded-xl border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100 outline-none focus:ring-2 focus:ring-emerald-500/40"
+            className={cn(
+              "rounded-full border px-3 py-1.5 text-xs font-medium transition",
+              view === tab.id
+                ? "border-emerald-500/50 bg-emerald-500/15 text-emerald-100"
+                : "border-zinc-700 bg-zinc-900 text-zinc-400 hover:border-zinc-600 hover:text-zinc-200"
+            )}
           >
-            <option value="">All</option>
-            <option value="requested">Requested</option>
-            <option value="confirmed">Confirmed</option>
-            <option value="cancelled">Cancelled</option>
-          </select>
-        </div>
-        <div className="max-w-md min-w-[220px] flex-1 space-y-2">
-          <label className="text-[11px] tracking-wide text-zinc-500 uppercase">
-            Search
-          </label>
-          <Input
-            placeholder="Email, vehicle, service…"
-            value={searchDraft}
-            onChange={(e) => setSearchDraft(e.target.value)}
-            className="border-zinc-700 bg-zinc-900 text-zinc-100 placeholder:text-zinc-600"
-          />
-        </div>
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      <div className="max-w-md space-y-2">
+        <label className="text-[11px] tracking-wide text-zinc-500 uppercase">
+          Search
+        </label>
+        <Input
+          placeholder="Email, phone, vehicle, service…"
+          value={searchDraft}
+          onChange={(e) => setSearchDraft(e.target.value)}
+          className="border-zinc-700 bg-zinc-900 text-zinc-100 placeholder:text-zinc-600"
+        />
       </div>
 
       <div className="overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-900/30">
@@ -271,8 +242,13 @@ export function AdminBookingsTable() {
                   ))
                 : rows.map((r) => (
                     <tr key={r.id} className="hover:bg-zinc-800/40">
-                      <td className="px-4 py-4 font-mono text-xs text-zinc-300">
-                        {r.id.slice(-10)}
+                      <td className="px-4 py-4 font-mono text-xs">
+                        <Link
+                          href={`/admin/bookings/${r.id}`}
+                          className="text-emerald-400/90 hover:text-emerald-300 hover:underline"
+                        >
+                          {r.id.slice(-10)}
+                        </Link>
                         <p className="mt-1 text-[11px] text-zinc-600">
                           {r.createdAt
                             ? new Date(r.createdAt).toLocaleString()
@@ -304,19 +280,22 @@ export function AdminBookingsTable() {
                             }
                             className="h-9 rounded-lg border border-zinc-700 bg-zinc-950 px-2 text-xs text-zinc-100 outline-none focus:ring-2 focus:ring-emerald-500/40 disabled:opacity-50"
                           >
-                            <option value="requested">Requested</option>
+                            <option value="pending">Pending</option>
                             <option value="confirmed">Confirmed</option>
+                            <option value="completed">Completed</option>
                             <option value="cancelled">Cancelled</option>
                           </select>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            className="h-9 text-xs text-zinc-400 hover:text-emerald-300"
-                            onClick={() => setDetailId(r.id)}
+                          <Link
+                            href={`/admin/bookings/${r.id}`}
+                            className={buttonVariants({
+                              variant: "ghost",
+                              size: "sm",
+                              className:
+                                "h-9 text-xs text-zinc-400 hover:text-emerald-300",
+                            })}
                           >
-                            Details
-                          </Button>
+                            Open
+                          </Link>
                         </div>
                       </td>
                     </tr>
@@ -329,13 +308,13 @@ export function AdminBookingsTable() {
           <AdminEmptyState
             icon={CalendarClock}
             title={
-              status || search.trim()
+              view || search.trim()
                 ? "No bookings match these filters"
                 : "No bay requests yet"
             }
             description={
-              status || search.trim()
-                ? "Clear status or search to see the full queue."
+              view || search.trim()
+                ? "Try another view or clear search."
                 : "Installation requests from the booking wizard will land here."
             }
           />
@@ -352,62 +331,6 @@ export function AdminBookingsTable() {
           onNext={() => setPage((p) => p + 1)}
         />
       </div>
-
-      <Sheet open={Boolean(detailId)} onOpenChange={(o) => !o && setDetailId(null)}>
-        <SheetContent
-          showCloseButton
-          className="flex h-full w-full max-w-full flex-col gap-0 border-zinc-800 bg-zinc-950 p-0 text-zinc-100 sm:max-w-2xl lg:max-w-[44rem]"
-        >
-          <SheetHeader className="shrink-0 border-b border-zinc-800 px-6 py-5 text-left">
-            <SheetTitle className="font-heading text-xl tracking-tight text-white">
-              Booking detail
-            </SheetTitle>
-          </SheetHeader>
-          <div className="min-h-0 flex-1 overflow-y-auto px-6 py-5">
-          {detailLoading ? (
-            <Skeleton className="h-40 w-full rounded-xl bg-zinc-800" />
-          ) : detail ? (
-            <dl className="grid gap-4 text-sm sm:grid-cols-2">
-              <DetailRow label="ID" value={detail.id} mono />
-              <DetailRow label="Status" value={detail.status} />
-              <DetailRow label="Name" value={detail.contactName} />
-              <DetailRow label="Email" value={detail.contactEmail} />
-              <DetailRow label="Phone" value={detail.contactPhone} />
-              <DetailRow label="Vehicle" value={detail.vehicleName} />
-              <DetailRow
-                label="Vehicle slug"
-                value={detail.vehicleSlug ?? "—"}
-                mono
-              />
-              <DetailRow label="Service" value={detail.service} />
-              <DetailRow label="Slot" value={`${detail.date} · ${detail.time}`} />
-              {detail.userId ? (
-                <DetailRow label="User ID" value={detail.userId} mono />
-              ) : null}
-            </dl>
-          ) : null}
-          </div>
-        </SheetContent>
-      </Sheet>
-    </div>
-  );
-}
-
-function DetailRow({
-  label,
-  value,
-  mono,
-}: {
-  label: string;
-  value: string;
-  mono?: boolean;
-}) {
-  return (
-    <div>
-      <dt className="text-[11px] tracking-wide text-zinc-500 uppercase">{label}</dt>
-      <dd className={`mt-1 text-zinc-200 ${mono ? "font-mono text-xs break-all" : ""}`}>
-        {value}
-      </dd>
     </div>
   );
 }

@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 
 import type { Product, ProductSpecification } from "@/data/types";
 import { useConfirmation } from "@/contexts/confirmation-context";
-import { parseVehicleSlugs } from "@/lib/admin/parse-tokens";
+import { AdminVehicleCompatPicker } from "@/components/admin/admin-vehicle-compat-picker";
 import {
   specsPayload,
   variantsPayload,
@@ -38,7 +38,7 @@ function emptyForm() {
     currency: "INR",
     description: "",
     legacyId: "",
-    vehicleSlugsStr: "",
+    vehicleSlugs: [] as string[],
     images: [] as string[],
     specs: [] as ProductSpecification[],
     variantRows: [] as VariantFormRow[],
@@ -76,7 +76,7 @@ export function AdminProductForm({ recordId }: { recordId: string | null }) {
         currency: p.currency ?? "INR",
         description: p.description ?? "",
         legacyId: "",
-        vehicleSlugsStr: (p.compatibleCars ?? []).join(", "),
+        vehicleSlugs: p.compatibleCars ?? [],
         images: p.images ?? [],
         specs: Array.isArray(p.specs) ? p.specs.map((s) => ({ ...s })) : [],
         variantRows:
@@ -102,7 +102,7 @@ export function AdminProductForm({ recordId }: { recordId: string | null }) {
     setSaving(true);
     setFormError(null);
 
-    const vehicleSlugs = parseVehicleSlugs(form.vehicleSlugsStr);
+    const vehicleSlugs = form.vehicleSlugs;
     const priceTrim = form.priceStr.trim();
     const price = priceTrim === "" ? null : Number.parseInt(priceTrim, 10);
     if (priceTrim !== "" && (Number.isNaN(price!) || price! < 0)) {
@@ -490,16 +490,15 @@ export function AdminProductForm({ recordId }: { recordId: string | null }) {
 
         <AdminFormSection title="Fitment" defaultOpen={false}>
           <AdminField
-            label="Compatible vehicle slugs"
-            hint="Comma-separated platform slugs."
+            label="Compatible platforms"
+            hint="Grouped by OEM brand and model. Writes ProductVehicleCompatibility on save."
           >
-            <Input
-              value={form.vehicleSlugsStr}
-              onChange={(e) =>
-                setForm((f) => ({ ...f, vehicleSlugsStr: e.target.value }))
+            <AdminVehicleCompatPicker
+              value={form.vehicleSlugs}
+              onChange={(vehicleSlugs) =>
+                setForm((f) => ({ ...f, vehicleSlugs }))
               }
-              className={adminInputClass}
-              placeholder="toyota-hilux, mahindra-thar"
+              disabled={saving}
             />
           </AdminField>
           {isNew ? (

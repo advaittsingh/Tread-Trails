@@ -5,15 +5,15 @@ import Image from "next/image";
 import Link from "next/link";
 
 import type { Product } from "@/data/types";
-import { cars } from "@/data/cars";
+import { useVehicleCatalog } from "@/hooks/use-vehicle-catalog";
 import { formatInr } from "@/lib/format";
 import { getBrandVisualForProduct } from "@/data/advven-brands";
 import { cn } from "@/lib/utils";
 
-function carLabels(slugs: string[]): string {
+function carLabels(slugs: string[], catalog: { slug: string; name: string }[]): string {
   if (slugs.length === 0) return "—";
   const labels = slugs
-    .map((s) => cars.find((c) => c.slug === s)?.name ?? s)
+    .map((s) => catalog.find((c) => c.slug === s)?.name ?? s)
     .filter(Boolean);
   return labels.length ? labels.join(", ") : "—";
 }
@@ -38,6 +38,7 @@ function specCell(product: Product, label: string): string {
 }
 
 export function CompareTable({ products }: { products: Product[] }) {
+  const { vehicles: catalog } = useVehicleCatalog();
   const specLabels = collectSpecLabels(products);
 
   return (
@@ -96,7 +97,7 @@ export function CompareTable({ products }: { products: Product[] }) {
               <dl className="divide-y divide-border/60 px-4 py-2 text-sm">
                 <div className="flex gap-3 py-2">
                   <dt className="w-[38%] shrink-0 text-muted-foreground">Vehicle fit</dt>
-                  <dd className="min-w-0 text-foreground">{carLabels(p.compatibleCars)}</dd>
+                  <dd className="min-w-0 text-foreground">{carLabels(p.compatibleCars, catalog)}</dd>
                 </div>
                 <div className="flex gap-3 py-2">
                   <dt className="w-[38%] shrink-0 text-muted-foreground">Summary</dt>
@@ -181,7 +182,7 @@ export function CompareTable({ products }: { products: Product[] }) {
               {(p) => formatInr(p.price) ?? "POA"}
             </TableMetricRow>
             <TableMetricRow label="Vehicle fit" products={products}>
-              {(p) => carLabels(p.compatibleCars)}
+              {(p) => carLabels(p.compatibleCars, catalog)}
             </TableMetricRow>
             <TableMetricRow label="Description" products={products}>
               {(p) => (

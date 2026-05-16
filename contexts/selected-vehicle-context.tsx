@@ -10,9 +10,11 @@ import {
   type ReactNode,
 } from "react";
 
-import { cars } from "@/data/cars";
 import { useAuth } from "@/contexts/auth-context";
-import { isKnownVehicleCatalogSlug } from "@/lib/vehicle-catalog-slugs";
+import {
+  isKnownVehicleCatalogSlug,
+  useVehicleCatalog,
+} from "@/hooks/use-vehicle-catalog";
 
 type SelectedVehicleContextValue = {
   /** Stored chassis slug, or null if cleared / never set */
@@ -30,6 +32,7 @@ const SelectedVehicleContext =
 const STORAGE_KEY = "tread-trails-selected-vehicle-v1";
 
 export function SelectedVehicleProvider({ children }: { children: ReactNode }) {
+  const { vehicles } = useVehicleCatalog();
   const { user, loading: authLoading, refresh } = useAuth();
   const [slug, setSlugState] = useState<string | null>(null);
   const [hydrated, setHydrated] = useState(false);
@@ -105,8 +108,8 @@ export function SelectedVehicleProvider({ children }: { children: ReactNode }) {
 
   const vehicleName = useMemo(() => {
     if (!slug) return null;
-    return cars.find((c) => c.slug === slug)?.name ?? null;
-  }, [slug]);
+    return vehicles.find((c) => c.slug === slug)?.name ?? null;
+  }, [slug, vehicles]);
 
   const value = useMemo(
     () => ({

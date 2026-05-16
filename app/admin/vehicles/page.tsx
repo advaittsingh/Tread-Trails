@@ -1,5 +1,5 @@
-import { AdminVehiclesTable } from "@/components/admin/admin-vehicles-table";
+import { AdminVehiclesCms } from "@/components/admin/admin-vehicles-cms";
 
 export default function AdminVehiclesPage() {
-  return <AdminVehiclesTable />;
+  return <AdminVehiclesCms />;
 }

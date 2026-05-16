@@ -2,9 +2,10 @@ import { NextResponse } from "next/server";
 import type { Prisma } from "@prisma/client";
 import { Prisma as PrismaNamespace } from "@prisma/client";
 
-import { prismaVehicleToCar } from "@/lib/catalog/map-vehicle";
+import { mapVehicleRowToCar } from "@/lib/catalog/vehicle-hierarchy";
 import { requireAdmin } from "@/lib/auth/request-user";
 import { logAdminAction } from "@/lib/server/admin-audit";
+import { revalidateVehicleCatalog } from "@/lib/server/revalidate-vehicle-catalog";
 import { prisma } from "@/lib/prisma";
 import { adminVehiclePatchSchema } from "@/lib/validations/admin-vehicle";
 
@@ -14,11 +15,36 @@ export async function GET(_req: Request, context: RouteCtx) {
   const gate = await requireAdmin();
   if ("response" in gate) return gate.response;
 
-  const row = await prisma.vehicle.findUnique({ where: { id: context.params.id } });
+  const row = await prisma.vehicle.findUnique({
+    where: { id: context.params.id },
+    select: {
+      id: true,
+      legacyId: true,
+      slug: true,
+      name: true,
+      tagline: true,
+      description: true,
+      heroImage: true,
+      thumbnail: true,
+      category: true,
+      engineSummary: true,
+      modelYearsLabel: true,
+      trimSummary: true,
+      generationKey: true,
+      modelId: true,
+      model: {
+        select: {
+          slug: true,
+          name: true,
+          make: { select: { slug: true, name: true } },
+        },
+      },
+    },
+  });
   if (!row) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
-  return NextResponse.json({ id: row.id, vehicle: prismaVehicleToCar(row) });
+  return NextResponse.json({ id: row.id, vehicle: mapVehicleRowToCar(row), modelId: row.modelId });
 }
 
 export async function PATCH(req: Request, context: RouteCtx) {
@@ -45,14 +71,27 @@ export async function PATCH(req: Request, context: RouteCtx) {
   const data: Prisma.VehicleUpdateInput = { ...body };
 
   try {
-    const row = await prisma.vehicle.update({ where: { id }, data });
+    const row = await prisma.vehicle.update({
+      where: { id },
+      data,
+      include: {
+        model: {
+          select: {
+            slug: true,
+            name: true,
+            make: { select: { slug: true, name: true } },
+          },
+        },
+      },
+    });
+    revalidateVehicleCatalog();
     await logAdminAction({
       adminId: gate.auth.userId,
       action: "vehicle.update",
       entity: "vehicle",
       entityId: id,
     });
-    return NextResponse.json({ id: row.id, vehicle: prismaVehicleToCar(row) });
+    return NextResponse.json({ id: row.id, vehicle: mapVehicleRowToCar(row) });
   } catch (e) {
     if (
       e instanceof PrismaNamespace.PrismaClientKnownRequestError &&
@@ -72,6 +111,7 @@ export async function DELETE(_req: Request, context: RouteCtx) {
   const { id } = context.params;
   try {
     await prisma.vehicle.delete({ where: { id } });
+    revalidateVehicleCatalog();
     await logAdminAction({
       adminId: gate.auth.userId,
       action: "vehicle.delete",

@@ -3,7 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import { getProductsForBrandSlug } from "@/data/index";
+import { listProductsForBrandSlug } from "@/lib/server/product-catalog";
 import { excerptPlain } from "@/lib/seo/json-ld-builders";
 import {
   absoluteOgAsset,
@@ -61,7 +61,7 @@ export default async function BrandProductsPage({ params }: Props) {
   const entry = await getBrandBySlug(params.slug);
   if (!entry) notFound();
 
-  const brandProducts = getProductsForBrandSlug(params.slug);
+  const brandProducts = await listProductsForBrandSlug(params.slug);
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">

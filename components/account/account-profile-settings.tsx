@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import { cars } from "@/data/cars";
+import { useVehicleCatalog } from "@/hooks/use-vehicle-catalog";
 import { useAuth } from "@/contexts/auth-context";
 import { accountProfileUpdateSchema } from "@/lib/validations/profile";
 import { validatePhone } from "@/lib/validations/phone";
@@ -35,6 +35,7 @@ function flattenFieldErrors(
 
 export function AccountProfileSettings() {
   const submitLock = useRef(false);
+  const { vehicles: cars } = useVehicleCatalog();
   const { user, loading, refresh } = useAuth();
 
   const [name, setName] = useState("");

@@ -1,6 +1,8 @@
 import { cars } from "@/data/cars";
 
-/** Slug exists in static fleet catalog (`data/cars`). */
-export function isKnownVehicleCatalogSlug(slug: string): boolean {
-  return cars.some((c) => c.slug === slug);
+export { isKnownVehicleCatalogSlug } from "@/hooks/use-vehicle-catalog";
+
+/** Static slug list (dev fallback when API not loaded). */
+export function staticVehicleCatalogSlugs(): string[] {
+  return cars.map((c) => c.slug);
 }

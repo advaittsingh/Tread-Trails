@@ -7,6 +7,9 @@ const lineSchema = z.object({
   productSlug: z.string().min(1),
   quantity: z.number().int().min(0),
   name: z.string().optional(),
+  variantId: z.string().optional(),
+  unitPrice: z.number().min(0).nullable().optional(),
+  image: z.string().max(2048).optional(),
 });
 
 const bodySchema = z.object({
@@ -15,6 +18,7 @@ const bodySchema = z.object({
   itemCount: z.number().int().min(0),
   subtotalHint: z.number().min(0).optional(),
   userEmail: z.string().email().optional(),
+  customerName: z.string().max(120).optional(),
   lastPath: z.string().max(512).optional(),
 });
 
@@ -31,21 +35,20 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid payload" }, { status: 400 });
   }
 
-  const { sessionId, lines, itemCount, subtotalHint, userEmail, lastPath } =
-    parsed.data;
+  const {
+    sessionId,
+    lines,
+    itemCount,
+    subtotalHint,
+    userEmail,
+    customerName,
+    lastPath,
+  } = parsed.data;
+
+  const email = userEmail?.trim() ? userEmail.trim().toLowerCase() : null;
+  const name = customerName?.trim() || null;
 
   try {
-    const setDoc: Record<string, unknown> = {
-      lines,
-      itemCount,
-      subtotalHint: subtotalHint ?? 0,
-      lastPath: lastPath ?? "",
-      updatedAt: new Date(),
-    };
-    if (userEmail?.trim()) {
-      setDoc.userEmail = userEmail.trim().toLowerCase();
-    }
-
     await prisma.cartTelemetry.upsert({
       where: { sessionId },
       create: {
@@ -53,14 +56,16 @@ export async function POST(req: Request) {
         lines,
         itemCount,
         subtotalHint: subtotalHint ?? 0,
-        userEmail: userEmail?.trim() ? userEmail.trim().toLowerCase() : null,
+        userEmail: email,
+        customerName: name,
         lastPath: lastPath ?? "",
       },
       update: {
         lines,
         itemCount,
         subtotalHint: subtotalHint ?? 0,
-        userEmail: userEmail?.trim() ? userEmail.trim().toLowerCase() : null,
+        ...(email ? { userEmail: email } : {}),
+        ...(name ? { customerName: name } : {}),
         lastPath: lastPath ?? "",
         updatedAt: new Date(),
       },

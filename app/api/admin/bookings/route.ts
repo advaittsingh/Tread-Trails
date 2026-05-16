@@ -3,8 +3,16 @@ import { NextResponse } from "next/server";
 import type { Prisma } from "@prisma/client";
 import { BookingStatus } from "@prisma/client";
 
+import { studioTodayISO } from "@/lib/admin/booking-detail";
 import { requireAdmin } from "@/lib/auth/request-user";
 import { prisma } from "@/lib/prisma";
+
+const STATUS_VALUES = new Set<string>([
+  BookingStatus.pending,
+  BookingStatus.confirmed,
+  BookingStatus.completed,
+  BookingStatus.cancelled,
+]);
 
 export async function GET(req: NextRequest) {
   const gate = await requireAdmin();
@@ -16,29 +24,55 @@ export async function GET(req: NextRequest) {
   const skip = (page - 1) * limit;
   const search = searchParams.get("search")?.trim();
   const statusParam = searchParams.get("status")?.trim();
+  const view = searchParams.get("view")?.trim();
 
   const where: Prisma.BookingWhereInput = {};
-  if (
-    statusParam === BookingStatus.requested ||
-    statusParam === BookingStatus.confirmed ||
-    statusParam === BookingStatus.cancelled
-  ) {
-    where.status = statusParam;
+  const today = studioTodayISO();
+
+  if (statusParam && STATUS_VALUES.has(statusParam)) {
+    where.status = statusParam as BookingStatus;
   }
+
+  switch (view) {
+    case "today":
+      where.date = today;
+      where.status = { not: BookingStatus.cancelled };
+      break;
+    case "upcoming":
+      where.date = { gte: today };
+      where.status = { in: [BookingStatus.pending, BookingStatus.confirmed] };
+      break;
+    case "completed":
+      where.status = BookingStatus.completed;
+      break;
+    case "cancelled":
+      where.status = BookingStatus.cancelled;
+      break;
+    default:
+      break;
+  }
+
   if (search) {
     where.OR = [
       { contactEmail: { contains: search, mode: "insensitive" } },
+      { contactName: { contains: search, mode: "insensitive" } },
+      { contactPhone: { contains: search, mode: "insensitive" } },
       { vehicleName: { contains: search, mode: "insensitive" } },
       { service: { contains: search, mode: "insensitive" } },
       { id: { equals: search } },
     ];
   }
 
+  const orderBy: Prisma.BookingOrderByWithRelationInput[] =
+    view === "upcoming" || view === "today"
+      ? [{ date: "asc" }, { time: "asc" }]
+      : [{ createdAt: "desc" }];
+
   try {
     const [bookings, total] = await Promise.all([
       prisma.booking.findMany({
         where,
-        orderBy: { createdAt: "desc" },
+        orderBy,
         skip,
         take: limit,
       }),
@@ -49,9 +83,11 @@ export async function GET(req: NextRequest) {
       bookings: bookings.map((b) => ({
         id: b.id,
         userId: b.userId ?? null,
+        vehicleSlug: b.vehicleSlug,
         contactEmail: b.contactEmail,
         contactName: b.contactName,
         contactPhone: b.contactPhone,
+        customerMessage: b.customerMessage,
         vehicleName: b.vehicleName,
         service: b.service,
         date: b.date,
@@ -63,6 +99,7 @@ export async function GET(req: NextRequest) {
       page,
       limit,
       totalPages: Math.ceil(total / limit) || 1,
+      studioToday: today,
     });
   } catch (e) {
     console.error(e);

@@ -3,7 +3,7 @@
 import Link from "next/link";
 
 import type { Product } from "@/data/types";
-import { getProductBySlug } from "@/data/index";
+import { useProductCatalog } from "@/contexts/product-catalog-context";
 import { useConfirmation } from "@/contexts/confirmation-context";
 import { useCompare } from "@/contexts/compare-context";
 import { toastSuccess } from "@/lib/toast";
@@ -14,6 +14,7 @@ import { SectionHeading } from "@/components/marketing/section-heading";
 import { Button, buttonVariants } from "@/components/ui/button";
 
 export function ComparePageContent() {
+  const { getProductBySlug } = useProductCatalog();
   const { confirmAction } = useConfirmation();
   const { slugs, hydrated, clear, remove } = useCompare();
 

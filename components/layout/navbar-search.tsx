@@ -11,7 +11,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Search } from "lucide-react";
 
-import { searchCatalogProducts } from "@/lib/search/catalog-search";
+import { useProductCatalog } from "@/contexts/product-catalog-context";
 import { cn } from "@/lib/utils";
 
 import { Input } from "@/components/ui/input";
@@ -28,12 +28,13 @@ export function NavbarSearch({
   const inputId = `${reactId}-catalog-search`;
   const listId = `${reactId}-product-suggestions`;
   const router = useRouter();
+  const { searchProducts } = useProductCatalog();
   const wrapRef = useRef<HTMLDivElement>(null);
   const [q, setQ] = useState("");
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(-1);
 
-  const results = searchCatalogProducts(q, 8);
+  const results = searchProducts(q, 8);
   const showList = open && q.trim().length >= 2 && results.length > 0;
 
   useEffect(() => {

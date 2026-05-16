@@ -13,7 +13,13 @@ import { prisma } from "@/lib/prisma";
 import { createRazorpayServerOrder } from "@/lib/razorpay/create-order";
 import { siteUrl } from "@/lib/site";
 import { getStripe, inrToStripeAmount } from "@/lib/stripe";
+import { logPaymentFailure } from "@/lib/logger";
+import { markCartsConvertedForEmail } from "@/lib/server/cart-recovery";
 import { createCheckoutOrderSchema } from "@/lib/validations/api";
+
+async function notifyCartConversion(orderId: string, email: string) {
+  void markCartsConvertedForEmail(email, orderId);
+}
 
 export async function POST(req: Request) {
   let json: unknown;
@@ -66,6 +72,7 @@ export async function POST(req: Request) {
           paymentMethod: "cod",
         },
       });
+      void notifyCartConversion(order.id, body.customerEmail);
 
       return NextResponse.json({
         mode: "cod",
@@ -91,6 +98,7 @@ export async function POST(req: Request) {
           paymentMethod: "stripe",
         },
       });
+      void notifyCartConversion(order.id, body.customerEmail);
 
       const base = siteUrl.replace(/\/$/, "");
       const session = await stripe.checkout.sessions.create({
@@ -170,6 +178,7 @@ export async function POST(req: Request) {
           paymentMethod: "razorpay",
         },
       });
+      void notifyCartConversion(order.id, body.customerEmail);
 
       try {
         const rz = await createRazorpayServerOrder({
@@ -194,7 +203,12 @@ export async function POST(req: Request) {
           prefillContact: body.customerPhone.replace(/\D/g, "").slice(-15),
         });
       } catch (e) {
-        console.error(e);
+        void logPaymentFailure(req, "Razorpay checkout start failed", {
+          error: e,
+          provider: "razorpay",
+          orderId: order.id,
+          userId: auth?.userId,
+        });
         await prisma.order.delete({ where: { id: order.id } });
         return NextResponse.json(
           { error: "Could not start Razorpay checkout — try again." },
@@ -218,6 +232,7 @@ export async function POST(req: Request) {
           juspayCheckoutOrderRef: juspayRef,
         },
       });
+      void notifyCartConversion(order.id, body.customerEmail);
 
       const routingId =
         auth?.userId ?? body.customerEmail.replace(/[^a-z0-9]/gi, "").slice(0, 48);
@@ -233,6 +248,12 @@ export async function POST(req: Request) {
       });
 
       if (!session.ok) {
+        void logPaymentFailure(req, "Juspay session failed", {
+          provider: "juspay",
+          orderId: order.id,
+          userId: auth?.userId,
+          meta: { error: session.error },
+        });
         await prisma.order.delete({ where: { id: order.id } });
         return NextResponse.json({ error: session.error }, { status: 502 });
       }
@@ -251,7 +272,11 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ error: "Unsupported payment channel" }, { status: 400 });
   } catch (e) {
-    console.error(e);
+    void logPaymentFailure(req, "Order checkout failed", {
+      error: e,
+      userId: auth?.userId,
+      meta: { channel: body.paymentChannel },
+    });
     return NextResponse.json({ error: "Could not create order" }, { status: 500 });
   }
 }

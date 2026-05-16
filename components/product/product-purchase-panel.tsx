@@ -6,7 +6,7 @@ import Link from "next/link";
 
 import { getBrandVisualForProduct } from "@/data/advven-brands";
 import type { Product } from "@/data/types";
-import { cars } from "@/data/cars";
+import { useVehicleCatalog } from "@/hooks/use-vehicle-catalog";
 import { formatInr } from "@/lib/format";
 import {
   resolveVariants,
@@ -32,6 +32,7 @@ export function ProductPurchasePanel({ product }: { product: Product }) {
   const [variantId, setVariantId] = useState(variants[0].id);
   const [vehicleSlug, setVehicleSlug] = useState("");
   const { slug: globalSlug, setSelectedSlug, hydrated } = useSelectedVehicle();
+  const { vehicles: cars } = useVehicleCatalog();
   const didApplyGlobalVehicle = useRef(false);
 
   const compatible = useMemo(() => {
@@ -39,7 +40,7 @@ export function ProductPurchasePanel({ product }: { product: Product }) {
     return cars
       .filter((c) => allowed.has(c.slug))
       .sort((a, b) => a.name.localeCompare(b.name));
-  }, [product.compatibleCars]);
+  }, [product.compatibleCars, cars]);
 
   useEffect(() => {
     if (!hydrated || didApplyGlobalVehicle.current || !globalSlug) return;

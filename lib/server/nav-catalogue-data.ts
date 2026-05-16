@@ -1,8 +1,7 @@
-import { productCategories } from "@/data/index";
 import { listBrandEntries } from "@/lib/server/brand-catalog";
 import { listBuilds } from "@/lib/server/build-catalog";
+import { listProductCategories } from "@/lib/server/product-catalog";
 import { listVehicles } from "@/lib/server/vehicle-catalog";
-import { prisma } from "@/lib/prisma";
 
 export type NavCatalogueLink = {
   label: string;
@@ -21,21 +20,7 @@ export type NavCatalogueData = {
 };
 
 async function listCategories(): Promise<string[]> {
-  try {
-    const rows = await prisma.product.findMany({
-      select: { category: true },
-      distinct: ["category"],
-      orderBy: { category: "asc" },
-    });
-    if (rows.length > 0) {
-      return Array.from(
-        new Set(rows.map((r) => r.category).filter(Boolean))
-      ).sort((a, b) => a.localeCompare(b));
-    }
-  } catch {
-    /* DB unavailable */
-  }
-  return productCategories;
+  return listProductCategories();
 }
 
 /** Mega-menu catalogue columns (server-only; used in root layout). */

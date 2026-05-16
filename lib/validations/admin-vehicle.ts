@@ -16,6 +16,9 @@ export const adminVehicleCreateSchema = z.object({
   modelYearsLabel: z.string().max(500).optional().default(""),
   trimSummary: z.string().max(2000).optional().default(""),
   legacyId: z.string().max(120).nullable().optional(),
+  modelId: z.string().cuid().nullable().optional(),
+  generationKey: z.string().max(80).nullable().optional(),
+  sortOrder: z.number().int().min(0).max(9999).optional(),
 });
 
 export const adminVehiclePatchSchema = adminVehicleCreateSchema.partial().strict();

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
+import { logPaymentFailure } from "@/lib/logger";
 import { fetchJuspayOrderStatus } from "@/lib/juspay/fetch-order";
 import { prisma } from "@/lib/prisma";
 
@@ -50,6 +51,11 @@ export async function POST(req: Request) {
 
     const remote = await fetchJuspayOrderStatus(ref);
     if (!remote.ok || !remote.status) {
+      void logPaymentFailure(req, "Juspay status fetch failed", {
+        provider: "juspay",
+        orderId: order.id,
+        meta: { error: remote.error },
+      });
       return NextResponse.json(
         { error: remote.error ?? "Could not read Juspay order" },
         { status: 502 }
@@ -61,7 +67,7 @@ export async function POST(req: Request) {
     if (paid && order.status !== "paid") {
       await prisma.order.update({
         where: { id: order.id },
-        data: { status: "paid" },
+        data: { status: "paid", paidAt: new Date() },
       });
     }
 
@@ -77,7 +83,11 @@ export async function POST(req: Request) {
       },
     });
   } catch (e) {
-    console.error(e);
+    void logPaymentFailure(req, "Juspay sync failed", {
+      error: e,
+      provider: "juspay",
+      orderId: parsed.data.orderId,
+    });
     return NextResponse.json({ error: "Sync failed" }, { status: 500 });
   }
 }

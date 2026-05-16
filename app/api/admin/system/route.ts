@@ -34,7 +34,15 @@ export async function GET() {
     const logs = await prisma.appErrorLog.findMany({
       orderBy: { createdAt: "desc" },
       take: 50,
-      select: { id: true, source: true, message: true, createdAt: true },
+        select: {
+          id: true,
+          severity: true,
+          category: true,
+          source: true,
+          route: true,
+          message: true,
+          createdAt: true,
+        },
     });
     recentErrors = logs;
   } catch {

@@ -23,7 +23,10 @@ type ListRow = {
   vehicle: Car;
 };
 
-export function AdminVehiclesTable() {
+type MakeOption = { id: string; name: string };
+type ModelOption = { id: string; name: string; makeId: string };
+
+export function AdminVehiclesTable({ embedded = false }: { embedded?: boolean }) {
   const { confirmDelete } = useConfirmation();
   const [rows, setRows] = useState<ListRow[]>([]);
   const [total, setTotal] = useState(0);
@@ -33,6 +36,10 @@ export function AdminVehiclesTable() {
   const [search, setSearch] = useState("");
   const [searchDraft, setSearchDraft] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
+  const [makeFilter, setMakeFilter] = useState("");
+  const [modelFilter, setModelFilter] = useState("");
+  const [makes, setMakes] = useState<MakeOption[]>([]);
+  const [models, setModels] = useState<ModelOption[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -47,6 +54,8 @@ export function AdminVehiclesTable() {
       });
       if (search.trim()) qs.set("search", search.trim());
       if (categoryFilter.trim()) qs.set("category", categoryFilter.trim());
+      if (makeFilter.trim()) qs.set("makeId", makeFilter.trim());
+      if (modelFilter.trim()) qs.set("modelId", modelFilter.trim());
 
       const res = await fetch(`/api/admin/vehicles?${qs}`, {
         credentials: "include",
@@ -64,7 +73,21 @@ export function AdminVehiclesTable() {
     } finally {
       setLoading(false);
     }
-  }, [page, limit, search, categoryFilter]);
+  }, [page, limit, search, categoryFilter, makeFilter, modelFilter]);
+
+  useEffect(() => {
+    async function loadFilters() {
+      const [mkRes, mdRes] = await Promise.all([
+        fetch("/api/admin/vehicle-makes", { credentials: "include" }),
+        fetch("/api/admin/vehicle-models", { credentials: "include" }),
+      ]);
+      const mk = await mkRes.json();
+      const md = await mdRes.json();
+      if (mkRes.ok) setMakes(mk.makes as MakeOption[]);
+      if (mdRes.ok) setModels(md.models as ModelOption[]);
+    }
+    void loadFilters();
+  }, []);
 
   useEffect(() => {
     load();
@@ -107,15 +130,19 @@ export function AdminVehiclesTable() {
     }
   }
 
+  const wrapperClass = embedded ? "space-y-6" : "space-y-8 p-6 lg:p-10";
+
   return (
-    <div className="space-y-8 p-6 lg:p-10">
-      <AdminPageHeader
-        title="Vehicles"
-        description="Platform hubs on the storefront — each vehicle has its own catalog and build gallery."
-        action={
-          <Link href="/admin/vehicles/new" className="inline-flex h-10 items-center justify-center rounded-md bg-emerald-600 px-4 text-sm font-medium text-white transition hover:bg-emerald-500">New vehicle</Link>
-        }
-      />
+    <div className={wrapperClass}>
+      {!embedded ? (
+        <AdminPageHeader
+          title="Vehicles"
+          description="Platform hubs on the storefront — each vehicle has its own catalog and build gallery."
+          action={
+            <Link href="/admin/vehicles/new" className="inline-flex h-10 items-center justify-center rounded-md bg-emerald-600 px-4 text-sm font-medium text-white transition hover:bg-emerald-500">New vehicle</Link>
+          }
+        />
+      ) : null}
 
       {error ? (
         <p className="rounded-xl border border-rose-500/35 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
@@ -155,15 +182,55 @@ export function AdminVehiclesTable() {
             ))}
           </select>
         </div>
+        <div className="min-w-[160px] max-w-xs space-y-2">
+          <Label className="text-[11px] tracking-wide text-zinc-500 uppercase">Brand</Label>
+          <select
+            value={makeFilter}
+            onChange={(e) => {
+              setMakeFilter(e.target.value);
+              setModelFilter("");
+              setPage(1);
+            }}
+            className="h-10 w-full rounded-xl border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100 outline-none focus:ring-2 focus:ring-emerald-500/40"
+          >
+            <option value="">All brands</option>
+            {makes.map((m) => (
+              <option key={m.id} value={m.id}>
+                {m.name}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="min-w-[160px] max-w-xs space-y-2">
+          <Label className="text-[11px] tracking-wide text-zinc-500 uppercase">Model</Label>
+          <select
+            value={modelFilter}
+            onChange={(e) => {
+              setModelFilter(e.target.value);
+              setPage(1);
+            }}
+            className="h-10 w-full rounded-xl border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100 outline-none focus:ring-2 focus:ring-emerald-500/40"
+          >
+            <option value="">All models</option>
+            {models
+              .filter((m) => !makeFilter || m.makeId === makeFilter)
+              .map((m) => (
+                <option key={m.id} value={m.id}>
+                  {m.name}
+                </option>
+              ))}
+          </select>
+        </div>
       </div>
 
       <div className="overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-900/30">
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[720px] text-left text-sm">
+          <table className="w-full min-w-[880px] text-left text-sm">
             <thead className="border-b border-zinc-800 bg-zinc-900/80 text-[11px] tracking-wide text-zinc-500 uppercase">
               <tr>
                 <th className="px-4 py-3 font-medium">Slug</th>
                 <th className="px-4 py-3 font-medium">Name</th>
+                <th className="px-4 py-3 font-medium">Brand / model</th>
                 <th className="px-4 py-3 font-medium">Category</th>
                 <th className="px-4 py-3 font-medium">Actions</th>
               </tr>
@@ -172,7 +239,7 @@ export function AdminVehiclesTable() {
               {loading
                 ? Array.from({ length: 6 }).map((_, i) => (
                     <tr key={i}>
-                      <td className="px-4 py-4" colSpan={4}>
+                      <td className="px-4 py-4" colSpan={5}>
                         <Skeleton className="h-10 w-full rounded-lg bg-zinc-800" />
                       </td>
                     </tr>
@@ -184,6 +251,11 @@ export function AdminVehiclesTable() {
                       </td>
                       <td className="max-w-[260px] truncate px-4 py-4 text-zinc-100">
                         {r.vehicle.name}
+                      </td>
+                      <td className="max-w-[200px] truncate px-4 py-4 text-xs text-zinc-400">
+                        {r.vehicle.makeName && r.vehicle.modelName
+                          ? `${r.vehicle.makeName} · ${r.vehicle.modelName}`
+                          : "—"}
                       </td>
                       <td className="px-4 py-4 text-zinc-400">{r.vehicle.category}</td>
                       <td className="space-x-2 whitespace-nowrap px-4 py-4">
