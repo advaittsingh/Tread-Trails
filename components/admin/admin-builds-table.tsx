@@ -9,20 +9,23 @@ import { useConfirmation } from "@/contexts/confirmation-context";
 import { toastError, toastSuccess } from "@/lib/toast";
 
 import { ADMIN_CONFIRM_DIALOG_CLASS } from "@/components/admin/admin-confirm-styles";
+import {
+  AdminEditSheet,
+  AdminField,
+  AdminFieldGrid,
+  AdminFormSection,
+  AdminFormStack,
+  AdminPageHeader,
+  AdminSheetFooterButtons,
+  adminInputClass,
+  adminSelectClass,
+  adminTextareaClass,
+} from "@/components/admin/admin-edit-sheet";
 import { AdminEmptyState } from "@/components/admin/admin-empty-state";
 import { AdminPaginationBar } from "@/components/admin/admin-pagination-bar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 
 type ListRow = {
@@ -311,32 +314,19 @@ export function AdminBuildsTable() {
 
   return (
     <div className="space-y-8 p-6 lg:p-10">
-      <header className="flex flex-col gap-4 border-b border-zinc-800 pb-6 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h1 className="font-heading text-2xl tracking-tight text-white md:text-3xl">
-            Portfolio builds
-          </h1>
-          <p className="mt-2 max-w-2xl text-sm text-zinc-400">
-            <span className="font-medium text-zinc-200">New build</span> → POST{" "}
-            <code className="rounded bg-zinc-800 px-1 py-0.5 font-mono text-[11px]">
-              /api/admin/portfolio-builds
-            </code>
-            . Row <span className="font-medium text-zinc-200">Edit</span> → GET + PATCH{" "}
-            <code className="rounded bg-zinc-800 px-1 py-0.5 font-mono text-[11px]">
-              /api/admin/portfolio-builds/[id]
-            </code>
-            . <span className="font-medium text-zinc-200">Delete</span> → DELETE (confirmation modal).
-            Vehicle slug must exist on Vehicle; product refs = slug / internal id / legacyId (comma-separated).
-          </p>
-        </div>
-        <Button
-          type="button"
-          onClick={openCreate}
-          className="bg-emerald-600 text-white hover:bg-emerald-500"
-        >
-          New build
-        </Button>
-      </header>
+      <AdminPageHeader
+        title="Portfolio builds"
+        description="Case studies on the storefront — before/after gallery and linked catalog SKUs."
+        action={
+          <Button
+            type="button"
+            onClick={openCreate}
+            className="bg-emerald-600 text-white hover:bg-emerald-500"
+          >
+            New build
+          </Button>
+        }
+      />
 
       {error ? (
         <p className="rounded-xl border border-rose-500/35 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
@@ -469,188 +459,175 @@ export function AdminBuildsTable() {
         />
       </div>
 
-      <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
-        <SheetContent
-          side="right"
-          showCloseButton
-          className="w-full border-zinc-800 bg-zinc-950 text-zinc-100 sm:max-w-xl"
-        >
-          <SheetHeader>
-            <SheetTitle className="text-white">
-              {editingInternalId ? "Edit build" : "New build"}
-            </SheetTitle>
-            <SheetDescription className="text-zinc-500">
-              Maps to PortfolioBuild + PortfolioBuildProduct joins. Mirrors storefront{" "}
-              <code className="rounded bg-zinc-800 px-1 font-mono text-[11px]">/build/[slug]</code>.
-            </SheetDescription>
-          </SheetHeader>
+      <AdminEditSheet
+        open={sheetOpen}
+        onOpenChange={setSheetOpen}
+        title={editingInternalId ? "Edit build" : "New build"}
+        subtitle="Published at /build/[slug] on the storefront."
+        formError={formError}
+        loading={formLoading}
+        loadingSkeleton={
+          <div className="space-y-3">
+            <Skeleton className="h-24 w-full rounded-xl bg-zinc-800" />
+            <Skeleton className="h-24 w-full rounded-xl bg-zinc-800" />
+          </div>
+        }
+        footer={
+          <AdminSheetFooterButtons
+            onCancel={() => setSheetOpen(false)}
+            onSave={() => void saveBuild()}
+            saving={saving}
+            saveDisabled={formLoading}
+          />
+        }
+      >
+        <AdminFormStack>
+          <AdminFormSection title="Basics" description="Identity and vehicle platform.">
+            <AdminFieldGrid>
+              <AdminField label="URL slug" hint="Lowercase, hyphenated.">
+                <Input
+                  value={form.slug}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, slug: e.target.value }))
+                  }
+                  className={adminInputClass}
+                  placeholder="fortuner-summit-suite"
+                />
+              </AdminField>
+              <AdminField label="Title">
+                <Input
+                  value={form.title}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, title: e.target.value }))
+                  }
+                  className={adminInputClass}
+                />
+              </AdminField>
+            </AdminFieldGrid>
+            <AdminField label="Vehicle platform">
+              <select
+                value={form.vehicleSlug}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, vehicleSlug: e.target.value }))
+                }
+                className={adminSelectClass}
+              >
+                <option value="">Select vehicle…</option>
+                {cars.map((c) => (
+                  <option key={c.slug} value={c.slug}>
+                    {c.name}
+                  </option>
+                ))}
+              </select>
+            </AdminField>
+          </AdminFormSection>
 
-          {formError ? (
-            <p className="rounded-lg border border-rose-500/35 bg-rose-500/10 px-3 py-2 text-sm text-rose-200">
-              {formError}
-            </p>
-          ) : null}
+          <AdminFormSection title="Story" description="Shown on the build detail page.">
+            <AdminField label="Summary" hint="One line for cards and listings.">
+              <textarea
+                value={form.summary}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, summary: e.target.value }))
+                }
+                rows={2}
+                className={adminTextareaClass}
+              />
+            </AdminField>
+            <AdminField label="Full description">
+              <textarea
+                value={form.description}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, description: e.target.value }))
+                }
+                rows={4}
+                className={adminTextareaClass}
+              />
+            </AdminField>
+          </AdminFormSection>
 
-          {formLoading ? (
-            <div className="space-y-3 py-6">
-              <Skeleton className="h-10 w-full bg-zinc-800" />
-              <Skeleton className="h-10 w-full bg-zinc-800" />
-              <Skeleton className="h-10 w-full bg-zinc-800" />
-            </div>
-          ) : (
-            <ScrollArea className="max-h-[calc(100vh-220px)] pr-3">
-              <div className="space-y-4 py-2">
-                <div className="space-y-2">
-                  <Label className="text-zinc-400">Slug</Label>
-                  <Input
-                    value={form.slug}
-                    onChange={(e) =>
-                      setForm((f) => ({ ...f, slug: e.target.value }))
-                    }
-                    className="border-zinc-700 bg-zinc-900 text-zinc-100"
-                    placeholder="hilux-arctic-runner"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-zinc-400">Title</Label>
-                  <Input
-                    value={form.title}
-                    onChange={(e) =>
-                      setForm((f) => ({ ...f, title: e.target.value }))
-                    }
-                    className="border-zinc-700 bg-zinc-900 text-zinc-100"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-zinc-400">Vehicle slug</Label>
-                  <Input
-                    value={form.vehicleSlug}
-                    onChange={(e) =>
-                      setForm((f) => ({ ...f, vehicleSlug: e.target.value }))
-                    }
-                    className="border-zinc-700 bg-zinc-900 text-zinc-100"
-                    placeholder="toyota-hilux"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-zinc-400">Summary</Label>
-                  <textarea
-                    value={form.summary}
-                    onChange={(e) =>
-                      setForm((f) => ({ ...f, summary: e.target.value }))
-                    }
-                    rows={3}
-                    className="w-full rounded-xl border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/40"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-zinc-400">Description</Label>
-                  <textarea
-                    value={form.description}
-                    onChange={(e) =>
-                      setForm((f) => ({ ...f, description: e.target.value }))
-                    }
-                    rows={6}
-                    className="w-full rounded-xl border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/40"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-zinc-400">Before image URL</Label>
-                  <Input
-                    value={form.beforeImage}
-                    onChange={(e) =>
-                      setForm((f) => ({ ...f, beforeImage: e.target.value }))
-                    }
-                    className="border-zinc-700 bg-zinc-900 text-zinc-100"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-zinc-400">After image URL</Label>
-                  <Input
-                    value={form.afterImage}
-                    onChange={(e) =>
-                      setForm((f) => ({ ...f, afterImage: e.target.value }))
-                    }
-                    className="border-zinc-700 bg-zinc-900 text-zinc-100"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-zinc-400">
-                    Gallery URLs (comma / newline separated)
-                  </Label>
-                  <textarea
-                    value={form.galleryStr}
-                    onChange={(e) =>
-                      setForm((f) => ({ ...f, galleryStr: e.target.value }))
-                    }
-                    rows={3}
-                    className="w-full rounded-xl border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/40"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-zinc-400">
-                    Linked products (slug, id, or legacyId — comma separated)
-                  </Label>
-                  <textarea
-                    value={form.productIdsStr}
-                    onChange={(e) =>
-                      setForm((f) => ({ ...f, productIdsStr: e.target.value }))
-                    }
-                    rows={3}
-                    placeholder="product-slug-a, product-slug-b"
-                    className="w-full rounded-xl border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/40"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-zinc-400">Legacy ID (optional)</Label>
-                  <Input
-                    value={form.legacyId}
-                    onChange={(e) =>
-                      setForm((f) => ({ ...f, legacyId: e.target.value }))
-                    }
-                    className="border-zinc-700 bg-zinc-900 text-zinc-100"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-zinc-400">
-                    Home spotlight rank (optional, blank = not featured; edit: blank clears)
-                  </Label>
-                  <Input
-                    value={form.homeSpotlightRankStr}
-                    onChange={(e) =>
-                      setForm((f) => ({
-                        ...f,
-                        homeSpotlightRankStr: e.target.value,
-                      }))
-                    }
-                    className="border-zinc-700 bg-zinc-900 text-zinc-100"
-                    placeholder="0 = highest priority when set"
-                  />
-                </div>
-              </div>
-            </ScrollArea>
-          )}
+          <AdminFormSection
+            title="Images"
+            description="Before/after hero and optional gallery."
+            defaultOpen={false}
+          >
+            <AdminFieldGrid>
+              <AdminField label="Before image URL">
+                <Input
+                  value={form.beforeImage}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, beforeImage: e.target.value }))
+                  }
+                  className={adminInputClass}
+                />
+              </AdminField>
+              <AdminField label="After image URL">
+                <Input
+                  value={form.afterImage}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, afterImage: e.target.value }))
+                  }
+                  className={adminInputClass}
+                />
+              </AdminField>
+            </AdminFieldGrid>
+            <AdminField label="Gallery URLs" hint="Comma or newline separated.">
+              <textarea
+                value={form.galleryStr}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, galleryStr: e.target.value }))
+                }
+                rows={2}
+                className={adminTextareaClass}
+              />
+            </AdminField>
+          </AdminFormSection>
 
-          <SheetFooter className="gap-2 border-t border-zinc-800 pt-4">
-            <Button
-              type="button"
-              variant="outline"
-              className="border-zinc-600 bg-zinc-950 text-zinc-200"
-              onClick={() => setSheetOpen(false)}
+          <AdminFormSection
+            title="Catalog & homepage"
+            description="Linked SKUs and featured strip."
+            defaultOpen={false}
+          >
+            <AdminField
+              label="Linked products"
+              hint="Product slugs or IDs, comma-separated."
             >
-              Cancel
-            </Button>
-            <Button
-              type="button"
-              disabled={saving || formLoading}
-              className="bg-emerald-600 text-white hover:bg-emerald-500"
-              onClick={() => void saveBuild()}
-            >
-              {saving ? "Saving…" : "Save"}
-            </Button>
-          </SheetFooter>
-        </SheetContent>
-      </Sheet>
+              <textarea
+                value={form.productIdsStr}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, productIdsStr: e.target.value }))
+                }
+                rows={2}
+                className={adminTextareaClass}
+                placeholder="sku-one, sku-two"
+              />
+            </AdminField>
+            <AdminFieldGrid>
+              <AdminField label="Home spotlight rank" hint="Blank = not on homepage. 0 is highest.">
+                <Input
+                  value={form.homeSpotlightRankStr}
+                  onChange={(e) =>
+                    setForm((f) => ({
+                      ...f,
+                      homeSpotlightRankStr: e.target.value,
+                    }))
+                  }
+                  className={adminInputClass}
+                  placeholder="0"
+                />
+              </AdminField>
+              <AdminField label="Legacy ID" hint="Migration only.">
+                <Input
+                  value={form.legacyId}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, legacyId: e.target.value }))
+                  }
+                  className={adminInputClass}
+                />
+              </AdminField>
+            </AdminFieldGrid>
+          </AdminFormSection>
+        </AdminFormStack>
+      </AdminEditSheet>
     </div>
   );
 }

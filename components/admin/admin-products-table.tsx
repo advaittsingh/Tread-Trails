@@ -13,21 +13,23 @@ import { formatInr } from "@/lib/format";
 import { toastError, toastSuccess } from "@/lib/toast";
 
 import { ADMIN_CONFIRM_DIALOG_CLASS } from "@/components/admin/admin-confirm-styles";
+import {
+  AdminEditSheet,
+  AdminField,
+  AdminFieldGrid,
+  AdminFormSection,
+  AdminFormStack,
+  AdminPageHeader,
+  AdminSheetFooterButtons,
+  adminInputClass,
+  adminTextareaClass,
+} from "@/components/admin/admin-edit-sheet";
 import { AdminEmptyState } from "@/components/admin/admin-empty-state";
 import { AdminPaginationBar } from "@/components/admin/admin-pagination-bar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ScrollArea } from "@/components/ui/scroll-area";
 
 type ProductDto = {
   slug: string;
@@ -388,28 +390,19 @@ export function AdminProductsTable() {
 
   return (
     <div className="space-y-8 p-6 lg:p-10">
-      <header className="flex flex-col gap-4 border-b border-zinc-800 pb-6 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h1 className="font-heading text-2xl tracking-tight text-white md:text-3xl">
-            Products
-          </h1>
-          <p className="mt-2 max-w-2xl text-sm text-zinc-400">
-            <span className="font-medium text-zinc-200">New product</span> → POST{" "}
-            <code className="rounded bg-zinc-800 px-1 py-0.5 font-mono text-[11px]">/api/admin/products</code>
-            . Row <span className="font-medium text-zinc-200">Edit</span> → GET + PATCH{" "}
-            <code className="rounded bg-zinc-800 px-1 py-0.5 font-mono text-[11px]">/api/admin/products/[id]</code>
-            . Row <span className="font-medium text-zinc-200">Delete</span> → DELETE (confirmation modal).
-            Vehicle slugs must exist on Vehicle for compatibility edges.
-          </p>
-        </div>
-        <Button
-          type="button"
-          onClick={openCreate}
-          className="bg-emerald-600 text-white hover:bg-emerald-500"
-        >
-          New product
-        </Button>
-      </header>
+      <AdminPageHeader
+        title="Products"
+        description="Catalog SKUs — pricing, fitment, specs, and checkout variants."
+        action={
+          <Button
+            type="button"
+            onClick={openCreate}
+            className="bg-emerald-600 text-white hover:bg-emerald-500"
+          >
+            New product
+          </Button>
+        }
+      />
 
       {error ? (
         <p className="rounded-xl border border-rose-500/35 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
@@ -554,371 +547,350 @@ export function AdminProductsTable() {
         />
       </div>
 
-      <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
-        <SheetContent
-          side="right"
-          showCloseButton
-          className="w-full border-zinc-800 bg-zinc-950 text-zinc-100 sm:max-w-xl"
-        >
-          <SheetHeader>
-            <SheetTitle className="text-white">
-              {editingInternalId ? "Edit product" : "New product"}
-            </SheetTitle>
-            <SheetDescription className="text-zinc-500">
-              Maps to Product + ProductVehicleCompatibility. Optional specs (label/value JSON)
-              and variants (id, label, optional price delta vs base price).
-            </SheetDescription>
-          </SheetHeader>
+      <AdminEditSheet
+        open={sheetOpen}
+        onOpenChange={setSheetOpen}
+        title={editingInternalId ? "Edit product" : "New product"}
+        subtitle="Published on the product detail page and in catalog search."
+        formError={formError}
+        loading={formLoading}
+        loadingSkeleton={
+          <div className="space-y-3">
+            <Skeleton className="h-24 w-full rounded-xl bg-zinc-800" />
+            <Skeleton className="h-24 w-full rounded-xl bg-zinc-800" />
+          </div>
+        }
+        footer={
+          <AdminSheetFooterButtons
+            onCancel={() => setSheetOpen(false)}
+            onSave={() => void saveProduct()}
+            saving={saving}
+            saveDisabled={formLoading}
+          />
+        }
+      >
+        <AdminFormStack>
+          <AdminFormSection title="Basics" description="Slug, name, brand, and category.">
+            <AdminFieldGrid>
+              <AdminField label="URL slug" hint="Lowercase, hyphenated.">
+                <Input
+                  value={form.slug}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, slug: e.target.value }))
+                  }
+                  className={adminInputClass}
+                  placeholder="sku-slug"
+                />
+              </AdminField>
+              <AdminField label="Name">
+                <Input
+                  value={form.name}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, name: e.target.value }))
+                  }
+                  className={adminInputClass}
+                />
+              </AdminField>
+            </AdminFieldGrid>
+            <AdminFieldGrid>
+              <AdminField label="Brand">
+                <Input
+                  value={form.brand}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, brand: e.target.value }))
+                  }
+                  className={adminInputClass}
+                />
+              </AdminField>
+              <AdminField label="Category">
+                <Input
+                  value={form.category}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, category: e.target.value }))
+                  }
+                  className={adminInputClass}
+                />
+              </AdminField>
+            </AdminFieldGrid>
+          </AdminFormSection>
 
-          {formError ? (
-            <p className="rounded-lg border border-rose-500/35 bg-rose-500/10 px-3 py-2 text-sm text-rose-200">
-              {formError}
-            </p>
-          ) : null}
+          <AdminFormSection title="Pricing">
+            <AdminFieldGrid>
+              <AdminField label="Price (INR)" hint="Whole rupees, or leave empty.">
+                <Input
+                  value={form.priceStr}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, priceStr: e.target.value }))
+                  }
+                  className={adminInputClass}
+                  placeholder="569999"
+                  inputMode="numeric"
+                />
+              </AdminField>
+              <AdminField label="Currency">
+                <Input
+                  value={form.currency}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, currency: e.target.value }))
+                  }
+                  className={adminInputClass}
+                />
+              </AdminField>
+            </AdminFieldGrid>
+          </AdminFormSection>
 
-          {formLoading ? (
-            <div className="space-y-3 py-6">
-              <Skeleton className="h-10 w-full bg-zinc-800" />
-              <Skeleton className="h-10 w-full bg-zinc-800" />
-              <Skeleton className="h-10 w-full bg-zinc-800" />
-            </div>
-          ) : (
-            <ScrollArea className="max-h-[calc(100vh-220px)] pr-3">
-              <div className="space-y-4 py-2">
-                <div className="space-y-2">
-                  <Label className="text-zinc-400">Slug</Label>
-                  <Input
-                    value={form.slug}
-                    onChange={(e) =>
-                      setForm((f) => ({ ...f, slug: e.target.value }))
-                    }
-                    className="border-zinc-700 bg-zinc-900 text-zinc-100"
-                    placeholder="sku-slug"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-zinc-400">Name</Label>
-                  <Input
-                    value={form.name}
-                    onChange={(e) =>
-                      setForm((f) => ({ ...f, name: e.target.value }))
-                    }
-                    className="border-zinc-700 bg-zinc-900 text-zinc-100"
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-2">
-                    <Label className="text-zinc-400">Brand</Label>
-                    <Input
-                      value={form.brand}
-                      onChange={(e) =>
-                        setForm((f) => ({ ...f, brand: e.target.value }))
-                      }
-                      className="border-zinc-700 bg-zinc-900 text-zinc-100"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-zinc-400">Category</Label>
-                    <Input
-                      value={form.category}
-                      onChange={(e) =>
-                        setForm((f) => ({ ...f, category: e.target.value }))
-                      }
-                      className="border-zinc-700 bg-zinc-900 text-zinc-100"
-                    />
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-2">
-                    <Label className="text-zinc-400">Price (whole INR)</Label>
-                    <Input
-                      value={form.priceStr}
-                      onChange={(e) =>
-                        setForm((f) => ({ ...f, priceStr: e.target.value }))
-                      }
-                      className="border-zinc-700 bg-zinc-900 text-zinc-100"
-                      placeholder="569999 or empty"
-                      inputMode="numeric"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-zinc-400">Currency</Label>
-                    <Input
-                      value={form.currency}
-                      onChange={(e) =>
-                        setForm((f) => ({ ...f, currency: e.target.value }))
-                      }
-                      className="border-zinc-700 bg-zinc-900 text-zinc-100"
-                    />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-zinc-400">Description</Label>
-                  <textarea
-                    value={form.description}
-                    onChange={(e) =>
-                      setForm((f) => ({ ...f, description: e.target.value }))
-                    }
-                    rows={4}
-                    className="w-full resize-y rounded-xl border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/40"
-                  />
-                </div>
-                <div className="space-y-3 rounded-xl border border-zinc-800 bg-zinc-900/40 p-3">
-                  <div className="flex items-center justify-between gap-2">
-                    <Label className="text-zinc-400">
-                      Specifications (label / value)
-                    </Label>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      className="border-zinc-600 bg-zinc-950 text-xs text-zinc-200"
-                      onClick={() =>
-                        setForm((f) => ({
-                          ...f,
-                          specs: [...f.specs, { label: "", value: "" }],
-                        }))
-                      }
-                    >
-                      Add row
-                    </Button>
-                  </div>
-                  <p className="text-[11px] leading-relaxed text-zinc-500">
-                    Rows with empty label or value are ignored on save. Shown on
-                    the product detail panel as structured specs.
-                  </p>
-                  {form.specs.length === 0 ? (
-                    <p className="text-xs text-zinc-600">
-                      No specification rows. Use Add row to enter bullet-style
-                      highlights.
-                    </p>
-                  ) : (
-                    <div className="space-y-2">
-                      {form.specs.map((row, i) => (
-                        <div
-                          key={`spec-draft-${i}`}
-                          className="flex flex-col gap-2 sm:flex-row sm:items-start"
-                        >
-                          <Input
-                            aria-label={`Spec label ${i + 1}`}
-                            placeholder="Label"
-                            value={row.label}
-                            onChange={(e) => {
-                              const v = e.target.value;
-                              setForm((f) => {
-                                const next = [...f.specs];
-                                next[i] = { ...next[i], label: v };
-                                return { ...f, specs: next };
-                              });
-                            }}
-                            className="border-zinc-700 bg-zinc-900 text-sm text-zinc-100 sm:min-w-[100px] sm:flex-1"
-                          />
-                          <Input
-                            aria-label={`Spec value ${i + 1}`}
-                            placeholder="Value"
-                            value={row.value}
-                            onChange={(e) => {
-                              const v = e.target.value;
-                              setForm((f) => {
-                                const next = [...f.specs];
-                                next[i] = { ...next[i], value: v };
-                                return { ...f, specs: next };
-                              });
-                            }}
-                            className="border-zinc-700 bg-zinc-900 text-sm text-zinc-100 sm:min-w-[140px] sm:flex-[2]"
-                          />
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            className="shrink-0 border-zinc-600 bg-zinc-950 text-xs text-zinc-400 hover:text-rose-300"
-                            onClick={() =>
-                              setForm((f) => ({
-                                ...f,
-                                specs: f.specs.filter((_, j) => j !== i),
-                              }))
-                            }
-                          >
-                            Remove
-                          </Button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-                <div className="space-y-3 rounded-xl border border-zinc-800 bg-zinc-900/40 p-3">
-                  <div className="flex items-center justify-between gap-2">
-                    <Label className="text-zinc-400">
-                      Variants (SKU id / label / price +INR)
-                    </Label>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      className="border-zinc-600 bg-zinc-950 text-xs text-zinc-200"
-                      onClick={() =>
-                        setForm((f) => ({
-                          ...f,
-                          variantRows: [
-                            ...f.variantRows,
-                            { id: "", label: "", priceModifierStr: "" },
-                          ],
-                        }))
-                      }
-                    >
-                      Add variant
-                    </Button>
-                  </div>
-                  <p className="text-[11px] leading-relaxed text-zinc-500">
-                    Stable <span className="text-zinc-400">id</span> is sent at
-                    checkout. Leave empty for no custom variants — storefront uses
-                    a default configuration. Modifier adds to base price (blank =
-                    none).
-                  </p>
-                  {form.variantRows.length === 0 ? (
-                    <p className="text-xs text-zinc-600">
-                      No variant rows — PDP shows “Standard configuration”.
-                    </p>
-                  ) : (
-                    <div className="space-y-2">
-                      {form.variantRows.map((row, i) => (
-                        <div
-                          key={`variant-draft-${i}`}
-                          className="flex flex-col gap-2 lg:flex-row lg:items-start"
-                        >
-                          <Input
-                            aria-label={`Variant id ${i + 1}`}
-                            placeholder="id (e.g. front-pair)"
-                            value={row.id}
-                            onChange={(e) => {
-                              const v = e.target.value;
-                              setForm((f) => {
-                                const next = [...f.variantRows];
-                                next[i] = { ...next[i], id: v };
-                                return { ...f, variantRows: next };
-                              });
-                            }}
-                            className="border-zinc-700 bg-zinc-900 font-mono text-sm text-zinc-100 lg:min-w-[120px] lg:flex-[2]"
-                          />
-                          <Input
-                            aria-label={`Variant label ${i + 1}`}
-                            placeholder="Label shown to customer"
-                            value={row.label}
-                            onChange={(e) => {
-                              const v = e.target.value;
-                              setForm((f) => {
-                                const next = [...f.variantRows];
-                                next[i] = { ...next[i], label: v };
-                                return { ...f, variantRows: next };
-                              });
-                            }}
-                            className="border-zinc-700 bg-zinc-900 text-sm text-zinc-100 lg:min-w-[140px] lg:flex-[3]"
-                          />
-                          <Input
-                            aria-label={`Variant price modifier ${i + 1}`}
-                            placeholder="+INR (optional)"
-                            value={row.priceModifierStr}
-                            inputMode="numeric"
-                            onChange={(e) => {
-                              const v = e.target.value;
-                              setForm((f) => {
-                                const next = [...f.variantRows];
-                                next[i] = { ...next[i], priceModifierStr: v };
-                                return { ...f, variantRows: next };
-                              });
-                            }}
-                            className="border-zinc-700 bg-zinc-900 text-sm text-zinc-100 lg:w-28"
-                          />
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            className="shrink-0 border-zinc-600 bg-zinc-950 text-xs text-zinc-400 hover:text-rose-300"
-                            onClick={() =>
-                              setForm((f) => ({
-                                ...f,
-                                variantRows: f.variantRows.filter(
-                                  (_, j) => j !== i
-                                ),
-                              }))
-                            }
-                          >
-                            Remove
-                          </Button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-                <div className="space-y-2">
+          <AdminFormSection title="Description">
+            <AdminField label="Product copy">
+              <textarea
+                value={form.description}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, description: e.target.value }))
+                }
+                rows={4}
+                className={adminTextareaClass}
+              />
+            </AdminField>
+          </AdminFormSection>
+
+          <AdminFormSection
+            title="Specifications"
+            description="Label/value pairs on the product page."
+            defaultOpen={false}
+          >
+                <div className="flex items-center justify-between gap-2">
                   <Label className="text-zinc-400">
-                    Images (comma-separated URLs)
+                    Specifications (label / value)
                   </Label>
-                  <Input
-                    value={form.imagesStr}
-                    onChange={(e) =>
-                      setForm((f) => ({ ...f, imagesStr: e.target.value }))
-                    }
-                    className="border-zinc-700 bg-zinc-900 text-zinc-100"
-                    placeholder="https://..., https://..."
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-zinc-400">
-                    Vehicle slugs (comma-separated)
-                  </Label>
-                  <Input
-                    value={form.vehicleSlugsStr}
-                    onChange={(e) =>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="border-zinc-600 bg-zinc-950 text-xs text-zinc-200"
+                    onClick={() =>
                       setForm((f) => ({
                         ...f,
-                        vehicleSlugsStr: e.target.value,
+                        specs: [...f.specs, { label: "", value: "" }],
                       }))
                     }
-                    className="border-zinc-700 bg-zinc-900 text-zinc-100"
-                    placeholder="toyota-hilux, mahindra-thar"
-                  />
+                  >
+                    Add row
+                  </Button>
                 </div>
-                {!editingInternalId ? (
+                <p className="text-[11px] leading-relaxed text-zinc-500">
+                  Rows with empty label or value are ignored on save. Shown on
+                  the product detail panel as structured specs.
+                </p>
+                {form.specs.length === 0 ? (
+                  <p className="text-xs text-zinc-600">
+                    No specification rows. Use Add row to enter bullet-style
+                    highlights.
+                  </p>
+                ) : (
                   <div className="space-y-2">
-                    <Label className="text-zinc-400">
-                      Legacy ID (optional)
-                    </Label>
-                    <Input
-                      value={form.legacyId}
-                      onChange={(e) =>
-                        setForm((f) => ({ ...f, legacyId: e.target.value }))
-                      }
-                      className="border-zinc-700 bg-zinc-900 text-zinc-100"
-                      placeholder="matches static catalog id"
-                    />
+                    {form.specs.map((row, i) => (
+                      <div
+                        key={`spec-draft-${i}`}
+                        className="flex flex-col gap-2 sm:flex-row sm:items-start"
+                      >
+                        <Input
+                          aria-label={`Spec label ${i + 1}`}
+                          placeholder="Label"
+                          value={row.label}
+                          onChange={(e) => {
+                            const v = e.target.value;
+                            setForm((f) => {
+                              const next = [...f.specs];
+                              next[i] = { ...next[i], label: v };
+                              return { ...f, specs: next };
+                            });
+                          }}
+                          className={adminInputClass}
+                        />
+                        <Input
+                          aria-label={`Spec value ${i + 1}`}
+                          placeholder="Value"
+                          value={row.value}
+                          onChange={(e) => {
+                            const v = e.target.value;
+                            setForm((f) => {
+                              const next = [...f.specs];
+                              next[i] = { ...next[i], value: v };
+                              return { ...f, specs: next };
+                            });
+                          }}
+                          className={adminInputClass}
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="shrink-0 border-zinc-600 bg-zinc-950 text-xs text-zinc-400 hover:text-rose-300"
+                          onClick={() =>
+                            setForm((f) => ({
+                              ...f,
+                              specs: f.specs.filter((_, j) => j !== i),
+                            }))
+                          }
+                        >
+                          Remove
+                        </Button>
+                      </div>
+                    ))}
                   </div>
-                ) : null}
-              </div>
-            </ScrollArea>
-          )}
+                )}
+          </AdminFormSection>
 
-          <SheetFooter className="border-t border-zinc-800">
-            <Button
-              type="button"
-              variant="outline"
-              className="border-zinc-700 bg-zinc-900 text-zinc-200"
-              onClick={() => setSheetOpen(false)}
-              disabled={saving}
-            >
-              Cancel
-            </Button>
-            <Button
-              type="button"
-              className="bg-emerald-600 text-white hover:bg-emerald-500"
-              onClick={saveProduct}
-              disabled={saving || formLoading}
-            >
-              {saving ? "Saving…" : "Save"}
-            </Button>
-          </SheetFooter>
-        </SheetContent>
-      </Sheet>
+          <AdminFormSection
+            title="Variants"
+            description="Checkout options and price deltas."
+            defaultOpen={false}
+          >
+                <div className="flex items-center justify-between gap-2">
+                  <Label className="text-zinc-400">
+                    Variants (SKU id / label / price +INR)
+                  </Label>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="border-zinc-600 bg-zinc-950 text-xs text-zinc-200"
+                    onClick={() =>
+                      setForm((f) => ({
+                        ...f,
+                        variantRows: [
+                          ...f.variantRows,
+                          { id: "", label: "", priceModifierStr: "" },
+                        ],
+                      }))
+                    }
+                  >
+                    Add variant
+                  </Button>
+                </div>
+                <p className="text-[11px] leading-relaxed text-zinc-500">
+                  Stable <span className="text-zinc-400">id</span> is sent at
+                  checkout. Leave empty for no custom variants — storefront uses
+                  a default configuration. Modifier adds to base price (blank =
+                  none).
+                </p>
+                {form.variantRows.length === 0 ? (
+                  <p className="text-xs text-zinc-600">
+                    No variant rows — PDP shows “Standard configuration”.
+                  </p>
+                ) : (
+                  <div className="space-y-2">
+                    {form.variantRows.map((row, i) => (
+                      <div
+                        key={`variant-draft-${i}`}
+                        className="flex flex-col gap-2 lg:flex-row lg:items-start"
+                      >
+                        <Input
+                          aria-label={`Variant id ${i + 1}`}
+                          placeholder="id (e.g. front-pair)"
+                          value={row.id}
+                          onChange={(e) => {
+                            const v = e.target.value;
+                            setForm((f) => {
+                              const next = [...f.variantRows];
+                              next[i] = { ...next[i], id: v };
+                              return { ...f, variantRows: next };
+                            });
+                          }}
+                          className={adminInputClass}
+                        />
+                        <Input
+                          aria-label={`Variant label ${i + 1}`}
+                          placeholder="Label shown to customer"
+                          value={row.label}
+                          onChange={(e) => {
+                            const v = e.target.value;
+                            setForm((f) => {
+                              const next = [...f.variantRows];
+                              next[i] = { ...next[i], label: v };
+                              return { ...f, variantRows: next };
+                            });
+                          }}
+                          className={adminInputClass}
+                        />
+                        <Input
+                          aria-label={`Variant price modifier ${i + 1}`}
+                          placeholder="+INR (optional)"
+                          value={row.priceModifierStr}
+                          inputMode="numeric"
+                          onChange={(e) => {
+                            const v = e.target.value;
+                            setForm((f) => {
+                              const next = [...f.variantRows];
+                              next[i] = { ...next[i], priceModifierStr: v };
+                              return { ...f, variantRows: next };
+                            });
+                          }}
+                          className={adminInputClass}
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="shrink-0 border-zinc-600 bg-zinc-950 text-xs text-zinc-400 hover:text-rose-300"
+                          onClick={() =>
+                            setForm((f) => ({
+                              ...f,
+                              variantRows: f.variantRows.filter(
+                                (_, j) => j !== i
+                              ),
+                            }))
+                          }
+                        >
+                          Remove
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+          </AdminFormSection>
+
+          <AdminFormSection
+            title="Media & fitment"
+            description="Images and compatible vehicle slugs."
+            defaultOpen={false}
+          >
+            <AdminField label="Image URLs" hint="Comma-separated.">
+              <Input
+                value={form.imagesStr}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, imagesStr: e.target.value }))
+                }
+                className={adminInputClass}
+                placeholder="https://..., https://..."
+              />
+            </AdminField>
+            <AdminField label="Vehicle slugs" hint="Comma-separated platform slugs.">
+              <Input
+                value={form.vehicleSlugsStr}
+                onChange={(e) =>
+                  setForm((f) => ({
+                    ...f,
+                    vehicleSlugsStr: e.target.value,
+                  }))
+                }
+                className={adminInputClass}
+                placeholder="toyota-hilux, mahindra-thar"
+              />
+            </AdminField>
+            {!editingInternalId ? (
+              <AdminField label="Legacy ID" hint="Migration only.">
+                <Input
+                  value={form.legacyId}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, legacyId: e.target.value }))
+                  }
+                  className={adminInputClass}
+                />
+              </AdminField>
+            ) : null}
+          </AdminFormSection>
+        </AdminFormStack>
+      </AdminEditSheet>
     </div>
   );
 }

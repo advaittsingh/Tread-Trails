@@ -354,14 +354,20 @@ export function AdminBookingsTable() {
       </div>
 
       <Sheet open={Boolean(detailId)} onOpenChange={(o) => !o && setDetailId(null)}>
-        <SheetContent className="w-full border-zinc-800 bg-zinc-950 text-zinc-100 sm:max-w-lg">
-          <SheetHeader>
-            <SheetTitle className="text-white">Booking detail</SheetTitle>
+        <SheetContent
+          showCloseButton
+          className="flex h-full w-full max-w-full flex-col gap-0 border-zinc-800 bg-zinc-950 p-0 text-zinc-100 sm:max-w-2xl lg:max-w-[44rem]"
+        >
+          <SheetHeader className="shrink-0 border-b border-zinc-800 px-6 py-5 text-left">
+            <SheetTitle className="font-heading text-xl tracking-tight text-white">
+              Booking detail
+            </SheetTitle>
           </SheetHeader>
+          <div className="min-h-0 flex-1 overflow-y-auto px-6 py-5">
           {detailLoading ? (
-            <Skeleton className="mt-6 h-40 w-full rounded-lg bg-zinc-800" />
+            <Skeleton className="h-40 w-full rounded-xl bg-zinc-800" />
           ) : detail ? (
-            <dl className="mt-6 space-y-4 text-sm">
+            <dl className="grid gap-4 text-sm sm:grid-cols-2">
               <DetailRow label="ID" value={detail.id} mono />
               <DetailRow label="Status" value={detail.status} />
               <DetailRow label="Name" value={detail.contactName} />
@@ -380,6 +386,7 @@ export function AdminBookingsTable() {
               ) : null}
             </dl>
           ) : null}
+          </div>
         </SheetContent>
       </Sheet>
     </div>

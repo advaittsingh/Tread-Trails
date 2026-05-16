@@ -12,20 +12,23 @@ import {
 } from "@/lib/vehicle-categories";
 
 import { ADMIN_CONFIRM_DIALOG_CLASS } from "@/components/admin/admin-confirm-styles";
+import {
+  AdminEditSheet,
+  AdminField,
+  AdminFieldGrid,
+  AdminFormSection,
+  AdminFormStack,
+  AdminPageHeader,
+  AdminSheetFooterButtons,
+  adminInputClass,
+  adminSelectClass,
+  adminTextareaClass,
+} from "@/components/admin/admin-edit-sheet";
 import { AdminEmptyState } from "@/components/admin/admin-empty-state";
 import { AdminPaginationBar } from "@/components/admin/admin-pagination-bar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 
 type ListRow = {
@@ -71,10 +74,6 @@ function apiErrorMessage(data: Record<string, unknown>, fallback: string): strin
   }
   return fallback;
 }
-
-const inputClass = "border-zinc-700 bg-zinc-900 text-zinc-100";
-const textareaClass =
-  "w-full rounded-xl border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/40";
 
 export function AdminVehiclesTable() {
   const { confirmDelete } = useConfirmation();
@@ -283,35 +282,19 @@ export function AdminVehiclesTable() {
 
   return (
     <div className="space-y-8 p-6 lg:p-10">
-      <header className="flex flex-col gap-4 border-b border-zinc-800 pb-6 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h1 className="font-heading text-2xl tracking-tight text-white md:text-3xl">
-            Vehicles
-          </h1>
-          <p className="mt-2 max-w-2xl text-sm text-zinc-400">
-            Platform hubs for{" "}
-            <code className="rounded bg-zinc-800 px-1 py-0.5 font-mono text-[11px]">
-              /vehicles/[slug]
-            </code>
-            . CRUD via{" "}
-            <code className="rounded bg-zinc-800 px-1 py-0.5 font-mono text-[11px]">
-              /api/admin/vehicles
-            </code>{" "}
-            and{" "}
-            <code className="rounded bg-zinc-800 px-1 py-0.5 font-mono text-[11px]">
-              /api/admin/vehicles/[id]
-            </code>
-            .
-          </p>
-        </div>
-        <Button
-          type="button"
-          onClick={openCreate}
-          className="bg-emerald-600 text-white hover:bg-emerald-500"
-        >
-          New vehicle
-        </Button>
-      </header>
+      <AdminPageHeader
+        title="Vehicles"
+        description="Platform hubs on the storefront — each vehicle has its own catalog and build gallery."
+        action={
+          <Button
+            type="button"
+            onClick={openCreate}
+            className="bg-emerald-600 text-white hover:bg-emerald-500"
+          >
+            New vehicle
+          </Button>
+        }
+      />
 
       {error ? (
         <p className="rounded-xl border border-rose-500/35 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
@@ -438,185 +421,168 @@ export function AdminVehiclesTable() {
         />
       </div>
 
-      <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
-        <SheetContent
-          side="right"
-          showCloseButton
-          className="w-full border-zinc-800 bg-zinc-950 text-zinc-100 sm:max-w-xl"
-        >
-          <SheetHeader>
-            <SheetTitle className="text-white">
-              {editingInternalId ? "Edit vehicle" : "New vehicle"}
-            </SheetTitle>
-            <SheetDescription className="text-zinc-500">
-              Maps to the Vehicle table. Public catalog uses slug for hub URLs.
-            </SheetDescription>
-          </SheetHeader>
+      <AdminEditSheet
+        open={sheetOpen}
+        onOpenChange={setSheetOpen}
+        title={editingInternalId ? "Edit vehicle" : "New vehicle"}
+        subtitle="Published at /vehicles/[slug] on the storefront."
+        formError={formError}
+        loading={formLoading}
+        loadingSkeleton={
+          <div className="space-y-3">
+            <Skeleton className="h-24 w-full rounded-xl bg-zinc-800" />
+            <Skeleton className="h-24 w-full rounded-xl bg-zinc-800" />
+          </div>
+        }
+        footer={
+          <AdminSheetFooterButtons
+            onCancel={() => setSheetOpen(false)}
+            onSave={() => void saveVehicle()}
+            saving={saving}
+            saveDisabled={formLoading}
+          />
+        }
+      >
+        <AdminFormStack>
+          <AdminFormSection title="Basics" description="Slug, name, and category.">
+            <AdminFieldGrid>
+              <AdminField label="URL slug" hint="Lowercase, hyphenated.">
+                <Input
+                  value={form.slug}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, slug: e.target.value }))
+                  }
+                  className={adminInputClass}
+                  placeholder="toyota-hilux"
+                />
+              </AdminField>
+              <AdminField label="Name">
+                <Input
+                  value={form.name}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, name: e.target.value }))
+                  }
+                  className={adminInputClass}
+                />
+              </AdminField>
+            </AdminFieldGrid>
+            <AdminField label="Tagline">
+              <Input
+                value={form.tagline}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, tagline: e.target.value }))
+                }
+                className={adminInputClass}
+              />
+            </AdminField>
+            <AdminField label="Category">
+              <select
+                value={form.category}
+                onChange={(e) =>
+                  setForm((f) => ({
+                    ...f,
+                    category: e.target.value as VehicleCategory,
+                  }))
+                }
+                className={adminSelectClass}
+              >
+                {VEHICLE_CATEGORY_ORDER.map((c) => (
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
+                ))}
+              </select>
+            </AdminField>
+          </AdminFormSection>
 
-          {formError ? (
-            <p className="rounded-lg border border-rose-500/35 bg-rose-500/10 px-3 py-2 text-sm text-rose-200">
-              {formError}
-            </p>
-          ) : null}
+          <AdminFormSection title="Story" description="Hub page copy.">
+            <AdminField label="Description">
+              <textarea
+                value={form.description}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, description: e.target.value }))
+                }
+                rows={4}
+                className={adminTextareaClass}
+              />
+            </AdminField>
+          </AdminFormSection>
 
-          {formLoading ? (
-            <div className="space-y-3 py-6">
-              <Skeleton className="h-10 w-full bg-zinc-800" />
-              <Skeleton className="h-10 w-full bg-zinc-800" />
-              <Skeleton className="h-10 w-full bg-zinc-800" />
-            </div>
-          ) : (
-            <ScrollArea className="max-h-[calc(100vh-220px)] pr-3">
-              <div className="space-y-4 py-2">
-                <div className="space-y-2">
-                  <Label className="text-zinc-400">Slug</Label>
-                  <Input
-                    value={form.slug}
-                    onChange={(e) =>
-                      setForm((f) => ({ ...f, slug: e.target.value }))
-                    }
-                    className={inputClass}
-                    placeholder="toyota-hilux"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-zinc-400">Name</Label>
-                  <Input
-                    value={form.name}
-                    onChange={(e) =>
-                      setForm((f) => ({ ...f, name: e.target.value }))
-                    }
-                    className={inputClass}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-zinc-400">Tagline</Label>
-                  <Input
-                    value={form.tagline}
-                    onChange={(e) =>
-                      setForm((f) => ({ ...f, tagline: e.target.value }))
-                    }
-                    className={inputClass}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-zinc-400">Description</Label>
-                  <textarea
-                    value={form.description}
-                    onChange={(e) =>
-                      setForm((f) => ({ ...f, description: e.target.value }))
-                    }
-                    rows={5}
-                    className={textareaClass}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-zinc-400">Hero image URL</Label>
-                  <Input
-                    value={form.heroImage}
-                    onChange={(e) =>
-                      setForm((f) => ({ ...f, heroImage: e.target.value }))
-                    }
-                    className={inputClass}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-zinc-400">Thumbnail URL</Label>
-                  <Input
-                    value={form.thumbnail}
-                    onChange={(e) =>
-                      setForm((f) => ({ ...f, thumbnail: e.target.value }))
-                    }
-                    className={inputClass}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-zinc-400">Category</Label>
-                  <select
-                    value={form.category}
-                    onChange={(e) =>
-                      setForm((f) => ({
-                        ...f,
-                        category: e.target.value as VehicleCategory,
-                      }))
-                    }
-                    className="h-10 w-full rounded-xl border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100 outline-none focus:ring-2 focus:ring-emerald-500/40"
-                  >
-                    {VEHICLE_CATEGORY_ORDER.map((c) => (
-                      <option key={c} value={c}>
-                        {c}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-zinc-400">Engine summary</Label>
-                  <textarea
-                    value={form.engineSummary}
-                    onChange={(e) =>
-                      setForm((f) => ({ ...f, engineSummary: e.target.value }))
-                    }
-                    rows={3}
-                    className={textareaClass}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-zinc-400">Model years label</Label>
-                  <Input
-                    value={form.modelYearsLabel}
-                    onChange={(e) =>
-                      setForm((f) => ({ ...f, modelYearsLabel: e.target.value }))
-                    }
-                    className={inputClass}
-                    placeholder="2016–2024"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-zinc-400">Trim summary</Label>
-                  <textarea
-                    value={form.trimSummary}
-                    onChange={(e) =>
-                      setForm((f) => ({ ...f, trimSummary: e.target.value }))
-                    }
-                    rows={3}
-                    className={textareaClass}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-zinc-400">Legacy ID (optional)</Label>
-                  <Input
-                    value={form.legacyId}
-                    onChange={(e) =>
-                      setForm((f) => ({ ...f, legacyId: e.target.value }))
-                    }
-                    className={inputClass}
-                    placeholder="Static catalog id when migrating"
-                  />
-                </div>
-              </div>
-            </ScrollArea>
-          )}
+          <AdminFormSection
+            title="Images"
+            description="Hero and thumbnail for listings."
+            defaultOpen={false}
+          >
+            <AdminFieldGrid>
+              <AdminField label="Hero image URL">
+                <Input
+                  value={form.heroImage}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, heroImage: e.target.value }))
+                  }
+                  className={adminInputClass}
+                />
+              </AdminField>
+              <AdminField label="Thumbnail URL">
+                <Input
+                  value={form.thumbnail}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, thumbnail: e.target.value }))
+                  }
+                  className={adminInputClass}
+                />
+              </AdminField>
+            </AdminFieldGrid>
+          </AdminFormSection>
 
-          <SheetFooter className="gap-2 border-t border-zinc-800 pt-4">
-            <Button
-              type="button"
-              variant="outline"
-              className="border-zinc-600 bg-zinc-950 text-zinc-200"
-              onClick={() => setSheetOpen(false)}
-            >
-              Cancel
-            </Button>
-            <Button
-              type="button"
-              disabled={saving || formLoading}
-              className="bg-emerald-600 text-white hover:bg-emerald-500"
-              onClick={() => void saveVehicle()}
-            >
-              {saving ? "Saving…" : "Save"}
-            </Button>
-          </SheetFooter>
-        </SheetContent>
-      </Sheet>
+          <AdminFormSection
+            title="Technical"
+            description="Engine, years, and trim notes."
+            defaultOpen={false}
+          >
+            <AdminField label="Engine summary">
+              <textarea
+                value={form.engineSummary}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, engineSummary: e.target.value }))
+                }
+                rows={3}
+                className={adminTextareaClass}
+              />
+            </AdminField>
+            <AdminFieldGrid>
+              <AdminField label="Model years" hint="e.g. 2016–2024">
+                <Input
+                  value={form.modelYearsLabel}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, modelYearsLabel: e.target.value }))
+                  }
+                  className={adminInputClass}
+                />
+              </AdminField>
+              <AdminField label="Legacy ID" hint="Migration only.">
+                <Input
+                  value={form.legacyId}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, legacyId: e.target.value }))
+                  }
+                  className={adminInputClass}
+                />
+              </AdminField>
+            </AdminFieldGrid>
+            <AdminField label="Trim summary">
+              <textarea
+                value={form.trimSummary}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, trimSummary: e.target.value }))
+                }
+                rows={3}
+                className={adminTextareaClass}
+              />
+            </AdminField>
+          </AdminFormSection>
+        </AdminFormStack>
+      </AdminEditSheet>
     </div>
   );
 }

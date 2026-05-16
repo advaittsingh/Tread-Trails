@@ -6,9 +6,13 @@ import Link from "next/link";
 import { formatInr } from "@/lib/format";
 import { toastError } from "@/lib/toast";
 
+import {
+  AdminFormSection,
+  adminSheetContentClass,
+  adminTextareaClass,
+} from "@/components/admin/admin-edit-sheet";
 import { AdminStatusBadge } from "@/components/admin/admin-status-badge";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
 import {
   Sheet,
   SheetContent,
@@ -117,111 +121,111 @@ export function AdminOrderDetailSheet({ orderId, onClose, onUpdated }: Props) {
 
   return (
     <Sheet open={Boolean(orderId)} onOpenChange={(o) => !o && onClose()}>
-      <SheetContent className="w-full overflow-y-auto border-zinc-800 bg-zinc-950 text-zinc-100 sm:max-w-xl">
-        <SheetHeader>
-          <SheetTitle className="text-white">Order detail</SheetTitle>
+      <SheetContent showCloseButton className={adminSheetContentClass}>
+        <SheetHeader className="shrink-0 border-b border-zinc-800 px-6 py-5 text-left">
+          <SheetTitle className="font-heading text-xl tracking-tight text-white">
+            Order detail
+          </SheetTitle>
         </SheetHeader>
-        {loading ? (
-          <Skeleton className="mt-6 h-48 w-full rounded-lg bg-zinc-800" />
-        ) : order ? (
-          <div className="mt-6 space-y-6 text-sm">
-            <div className="flex flex-wrap items-center gap-2">
-              <AdminStatusBadge status={order.status} />
-              <span className="text-xs capitalize text-zinc-500">
-                {order.paymentMethod}
-              </span>
-              <span className="font-heading text-lg text-white tabular-nums">
-                {formatInr(order.total) ?? "—"}
-              </span>
-            </div>
-            <Block title="Customer">
-              <p>{order.customerName}</p>
-              <p className="text-zinc-400">{order.customerEmail}</p>
-              <p className="text-zinc-400">{order.customerPhone}</p>
-            </Block>
-            <Block title="Line items">
-              <pre className="max-h-48 overflow-auto rounded-lg border border-zinc-800 bg-zinc-900/80 p-3 text-xs text-zinc-300">
-                {JSON.stringify(order.items, null, 2)}
-              </pre>
-            </Block>
-            <Block title="Shipping address">
-              <pre className="overflow-auto rounded-lg border border-zinc-800 bg-zinc-900/80 p-3 text-xs text-zinc-300">
-                {JSON.stringify(order.shippingAddress, null, 2)}
-              </pre>
-            </Block>
-            <Block title="Payment references">
-              <ul className="space-y-1 font-mono text-xs text-zinc-400">
-                {order.stripeCheckoutSessionId ? (
-                  <li>Stripe session: {order.stripeCheckoutSessionId}</li>
-                ) : null}
-                {order.stripePaymentIntentId ? (
-                  <li>Stripe PI: {order.stripePaymentIntentId}</li>
-                ) : null}
-                {order.razorpayOrderId ? (
-                  <li>Razorpay order: {order.razorpayOrderId}</li>
-                ) : null}
-                {order.razorpayPaymentId ? (
-                  <li>Razorpay payment: {order.razorpayPaymentId}</li>
-                ) : null}
-                {order.juspayGatewayOrderId ? (
-                  <li>Juspay gateway: {order.juspayGatewayOrderId}</li>
-                ) : null}
-                {order.juspayCheckoutOrderRef ? (
-                  <li>Juspay ref: {order.juspayCheckoutOrderRef}</li>
-                ) : null}
-              </ul>
-              {stripeDash ? (
-                <Link
-                  href={stripeDash}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="mt-2 inline-block text-xs text-emerald-400 underline"
-                >
-                  Open in Stripe Dashboard
-                </Link>
-              ) : null}
-            </Block>
-            <div className="space-y-2">
-              <Label className="text-zinc-400">Fulfilment / refund notes</Label>
-              <textarea
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                rows={4}
-                className="w-full rounded-xl border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 outline-none focus:ring-2 focus:ring-emerald-500/40"
-              />
-              <Button
-                type="button"
-                size="sm"
-                disabled={savingNotes}
-                onClick={() => void saveNotes()}
-                className="bg-emerald-600 hover:bg-emerald-500"
+        <div className="min-h-0 flex-1 overflow-y-auto px-6 py-5">
+          {loading ? (
+            <Skeleton className="h-48 w-full rounded-xl bg-zinc-800" />
+          ) : order ? (
+            <div className="space-y-4 text-sm">
+              <div className="flex flex-wrap items-center gap-2">
+                <AdminStatusBadge status={order.status} />
+                <span className="text-xs capitalize text-zinc-500">
+                  {order.paymentMethod}
+                </span>
+                <span className="font-heading text-lg text-white tabular-nums">
+                  {formatInr(order.total) ?? "—"}
+                </span>
+              </div>
+
+              <AdminFormSection title="Customer">
+                <p className="text-zinc-100">{order.customerName}</p>
+                <p className="text-zinc-400">{order.customerEmail}</p>
+                <p className="text-zinc-400">{order.customerPhone}</p>
+              </AdminFormSection>
+
+              <AdminFormSection
+                title="Line items"
+                description="Raw cart payload from checkout."
+                defaultOpen={false}
               >
-                {savingNotes ? "Saving…" : "Save notes"}
-              </Button>
+                <pre className="max-h-48 overflow-auto rounded-lg border border-zinc-800 bg-zinc-900/80 p-3 text-xs text-zinc-300">
+                  {JSON.stringify(order.items, null, 2)}
+                </pre>
+              </AdminFormSection>
+
+              <AdminFormSection title="Shipping address" defaultOpen={false}>
+                <pre className="overflow-auto rounded-lg border border-zinc-800 bg-zinc-900/80 p-3 text-xs text-zinc-300">
+                  {JSON.stringify(order.shippingAddress, null, 2)}
+                </pre>
+              </AdminFormSection>
+
+              <AdminFormSection
+                title="Payment references"
+                description="Gateway IDs for support lookups."
+                defaultOpen={false}
+              >
+                <ul className="space-y-1 font-mono text-xs text-zinc-400">
+                  {order.stripeCheckoutSessionId ? (
+                    <li>Stripe session: {order.stripeCheckoutSessionId}</li>
+                  ) : null}
+                  {order.stripePaymentIntentId ? (
+                    <li>Stripe PI: {order.stripePaymentIntentId}</li>
+                  ) : null}
+                  {order.razorpayOrderId ? (
+                    <li>Razorpay order: {order.razorpayOrderId}</li>
+                  ) : null}
+                  {order.razorpayPaymentId ? (
+                    <li>Razorpay payment: {order.razorpayPaymentId}</li>
+                  ) : null}
+                  {order.juspayGatewayOrderId ? (
+                    <li>Juspay gateway: {order.juspayGatewayOrderId}</li>
+                  ) : null}
+                  {order.juspayCheckoutOrderRef ? (
+                    <li>Juspay ref: {order.juspayCheckoutOrderRef}</li>
+                  ) : null}
+                </ul>
+                {stripeDash ? (
+                  <Link
+                    href={stripeDash}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-2 inline-block text-xs text-emerald-400 underline"
+                  >
+                    Open in Stripe Dashboard
+                  </Link>
+                ) : null}
+              </AdminFormSection>
+
+              <AdminFormSection title="Fulfilment notes">
+                <textarea
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  rows={4}
+                  className={adminTextareaClass}
+                />
+                <Button
+                  type="button"
+                  size="sm"
+                  disabled={savingNotes}
+                  onClick={() => void saveNotes()}
+                  className="bg-emerald-600 hover:bg-emerald-500"
+                >
+                  {savingNotes ? "Saving…" : "Save notes"}
+                </Button>
+              </AdminFormSection>
+
+              <p className="text-[11px] text-zinc-600">
+                Created {new Date(order.createdAt).toLocaleString()}
+              </p>
             </div>
-            <p className="text-[11px] text-zinc-600">
-              Created {new Date(order.createdAt).toLocaleString()}
-            </p>
-          </div>
-        ) : null}
+          ) : null}
+        </div>
       </SheetContent>
     </Sheet>
-  );
-}
-
-function Block({
-  title,
-  children,
-}: {
-  title: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <section>
-      <h3 className="text-[11px] font-semibold tracking-wide text-zinc-500 uppercase">
-        {title}
-      </h3>
-      <div className="mt-2">{children}</div>
-    </section>
   );
 }

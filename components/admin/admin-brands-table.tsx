@@ -7,20 +7,21 @@ import { useConfirmation } from "@/contexts/confirmation-context";
 import { toastError, toastSuccess } from "@/lib/toast";
 
 import { ADMIN_CONFIRM_DIALOG_CLASS } from "@/components/admin/admin-confirm-styles";
+import {
+  AdminEditSheet,
+  AdminField,
+  AdminFieldGrid,
+  AdminFormSection,
+  AdminFormStack,
+  AdminPageHeader,
+  AdminSheetFooterButtons,
+  adminInputClass,
+} from "@/components/admin/admin-edit-sheet";
 import { AdminEmptyState } from "@/components/admin/admin-empty-state";
 import { AdminPaginationBar } from "@/components/admin/admin-pagination-bar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 
 type BrandRow = {
@@ -51,8 +52,6 @@ function apiErrorMessage(data: Record<string, unknown>, fallback: string): strin
   }
   return fallback;
 }
-
-const inputClass = "border-zinc-700 bg-zinc-900 text-zinc-100";
 
 export function AdminBrandsTable() {
   const { confirmDelete } = useConfirmation();
@@ -252,31 +251,19 @@ export function AdminBrandsTable() {
 
   return (
     <div className="space-y-8 p-6 lg:p-10">
-      <header className="flex flex-col gap-4 border-b border-zinc-800 pb-6 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h1 className="font-heading text-2xl tracking-tight text-white md:text-3xl">
-            Brands
-          </h1>
-          <p className="mt-2 max-w-2xl text-sm text-zinc-400">
-            Supplier logos and catalog grouping. CRUD via{" "}
-            <code className="rounded bg-zinc-800 px-1 py-0.5 font-mono text-[11px]">
-              /api/admin/brands
-            </code>{" "}
-            and{" "}
-            <code className="rounded bg-zinc-800 px-1 py-0.5 font-mono text-[11px]">
-              /api/admin/brands/[id]
-            </code>
-            . Product count is recomputed on save (read-only here).
-          </p>
-        </div>
-        <Button
-          type="button"
-          onClick={openCreate}
-          className="bg-emerald-600 text-white hover:bg-emerald-500"
-        >
-          New brand
-        </Button>
-      </header>
+      <AdminPageHeader
+        title="Brands"
+        description="Supplier logos and catalog grouping. Product counts update automatically from linked SKUs."
+        action={
+          <Button
+            type="button"
+            onClick={openCreate}
+            className="bg-emerald-600 text-white hover:bg-emerald-500"
+          >
+            New brand
+          </Button>
+        }
+      />
 
       {error ? (
         <p className="rounded-xl border border-rose-500/35 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
@@ -383,111 +370,84 @@ export function AdminBrandsTable() {
         />
       </div>
 
-      <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
-        <SheetContent
-          side="right"
-          showCloseButton
-          className="w-full border-zinc-800 bg-zinc-950 text-zinc-100 sm:max-w-xl"
-        >
-          <SheetHeader>
-            <SheetTitle className="text-white">
-              {editingId ? "Edit brand" : "New brand"}
-            </SheetTitle>
-            <SheetDescription className="text-zinc-500">
-              Maps to the Brand table. Product count updates automatically when products change.
-            </SheetDescription>
-          </SheetHeader>
-
-          {formError ? (
-            <p className="rounded-lg border border-rose-500/35 bg-rose-500/10 px-3 py-2 text-sm text-rose-200">
-              {formError}
-            </p>
-          ) : null}
-
-          {formLoading ? (
-            <div className="space-y-3 py-6">
-              <Skeleton className="h-10 w-full bg-zinc-800" />
-              <Skeleton className="h-10 w-full bg-zinc-800" />
-            </div>
-          ) : (
-            <ScrollArea className="max-h-[calc(100vh-220px)] pr-3">
-              <div className="space-y-4 py-2">
-                <div className="space-y-2">
-                  <Label className="text-zinc-400">Slug</Label>
-                  <Input
-                    value={form.slug}
-                    onChange={(e) =>
-                      setForm((f) => ({ ...f, slug: e.target.value }))
-                    }
-                    className={inputClass}
-                    placeholder="arb"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-zinc-400">Name</Label>
-                  <Input
-                    value={form.name}
-                    onChange={(e) =>
-                      setForm((f) => ({ ...f, name: e.target.value }))
-                    }
-                    className={inputClass}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-zinc-400">Tagline</Label>
-                  <Input
-                    value={form.tagline}
-                    onChange={(e) =>
-                      setForm((f) => ({ ...f, tagline: e.target.value }))
-                    }
-                    className={inputClass}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-zinc-400">Logo URL</Label>
-                  <Input
-                    value={form.logoSrc}
-                    onChange={(e) =>
-                      setForm((f) => ({ ...f, logoSrc: e.target.value }))
-                    }
-                    className={inputClass}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-zinc-400">Sort order</Label>
-                  <Input
-                    value={form.sortOrderStr}
-                    onChange={(e) =>
-                      setForm((f) => ({ ...f, sortOrderStr: e.target.value }))
-                    }
-                    className={inputClass}
-                    placeholder="0"
-                  />
-                </div>
-              </div>
-            </ScrollArea>
-          )}
-
-          <SheetFooter className="gap-2 border-t border-zinc-800 pt-4">
-            <Button
-              type="button"
-              variant="outline"
-              className="border-zinc-600 bg-zinc-950 text-zinc-200"
-              onClick={() => setSheetOpen(false)}
-            >
-              Cancel
-            </Button>
-            <Button
-              type="button"
-              disabled={saving || formLoading}
-              className="bg-emerald-600 text-white hover:bg-emerald-500"
-              onClick={() => void saveBrand()}
-            >
-              {saving ? "Saving…" : "Save"}
-            </Button>
-          </SheetFooter>
-        </SheetContent>
-      </Sheet>
+      <AdminEditSheet
+        open={sheetOpen}
+        onOpenChange={setSheetOpen}
+        title={editingId ? "Edit brand" : "New brand"}
+        subtitle="Shown in catalog filters and product cards."
+        formError={formError}
+        loading={formLoading}
+        loadingSkeleton={
+          <div className="space-y-3">
+            <Skeleton className="h-10 w-full rounded-xl bg-zinc-800" />
+            <Skeleton className="h-10 w-full rounded-xl bg-zinc-800" />
+          </div>
+        }
+        footer={
+          <AdminSheetFooterButtons
+            onCancel={() => setSheetOpen(false)}
+            onSave={() => void saveBrand()}
+            saving={saving}
+            saveDisabled={formLoading}
+          />
+        }
+      >
+        <AdminFormStack>
+          <AdminFormSection title="Identity" description="Slug and display name.">
+            <AdminFieldGrid>
+              <AdminField label="URL slug" hint="Lowercase, hyphenated.">
+                <Input
+                  value={form.slug}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, slug: e.target.value }))
+                  }
+                  className={adminInputClass}
+                  placeholder="arb"
+                />
+              </AdminField>
+              <AdminField label="Name">
+                <Input
+                  value={form.name}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, name: e.target.value }))
+                  }
+                  className={adminInputClass}
+                />
+              </AdminField>
+            </AdminFieldGrid>
+            <AdminField label="Tagline">
+              <Input
+                value={form.tagline}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, tagline: e.target.value }))
+                }
+                className={adminInputClass}
+              />
+            </AdminField>
+          </AdminFormSection>
+          <AdminFormSection title="Presentation" description="Logo and list order.">
+            <AdminField label="Logo URL">
+              <Input
+                value={form.logoSrc}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, logoSrc: e.target.value }))
+                }
+                className={adminInputClass}
+              />
+            </AdminField>
+            <AdminField label="Sort order" hint="Lower numbers appear first.">
+              <Input
+                value={form.sortOrderStr}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, sortOrderStr: e.target.value }))
+                }
+                className={adminInputClass}
+                placeholder="0"
+              />
+            </AdminField>
+          </AdminFormSection>
+        </AdminFormStack>
+      </AdminEditSheet>
     </div>
   );
 }
