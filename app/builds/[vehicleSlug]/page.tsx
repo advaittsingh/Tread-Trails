@@ -66,7 +66,7 @@ export default async function BuildsForVehiclePage({ params }: Props) {
   const vehicleBuilds = await getBuildsForVehicle(car.slug);
 
   return (
-    <MarketingPageShell background="terrain">
+    <MarketingPageShell>
       <nav className="mb-10 text-sm text-muted-foreground">
         <Link href="/builds" className="transition hover:text-primary">
           Builds

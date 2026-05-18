@@ -65,7 +65,7 @@ export default async function BrandProductsPage({ params }: Props) {
   const brandProducts = await listProductsForBrandSlug(params.slug);
 
   return (
-    <MarketingPageShell background="mud">
+    <MarketingPageShell>
       <nav className="mb-10 text-sm text-muted-foreground">
         <Link href="/brands" className="transition hover:text-primary">
           Brands

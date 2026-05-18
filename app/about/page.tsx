@@ -14,7 +14,10 @@ import { buildPageMetadata } from "@/lib/seo/page-metadata";
 import { AboutHero } from "@/components/about/about-hero";
 import { PrimaryCta, WhatsAppCta } from "@/components/marketing/cta-buttons";
 import { SectionHeading } from "@/components/marketing/section-heading";
-import { TextureBackgroundSection } from "@/components/marketing/tread-texture-section";
+import {
+  PlainSection,
+  TextureBackgroundSection,
+} from "@/components/marketing/tread-texture-section";
 import { siteBackgroundUrl } from "@/lib/site-backgrounds";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
@@ -101,7 +104,7 @@ export default function AboutPage() {
       <AboutHero />
 
       <TextureBackgroundSection
-        backgroundImage={siteBackgroundUrl("mud")}
+        backgroundImage={siteBackgroundUrl("bg3")}
         className="border-b border-border/60 py-16 lg:py-24"
         innerClassName="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8"
       >
@@ -109,6 +112,7 @@ export default function AboutPage() {
         <section className="mx-auto max-w-3xl text-center lg:max-w-4xl">
           <SectionHeading
             align="center"
+            tone="cinematic"
             eyebrow="Overview"
             title="Built for platforms that leave pavement"
             description="Tread Trails is an expedition-focused automotive lab: we marry disciplined engineering with a boutique studio experience. Each engagement starts from your chassis — Hilux, Thar, Fortuner, Wrangler-class rigs — and ends with hardware that earns highway miles and trail confidence alike."
@@ -167,15 +171,12 @@ export default function AboutPage() {
         </section>
       </TextureBackgroundSection>
 
-      <TextureBackgroundSection
-        backgroundImage={siteBackgroundUrl("terrain")}
-        className="border-b border-border/60 py-16 lg:py-24"
-        innerClassName="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8"
-      >
+      <PlainSection innerClassName="space-y-0">
         {/* Why choose us */}
         <section>
           <SectionHeading
             align="center"
+            tone="cinematic"
             eyebrow="Differentiators"
             title="Why choose us"
             description="Six reasons drivers and fleets keep the thread with Tread Trails — beyond SKUs and price lists."
@@ -184,7 +185,7 @@ export default function AboutPage() {
           <ul className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 lg:gap-8">
             {WHY_ITEMS.map(({ icon: Icon, title, body }) => (
               <li key={title}>
-                <Card className="h-full border-border/70 shadow-card transition hover:border-primary/25 hover:shadow-card-hover">
+                <Card className="glass-panel h-full border-primary/15 shadow-card transition duration-500 hover:border-primary/25 hover:shadow-card-hover">
                   <CardContent className="flex flex-col gap-4 p-6">
                     <span className="flex size-11 items-center justify-center rounded-xl border border-primary/20 bg-primary/8 text-primary">
                       <Icon className="size-5" aria-hidden />
@@ -199,16 +200,17 @@ export default function AboutPage() {
             ))}
           </ul>
         </section>
-      </TextureBackgroundSection>
+      </PlainSection>
 
       <TextureBackgroundSection
-        backgroundImage={siteBackgroundUrl("tread")}
+        backgroundImage={siteBackgroundUrl("bg3")}
         className="py-16 lg:py-24"
         innerClassName="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8"
       >
         {/* Process / timeline */}
         <section>
           <SectionHeading
+            tone="cinematic"
             eyebrow="How we work"
             title="Process"
             description="From first click to post-install support — a linear lane with clear milestones."
@@ -246,7 +248,7 @@ export default function AboutPage() {
 
         {/* CTA */}
         <section aria-labelledby="about-cta-heading" className="pb-0">
-          <Card className="overflow-hidden border-primary/20 bg-gradient-to-br from-primary/10 via-background to-background shadow-card">
+          <Card className="glass-panel overflow-hidden border-primary/20 shadow-card">
             <CardContent className="flex flex-col gap-8 p-8 sm:flex-row sm:items-center sm:justify-between sm:p-10 lg:p-12">
               <div className="max-w-xl space-y-3">
                 <p className="font-heading text-xs tracking-[0.35em] text-primary uppercase">

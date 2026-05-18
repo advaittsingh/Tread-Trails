@@ -79,7 +79,7 @@ export function NavbarSearch({
           role="combobox"
           placeholder="Search products"
           autoComplete="off"
-          className="h-9 rounded-full border-border/80 bg-background/90 pl-9 pr-3 shadow-inner"
+          className="h-8 rounded-full border-primary/20 bg-background/50 pl-9 pr-3 text-sm shadow-none backdrop-blur-[6px] placeholder:text-muted-foreground/80 focus-visible:border-primary/35 focus-visible:ring-primary/20"
           onChange={(e) => {
             setQ(e.target.value);
             setOpen(true);

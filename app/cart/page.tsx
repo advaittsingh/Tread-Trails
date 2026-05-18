@@ -16,7 +16,7 @@ export const metadata: Metadata = buildPageMetadata({
 
 export default function CartPage() {
   return (
-    <MarketingPageShell background="tread">
+    <MarketingPageShell>
       <SectionHeading
         titleAs="h1"
         eyebrow="Checkout"

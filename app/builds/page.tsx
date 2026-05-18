@@ -18,7 +18,7 @@ export default async function BuildsPage() {
   const cars = await listVehicles();
 
   return (
-    <MarketingPageShell background="terrain">
+    <MarketingPageShell>
       <SectionHeading
         titleAs="h1"
         eyebrow="Case studies"

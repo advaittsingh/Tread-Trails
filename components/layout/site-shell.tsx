@@ -62,12 +62,12 @@ export function SiteShell({ children }: { children: React.ReactNode }) {
       />
       <div
         aria-hidden
-        className="pointer-events-none fixed inset-0 -z-10 bg-lux-grid bg-grid opacity-[0.35]"
+        className="pointer-events-none fixed inset-0 -z-10 bg-lux-grid bg-grid opacity-[0.18]"
       />
       <main
         id="main-content"
         className={cn(
-          "min-h-[70vh] pt-16",
+          "min-h-[70vh] pt-14",
           compareTrayPad && "pb-24 sm:pb-[5.5rem]"
         )}
       >

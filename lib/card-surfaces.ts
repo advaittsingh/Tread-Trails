@@ -1,27 +1,27 @@
 import { cn } from "@/lib/utils";
 
-/** Warm cream surfaces that sit on textured section backgrounds (homepage, etc.). */
+/** Glass panels over textured section backgrounds (homepage, etc.). */
 export function cardShellClass(onTextureBg?: boolean, className?: string) {
   return cn(
     onTextureBg
-      ? "border-primary/20 bg-background/90 shadow-card backdrop-blur-sm"
-      : "border-border/70 bg-card shadow-card",
+      ? "glass-panel border-primary/15 shadow-card transition-[transform,box-shadow] duration-500 hover:shadow-card-hover"
+      : "border-border/70 bg-card shadow-card transition-[transform,box-shadow] duration-500 hover:shadow-card-hover",
     className
   );
 }
 
 export function cardWellClass(onTextureBg?: boolean, className?: string) {
-  return cn(onTextureBg ? "bg-muted/80" : "bg-muted/40", className);
+  return cn(onTextureBg ? "bg-muted/50" : "bg-muted/40", className);
 }
 
 export function cardContentClass(onTextureBg?: boolean, className?: string) {
-  return cn(onTextureBg ? "bg-background/85" : "bg-card", className);
+  return cn(onTextureBg ? "glass-panel border-t border-primary/10" : "bg-card", className);
 }
 
 export function cardInsetStripClass(onTextureBg?: boolean, className?: string) {
   return cn(
     onTextureBg
-      ? "border-primary/15 bg-secondary/70"
+      ? "border-primary/15 bg-white/50 backdrop-blur-[4px]"
       : "border-border/60 bg-background",
     className
   );

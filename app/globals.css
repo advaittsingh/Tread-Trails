@@ -8,6 +8,20 @@
   .text-balance {
     text-wrap: balance;
   }
+  .glass-panel {
+    background: rgba(255, 255, 255, 0.65);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+  }
+  .glass-panel-dark {
+    background: rgba(28, 24, 22, 0.72);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+  .heading-cinematic {
+    @apply font-heading text-balance font-extrabold uppercase tracking-[0.06em];
+    font-variation-settings: "opsz" 72, "wdth" 100;
+  }
   .no-scrollbar {
     -ms-overflow-style: none;
     scrollbar-width: none;
@@ -67,6 +81,9 @@
   }
   .font-heading {
     font-variation-settings: "opsz" 72, "wdth" 100;
+  }
+  .font-heading-display {
+    font-variation-settings: "opsz" 72, "wdth" 105;
   }
   /* Upright “&” when headings use a swash italic ampersand */
   .plain-amp {

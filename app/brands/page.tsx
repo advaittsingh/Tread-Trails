@@ -18,7 +18,7 @@ export default async function BrandsPage() {
   const brands = await listBrandEntries();
 
   return (
-    <MarketingPageShell background="mud">
+    <MarketingPageShell>
       <SectionHeading
         titleAs="h1"
         eyebrow="Manufacturers"

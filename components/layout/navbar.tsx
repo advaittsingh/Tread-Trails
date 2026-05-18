@@ -79,10 +79,9 @@ function NavLink({
       onClick={onClick}
       aria-current={active ? "page" : undefined}
       className={cn(
-        "text-sm tracking-wide transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+        "text-xs font-medium tracking-[0.14em] uppercase transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
         !stacked && [
-          // Full-height tap target; underline sits on inner label only (just below text).
-          "group/navlink inline-flex h-16 items-center rounded-md text-black",
+          "group/navlink inline-flex h-14 items-center rounded-md text-foreground/90",
           "hover:text-black",
           active && "font-medium",
         ],
@@ -126,7 +125,7 @@ function NavCatalogueTrigger({
 
   return (
     <div
-      className="relative h-16"
+      className="relative h-14"
       onMouseEnter={() => setMenuOpen(true)}
       onFocus={() => setMenuOpen(true)}
       onBlur={(e) => {
@@ -140,7 +139,7 @@ function NavCatalogueTrigger({
         aria-haspopup="true"
         aria-expanded={menuOpen}
         className={cn(
-          "inline-flex h-16 items-center rounded-md text-sm tracking-wide text-black transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+          "inline-flex h-14 items-center rounded-md text-xs font-medium tracking-[0.14em] text-foreground/90 uppercase transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
           "hover:text-black",
           active && "font-medium"
         )}
@@ -195,8 +194,8 @@ export function Navbar({ catalogue }: { catalogue: NavCatalogueData }) {
       className={cn(
         "fixed inset-x-0 top-0 z-50 transition-[background-color,box-shadow,border-color] duration-300",
         solid
-          ? "border-b border-border/80 bg-background/95 shadow-card backdrop-blur-md"
-          : "border-b border-transparent bg-background/80 backdrop-blur-sm"
+          ? "border-b border-primary/10 bg-background/70 shadow-card backdrop-blur-[6px]"
+          : "border-b border-transparent bg-background/55 backdrop-blur-[4px]"
       )}
     >
       {/*
@@ -209,7 +208,7 @@ export function Navbar({ catalogue }: { catalogue: NavCatalogueData }) {
       */}
       <div
         className={cn(
-          "mx-auto h-16 max-w-7xl px-4 sm:px-6 lg:px-8",
+          "mx-auto h-14 max-w-7xl px-4 sm:px-6 lg:px-8",
           "flex flex-nowrap items-center justify-between gap-3",
           "lg:grid lg:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] lg:items-center lg:gap-4"
         )}
@@ -217,7 +216,7 @@ export function Navbar({ catalogue }: { catalogue: NavCatalogueData }) {
         <div className="flex min-w-0 shrink-0 items-center lg:justify-self-start">
           <Link
             href="/"
-            className="flex h-16 items-center outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="flex h-14 items-center outline-none focus-visible:ring-2 focus-visible:ring-ring"
             aria-label="Tread Trails home"
           >
             <SiteLogo variant="header" priority />
@@ -231,7 +230,7 @@ export function Navbar({ catalogue }: { catalogue: NavCatalogueData }) {
             "justify-self-center",
             // Pull primary links toward the logo; grid column gap unchanged before utilities.
             "lg:-ms-3 xl:-ms-4",
-            "flex-nowrap gap-x-5 whitespace-nowrap xl:gap-x-6"
+            "flex-nowrap gap-x-6 whitespace-nowrap xl:gap-x-8"
           )}
         >
           {primaryNav.map((entry) =>

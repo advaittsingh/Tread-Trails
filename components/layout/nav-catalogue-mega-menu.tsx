@@ -147,7 +147,7 @@ export function NavCatalogueMegaMenu({
   const panel = (
     <div
       className={cn(
-        "fixed inset-x-0 top-16 z-[100] border-b border-border/80 bg-background pt-1 shadow-[0_12px_40px_-8px_rgba(0,0,0,0.18)] transition-[opacity,visibility,transform] duration-200 ease-out",
+        "glass-panel fixed inset-x-0 top-14 z-[100] border-b border-primary/10 pt-1 shadow-[0_12px_40px_-8px_rgba(0,0,0,0.12)] transition-[opacity,visibility,transform] duration-200 ease-out",
         open
           ? "pointer-events-auto visible translate-y-0 opacity-100"
           : "pointer-events-none invisible -translate-y-1 opacity-0"

@@ -37,7 +37,7 @@ export default async function ProductsPage({ searchParams }: Props) {
   ]);
 
   return (
-    <MarketingPageShell background="mud">
+    <MarketingPageShell>
       <SectionHeading
         titleAs="h1"
         eyebrow="Catalog"

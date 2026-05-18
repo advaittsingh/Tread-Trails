@@ -19,10 +19,9 @@ export function HomeHero() {
           alt="Premium off-road vehicle in a studio setting"
           fill
           priority
-          className="object-cover object-center"
+          className="object-cover object-center transition-transform duration-[1.2s] ease-out"
           sizes="100vw"
         />
-        {/* Readable type on the left; photo stays visible toward center/right */}
         <div className="absolute inset-0 bg-gradient-to-r from-background from-0% via-background/88 via-42% to-transparent to-78%" />
         <div className="absolute inset-0 bg-gradient-to-t from-background/75 via-transparent via-40% to-transparent" />
       </div>
@@ -32,18 +31,18 @@ export function HomeHero() {
             initial={reduceMotion ? false : { opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.45 }}
-            className="font-sans text-[11px] font-medium tracking-[0.42em] text-primary uppercase"
+            className="font-sans text-[10px] font-semibold tracking-[0.48em] text-primary uppercase"
           >
-            Expedition-grade builds
+            Expedition atelier
           </motion.p>
           <motion.h1
             initial={reduceMotion ? false : { opacity: 0, y: 18 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.55, delay: 0.05 }}
-            className="font-heading text-balance text-5xl font-semibold leading-[0.98] tracking-[-0.03em] text-foreground sm:text-6xl md:text-7xl lg:text-[5.25rem]"
+            className="heading-cinematic font-heading-display text-5xl leading-[0.95] sm:text-6xl md:text-7xl lg:text-[5.5rem]"
           >
             Terrain,
-            <span className="block text-muted-foreground">refined.</span>
+            <span className="mt-1 block text-muted-foreground">refined.</span>
           </motion.h1>
           <motion.p
             initial={reduceMotion ? false : { opacity: 0, y: 14 }}
@@ -60,15 +59,10 @@ export function HomeHero() {
             transition={{ duration: 0.45, delay: 0.18 }}
             className="flex flex-wrap gap-3"
           >
-            <PrimaryCta href="/booking" className="h-11 px-6 text-base shadow-card">
-              Book appointment
-            </PrimaryCta>
+            <PrimaryCta href="/booking">Book appointment</PrimaryCta>
             <Link
               href="/vehicles"
-              className={cn(
-                buttonVariants({ variant: "outline" }),
-                "h-11 px-6 text-base"
-              )}
+              className={cn(buttonVariants({ variant: "outline", size: "brand" }))}
             >
               Explore vehicles
             </Link>

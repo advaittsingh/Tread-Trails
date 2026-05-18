@@ -74,7 +74,7 @@ export const BuildCard = memo(function BuildCard({
               src={build.afterImage}
               alt={`${build.title} after`}
               fill
-              className="object-cover transition duration-700 group-hover:scale-[1.03]"
+              className="object-cover transition duration-700 ease-out group-hover:scale-[1.05]"
               sizes="(max-width: 768px) 50vw, 33vw"
               loading="lazy"
             />

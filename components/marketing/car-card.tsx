@@ -82,7 +82,7 @@ export const CarCard = memo(function CarCard({
                   ? "(max-width: 640px) 78vw, 260px"
                   : "(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
               }
-              className="object-cover object-center transition duration-500 group-hover:scale-[1.03]"
+              className="object-cover object-center transition duration-700 ease-out group-hover:scale-[1.05]"
               loading="lazy"
             />
           </div>

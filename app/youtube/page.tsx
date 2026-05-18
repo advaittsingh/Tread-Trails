@@ -37,7 +37,7 @@ export default async function YoutubePage() {
   const videos = await fetchTreadTrailsYoutubeFeed(15);
 
   return (
-    <MarketingPageShell background="terrain">
+    <MarketingPageShell>
       <SectionHeading
         titleAs="h1"
         align="center"

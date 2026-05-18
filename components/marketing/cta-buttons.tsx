@@ -14,7 +14,10 @@ type PrimaryCtaProps = {
 
 export function PrimaryCta({ href, children, className }: PrimaryCtaProps) {
   return (
-    <Link href={href} className={cn(buttonVariants(), className)}>
+    <Link
+      href={href}
+      className={cn(buttonVariants({ variant: "default", size: "brand" }), className)}
+    >
       {children}
     </Link>
   );
@@ -40,11 +43,11 @@ export function WhatsAppCta({
       target="_blank"
       rel="noopener noreferrer"
       className={cn(
-        "inline-flex h-9 shrink-0 items-center justify-center gap-2 rounded-lg px-3 text-sm font-medium whitespace-nowrap transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
+        "inline-flex h-11 shrink-0 items-center justify-center gap-2 rounded-xl px-6 text-xs font-bold tracking-[0.04em] uppercase whitespace-nowrap transition-all focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
         variant === "solid" &&
-          "bg-[#25D366] text-[#05301c] hover:bg-[#1ebe57]",
+          "bg-[#25D366] text-[#05301c] shadow-[0_4px_14px_-6px_rgba(37,211,102,0.55)] hover:bg-[#1ebe57]",
         variant === "outline" &&
-          "border border-[#25D366]/45 bg-background text-[#0f5132] hover:bg-[#25D366]/8",
+          "glass-panel border border-[#25D366]/35 text-[#0f5132] hover:border-[#25D366]/55 hover:bg-[#25D366]/8",
         className
       )}
     >

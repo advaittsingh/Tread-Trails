@@ -14,7 +14,7 @@ export const metadata: Metadata = buildPageMetadata({
 
 export default function ComparePage() {
   return (
-    <MarketingPageShell background="terrain">
+    <MarketingPageShell>
       <ComparePageContent />
     </MarketingPageShell>
   );

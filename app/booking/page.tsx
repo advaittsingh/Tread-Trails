@@ -31,7 +31,7 @@ function BookingFallback() {
 
 export default function BookingPage() {
   return (
-    <MarketingPageShell background="tread">
+    <MarketingPageShell>
       <SectionHeading
         titleAs="h1"
         align="center"

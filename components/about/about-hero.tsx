@@ -37,7 +37,7 @@ export function AboutHero() {
             initial={reduceMotion ? false : { opacity: 0, y: 18 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.55, delay: 0.05 }}
-            className="font-heading text-balance text-4xl font-semibold leading-[0.98] tracking-[-0.03em] text-foreground sm:text-5xl md:text-6xl lg:text-7xl"
+            className="heading-cinematic font-heading-display text-4xl leading-[0.95] sm:text-5xl md:text-6xl lg:text-7xl"
           >
             Engineers,
             <span className="block text-muted-foreground">with studio craft.</span>

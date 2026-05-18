@@ -18,7 +18,7 @@ export const metadata: Metadata = buildPageMetadata({
 
 export default function CorporateInquiryPage() {
   return (
-    <MarketingPageShell background="mud">
+    <MarketingPageShell>
       <SectionHeading
         titleAs="h1"
         align="center"

@@ -14,7 +14,10 @@ import { VehicleExploreCarousel } from "@/components/marketing/vehicle-explore-c
 import { HomeHero } from "@/components/marketing/home-hero";
 import { ProductCard } from "@/components/marketing/product-card";
 import { SectionHeading } from "@/components/marketing/section-heading";
-import { TextureBackgroundSection } from "@/components/marketing/tread-texture-section";
+import {
+  PlainSection,
+  TextureBackgroundSection,
+} from "@/components/marketing/tread-texture-section";
 import { siteBackgroundUrl } from "@/lib/site-backgrounds";
 
 export const metadata: Metadata = buildPageMetadata({
@@ -35,90 +38,84 @@ export default async function HomePage() {
     <>
       <HomeHero />
 
+      {/* Categories — tire tread */}
       <TextureBackgroundSection
         backgroundImage={siteBackgroundUrl("tread")}
-        className="py-20"
-        innerClassName="mx-auto max-w-7xl space-y-12 overflow-x-hidden px-4 sm:px-6 lg:px-8"
+        className="py-20 lg:py-24"
+        innerClassName="mx-auto max-w-7xl space-y-14 overflow-x-hidden px-4 sm:px-6 lg:px-8"
       >
         <SectionHeading
+          tone="cinematic"
           eyebrow="Platforms"
-          title="Explore by vehicle"
-          description="Pick a brand, model line, and generation — then open a variant hub for compatible SKUs and platform specs. Browse the full fleet by OEM on Vehicles."
+          title="Engineered for terrain"
+          description="Pick a brand, model line, and generation — then open a variant hub for compatible SKUs and platform specs."
         />
         <VehicleExploreCarousel cars={cars} onTextureBg />
-        <div className="flex justify-center pt-4">
+        <div className="flex justify-center pt-2">
           <Link
             href="/vehicles"
-            className="rounded-sm text-sm tracking-wide text-muted-foreground underline-offset-4 outline-none transition-colors hover:text-primary hover:underline focus-visible:text-primary focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+            className="text-xs font-medium tracking-[0.2em] text-muted-foreground uppercase underline-offset-4 transition-colors hover:text-primary hover:underline"
           >
-            Browse by brand
+            Browse by OEM
           </Link>
         </div>
       </TextureBackgroundSection>
 
-      <TextureBackgroundSection
-        backgroundImage={siteBackgroundUrl("bg3")}
-        className="border-y border-border/60 py-20"
-        innerClassName="mx-auto max-w-7xl space-y-12 overflow-x-hidden px-4 sm:px-6 lg:px-8"
-      >
+      {/* Categories — brands on plain warm white */}
+      <PlainSection innerClassName="space-y-14 overflow-x-hidden">
         <SectionHeading
+          tone="cinematic"
           eyebrow="Manufacturers"
-          title="Explore by brand"
-          description="Each card opens that manufacturer’s brand hub — the curated catalog filtered to their lineup. Home highlights six partners; the Brands index lists every hub from the same live catalog."
+          title="Curated partner systems"
+          description="Each card opens that manufacturer’s brand hub — expedition-grade catalog filtered to their lineup."
         />
-        <BrandExploreCarousel brands={featuredBrands} onTextureBg />
-        <div className="flex justify-center pt-4">
+        <BrandExploreCarousel brands={featuredBrands} />
+        <div className="flex justify-center pt-2">
           <Link
             href="/brands"
-            className="rounded-sm text-sm tracking-wide text-muted-foreground underline-offset-4 outline-none transition-colors hover:text-[#128C7E] hover:underline focus-visible:text-[#128C7E] focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+            className="text-xs font-medium tracking-[0.2em] text-muted-foreground uppercase underline-offset-4 transition-colors hover:text-primary hover:underline"
           >
-            Browse all partner brands
+            All partner brands
           </Link>
         </div>
-      </TextureBackgroundSection>
+      </PlainSection>
 
-      <TextureBackgroundSection
-        backgroundImage={siteBackgroundUrl("bg4")}
-        className="border-y border-border/60 py-20"
-        innerClassName="mx-auto max-w-7xl space-y-12 px-4 sm:px-6 lg:px-8"
-      >
+      {/* Featured builds — plain warm white */}
+      <PlainSection innerClassName="space-y-14">
         <SectionHeading
+          tone="cinematic"
           eyebrow="Portfolio"
-          title="Featured builds"
-          description="Ordered from portfolio spotlight ranks (same catalog as /builds); open a card for the full story and parts traceability."
+          title="Built for the wild"
+          description="Real installs on real platforms — open a case study for the full narrative and parts traceability."
         />
         <div className="grid gap-10 lg:grid-cols-3">
           {featuredBuilds.map((b, i) => {
             const vehicleName = cars.find((c) => c.slug === b.vehicleSlug)?.name;
             return (
-              <BuildCard
-                key={b.id}
-                build={b}
-                vehicleName={vehicleName}
-                index={i}
-                onTextureBg
-              />
+              <BuildCard key={b.id} build={b} vehicleName={vehicleName} index={i} />
             );
           })}
         </div>
         <div className="flex justify-center">
           <Link
             href="/builds"
-            className="rounded-sm text-sm tracking-wide text-muted-foreground underline-offset-4 outline-none transition-colors hover:text-[#128C7E] hover:underline focus-visible:text-[#128C7E] focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+            className="text-xs font-medium tracking-[0.2em] text-muted-foreground uppercase underline-offset-4 transition-colors hover:text-primary hover:underline"
           >
             Explore builds by vehicle
           </Link>
         </div>
-      </TextureBackgroundSection>
+      </PlainSection>
 
+      {/* Services / catalog — mud texture */}
       <TextureBackgroundSection
-        backgroundImage={siteBackgroundUrl("bg5")}
-        className="py-20"
-        innerClassName="mx-auto max-w-7xl space-y-12 px-4 sm:px-6 lg:px-8"
+        backgroundImage={siteBackgroundUrl("mud")}
+        className="border-y border-border/50 py-20 lg:py-24"
+        innerClassName="mx-auto max-w-7xl space-y-14 px-4 sm:px-6 lg:px-8"
       >
         <SectionHeading
+          tone="cinematic"
           eyebrow="Catalog"
-          title="Featured products"
+          title="Expedition systems"
           description="Modular upgrades with explicit vehicle compatibility — speak with our engineers before checkout."
         />
         <div className="grid gap-8 sm:grid-cols-2 xl:grid-cols-4">
@@ -135,35 +132,32 @@ export default async function HomePage() {
         <div className="flex justify-center">
           <Link
             href="/products"
-            className="rounded-sm text-sm tracking-wide text-black underline-offset-4 outline-none transition-colors hover:text-[#128C7E] hover:underline focus-visible:text-[#128C7E] focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+            className="text-xs font-medium tracking-[0.2em] text-foreground uppercase underline-offset-4 transition-colors hover:text-primary hover:underline"
           >
             Open full catalog
           </Link>
         </div>
       </TextureBackgroundSection>
 
-      <TextureBackgroundSection
-        backgroundImage={siteBackgroundUrl("terrain")}
-        className="border-t border-border/60 py-24"
-        innerClassName="mx-auto flex max-w-5xl flex-col items-center gap-8 px-4 text-center sm:px-6"
-      >
-        <SectionHeading
-          align="center"
-          eyebrow="Concierge"
-          title="Book a bay or reach us instantly."
-          description="Studio visits are limited — WhatsApp keeps your thread aligned with the technicians assigned to your chassis."
-        />
-        <div className="flex flex-wrap justify-center gap-3">
-          <PrimaryCta href="/booking" className="h-11 px-8">
-            Schedule installation
-          </PrimaryCta>
-          <WhatsAppCta
-            message="Hi — I'd like to book time with Tread Trails."
-            label="WhatsApp"
-            className="h-11 px-8"
+      {/* Concierge — clean */}
+      <section className="border-t border-border/50 bg-background py-24 lg:py-28">
+        <div className="mx-auto flex max-w-5xl flex-col items-center gap-10 px-4 text-center sm:px-6">
+          <SectionHeading
+            align="center"
+            tone="cinematic"
+            eyebrow="Concierge"
+            title="Studio by appointment"
+            description="Limited bay time — WhatsApp keeps your thread aligned with the technicians assigned to your chassis."
           />
+          <div className="flex flex-wrap justify-center gap-3">
+            <PrimaryCta href="/booking">Schedule installation</PrimaryCta>
+            <WhatsAppCta
+              message="Hi — I'd like to book time with Tread Trails."
+              label="WhatsApp"
+            />
+          </div>
         </div>
-      </TextureBackgroundSection>
+      </section>
     </>
   );
 }
