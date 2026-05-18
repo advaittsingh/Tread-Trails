@@ -7,9 +7,13 @@ import { ExploreCarousel } from "@/components/marketing/explore-carousel";
 
 type VehicleExploreCarouselProps = {
   cars: Car[];
+  onTextureBg?: boolean;
 };
 
-export function VehicleExploreCarousel({ cars }: VehicleExploreCarouselProps) {
+export function VehicleExploreCarousel({
+  cars,
+  onTextureBg = false,
+}: VehicleExploreCarouselProps) {
   return (
     <ExploreCarousel
       items={cars}
@@ -20,6 +24,7 @@ export function VehicleExploreCarousel({ cars }: VehicleExploreCarouselProps) {
           car={car}
           index={i}
           variant="compact"
+          onTextureBg={onTextureBg}
           className="w-full shrink-0"
         />
       )}

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 
 import { buildPageMetadata } from "@/lib/seo/page-metadata";
 
+import { MarketingPageShell } from "@/components/layout/marketing-page-shell";
 import { ComparePageContent } from "@/components/compare/compare-page-content";
 
 export const metadata: Metadata = buildPageMetadata({
@@ -12,5 +13,9 @@ export const metadata: Metadata = buildPageMetadata({
 });
 
 export default function ComparePage() {
-  return <ComparePageContent />;
+  return (
+    <MarketingPageShell background="terrain">
+      <ComparePageContent />
+    </MarketingPageShell>
+  );
 }

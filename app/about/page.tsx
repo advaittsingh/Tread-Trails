@@ -14,6 +14,8 @@ import { buildPageMetadata } from "@/lib/seo/page-metadata";
 import { AboutHero } from "@/components/about/about-hero";
 import { PrimaryCta, WhatsAppCta } from "@/components/marketing/cta-buttons";
 import { SectionHeading } from "@/components/marketing/section-heading";
+import { TextureBackgroundSection } from "@/components/marketing/tread-texture-section";
+import { siteBackgroundUrl } from "@/lib/site-backgrounds";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
@@ -98,7 +100,11 @@ export default function AboutPage() {
     <>
       <AboutHero />
 
-      <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 lg:py-24">
+      <TextureBackgroundSection
+        backgroundImage={siteBackgroundUrl("mud")}
+        className="border-b border-border/60 py-16 lg:py-24"
+        innerClassName="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8"
+      >
         {/* Company overview */}
         <section className="mx-auto max-w-3xl text-center lg:max-w-4xl">
           <SectionHeading
@@ -159,9 +165,13 @@ export default function AboutPage() {
             </Card>
           </div>
         </section>
+      </TextureBackgroundSection>
 
-        <Separator className="my-16 bg-border/60 lg:my-20" />
-
+      <TextureBackgroundSection
+        backgroundImage={siteBackgroundUrl("terrain")}
+        className="border-b border-border/60 py-16 lg:py-24"
+        innerClassName="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8"
+      >
         {/* Why choose us */}
         <section>
           <SectionHeading
@@ -189,9 +199,13 @@ export default function AboutPage() {
             ))}
           </ul>
         </section>
+      </TextureBackgroundSection>
 
-        <Separator className="my-16 bg-border/60 lg:my-20" />
-
+      <TextureBackgroundSection
+        backgroundImage={siteBackgroundUrl("tread")}
+        className="py-16 lg:py-24"
+        innerClassName="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8"
+      >
         {/* Process / timeline */}
         <section>
           <SectionHeading
@@ -231,7 +245,7 @@ export default function AboutPage() {
         <Separator className="my-16 bg-border/60 lg:my-20" />
 
         {/* CTA */}
-        <section aria-labelledby="about-cta-heading">
+        <section aria-labelledby="about-cta-heading" className="pb-0">
           <Card className="overflow-hidden border-primary/20 bg-gradient-to-br from-primary/10 via-background to-background shadow-card">
             <CardContent className="flex flex-col gap-8 p-8 sm:flex-row sm:items-center sm:justify-between sm:p-10 lg:p-12">
               <div className="max-w-xl space-y-3">
@@ -269,7 +283,7 @@ export default function AboutPage() {
             </CardContent>
           </Card>
         </section>
-      </div>
+      </TextureBackgroundSection>
     </>
   );
 }

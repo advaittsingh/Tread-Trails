@@ -8,6 +8,7 @@ import { ArrowUpRight } from "lucide-react";
 
 import type { BrandEntry } from "@/data/index";
 
+import { cardShellClass } from "@/lib/card-surfaces";
 import { cn } from "@/lib/utils";
 
 type BrandCardProps = {
@@ -15,6 +16,8 @@ type BrandCardProps = {
   index?: number;
   /** Narrow card for homepage carousel strips. */
   variant?: "default" | "compact";
+  /** Cream surfaces for textured homepage sections. */
+  onTextureBg?: boolean;
   className?: string;
 };
 
@@ -22,6 +25,7 @@ export const BrandCard = memo(function BrandCard({
   brand,
   index = 0,
   variant = "default",
+  onTextureBg = false,
   className,
 }: BrandCardProps) {
   const reduceMotion = useReducedMotion();
@@ -48,7 +52,8 @@ export const BrandCard = memo(function BrandCard({
       >
         <div
           className={cn(
-            "flex h-full flex-col overflow-hidden rounded-xl border border-border/70 bg-card shadow-card transition-shadow duration-300 hover:shadow-card-hover",
+            "flex h-full flex-col overflow-hidden rounded-xl transition-shadow duration-300 hover:shadow-card-hover",
+            cardShellClass(onTextureBg),
             compact
               ? "min-h-[220px] rounded-lg p-4 shadow-sm hover:shadow-card"
               : "min-h-[280px] p-6"
@@ -84,7 +89,8 @@ export const BrandCard = memo(function BrandCard({
           </div>
           <div
             className={cn(
-              "mt-auto space-y-3 border-t border-border/50 pt-5 text-center",
+              "mt-auto space-y-3 border-t pt-5 text-center",
+              onTextureBg ? "border-primary/15" : "border-border/50",
               compact && "space-y-2 pt-3.5"
             )}
           >

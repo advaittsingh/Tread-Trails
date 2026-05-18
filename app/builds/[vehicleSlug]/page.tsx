@@ -14,6 +14,7 @@ import {
   listVehicleSlugs,
 } from "@/lib/server/vehicle-catalog";
 
+import { MarketingPageShell } from "@/components/layout/marketing-page-shell";
 import { BuildCard } from "@/components/marketing/build-card";
 import { SectionHeading } from "@/components/marketing/section-heading";
 import { PrimaryCta } from "@/components/marketing/cta-buttons";
@@ -65,7 +66,7 @@ export default async function BuildsForVehiclePage({ params }: Props) {
   const vehicleBuilds = await getBuildsForVehicle(car.slug);
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+    <MarketingPageShell background="terrain">
       <nav className="mb-10 text-sm text-muted-foreground">
         <Link href="/builds" className="transition hover:text-primary">
           Builds
@@ -109,6 +110,6 @@ export default async function BuildsForVehiclePage({ params }: Props) {
           ))}
         </div>
       )}
-    </div>
+    </MarketingPageShell>
   );
 }

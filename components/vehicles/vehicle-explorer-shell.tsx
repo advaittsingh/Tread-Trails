@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 
 import { Breadcrumbs, type BreadcrumbItem } from "@/components/layout/breadcrumbs";
+import { TreadTextureSection } from "@/components/marketing/tread-texture-section";
 import { SectionHeading } from "@/components/marketing/section-heading";
 import { cn } from "@/lib/utils";
 
@@ -22,7 +23,10 @@ export function VehicleExplorerShell({
   className,
 }: VehicleExplorerShellProps) {
   return (
-    <div className={cn("mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8", className)}>
+    <TreadTextureSection
+      className={cn("min-h-[calc(100dvh-4rem)]", className)}
+      innerClassName="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8"
+    >
       <Breadcrumbs items={breadcrumbs} className="mb-8" />
       <SectionHeading
         titleAs="h1"
@@ -32,6 +36,6 @@ export function VehicleExplorerShell({
         className="mb-12"
       />
       {children}
-    </div>
+    </TreadTextureSection>
   );
 }

@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { buildPageMetadata } from "@/lib/seo/page-metadata";
 import { listBrandEntries } from "@/lib/server/brand-catalog";
 
+import { MarketingPageShell } from "@/components/layout/marketing-page-shell";
 import { BrandCard } from "@/components/marketing/brand-card";
 import { SectionHeading } from "@/components/marketing/section-heading";
 
@@ -17,7 +18,7 @@ export default async function BrandsPage() {
   const brands = await listBrandEntries();
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+    <MarketingPageShell background="mud">
       <SectionHeading
         titleAs="h1"
         eyebrow="Manufacturers"
@@ -30,6 +31,6 @@ export default async function BrandsPage() {
           <BrandCard key={b.slug} brand={b} index={i} />
         ))}
       </div>
-    </div>
+    </MarketingPageShell>
   );
 }

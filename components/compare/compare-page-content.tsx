@@ -38,18 +38,18 @@ export function ComparePageContent() {
 
   if (!hydrated) {
     return (
-      <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+      <>
         <div className="h-8 w-48 animate-pulse rounded-lg bg-muted" aria-hidden />
         <div className="mt-10 space-y-4">
           <div className="h-40 animate-pulse rounded-xl bg-muted" aria-hidden />
         </div>
-      </div>
+      </>
     );
   }
 
   if (slugs.length === 0) {
     return (
-      <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+      <>
         <SectionHeading
           titleAs="h1"
           eyebrow="Compare"
@@ -63,12 +63,12 @@ export function ComparePageContent() {
         >
           Browse products
         </Link>
-      </div>
+      </>
     );
   }
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+    <>
       <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
         <SectionHeading
           titleAs="h1"
@@ -136,6 +136,6 @@ export function ComparePageContent() {
           </div>
         )}
       </div>
-    </div>
+    </>
   );
 }

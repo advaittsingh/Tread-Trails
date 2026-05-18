@@ -10,6 +10,12 @@ import type { Product } from "@/data/types";
 import { formatInr } from "@/lib/format";
 import { whatsappHref, whatsappProductInterest } from "@/lib/whatsapp";
 
+import {
+  cardContentClass,
+  cardInsetStripClass,
+  cardShellClass,
+  cardWellClass,
+} from "@/lib/card-surfaces";
 import { cn } from "@/lib/utils";
 
 import { AddToCartButton } from "@/components/cart/add-to-cart-button";
@@ -22,6 +28,8 @@ import { buttonVariants } from "@/components/ui/button";
 type ProductCardProps = {
   product: Product;
   index?: number;
+  /** Cream card surfaces for textured homepage sections. */
+  onTextureBg?: boolean;
   /** Larger brand logo and price overlay (e.g. homepage featured row). */
   emphasizeOverlay?: boolean;
 };
@@ -29,16 +37,19 @@ type ProductCardProps = {
 export const ProductCard = memo(function ProductCard({
   product,
   index = 0,
+  onTextureBg = false,
   emphasizeOverlay = false,
 }: ProductCardProps) {
   const reduceMotion = useReducedMotion();
   const priceLabel = formatInr(product.price);
   const brandVis = getBrandVisualForProduct(product);
+  const textured = onTextureBg || emphasizeOverlay;
 
   const brandStrip = (
     <Badge
       className={cn(
-        "grid w-full grid-cols-2 overflow-hidden rounded-full border border-border/60 bg-background p-0 tracking-normal shadow-none",
+        "grid w-full grid-cols-2 overflow-hidden rounded-full border p-0 tracking-normal shadow-none",
+        cardInsetStripClass(textured),
         emphasizeOverlay ? "min-h-14" : "min-h-11"
       )}
     >
@@ -114,9 +125,12 @@ export const ProductCard = memo(function ProductCard({
           : { duration: 0.4, delay: index * 0.04, ease: [0.22, 1, 0.36, 1] }
       }
       whileHover={reduceMotion ? undefined : { y: -4 }}
-      className="group flex h-full flex-col overflow-hidden rounded-xl border border-border/70 bg-card shadow-card transition-shadow duration-300 hover:shadow-card-hover"
+      className={cn(
+        "group flex h-full flex-col overflow-hidden rounded-xl transition-shadow duration-300 hover:shadow-card-hover",
+        cardShellClass(textured)
+      )}
     >
-      <div className="relative aspect-square overflow-hidden bg-muted/40">
+      <div className={cn("relative aspect-square overflow-hidden", cardWellClass(textured))}>
         <Link
           href={`/product/${product.slug}`}
           className="absolute inset-0 z-0 block outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
@@ -132,7 +146,12 @@ export const ProductCard = memo(function ProductCard({
           />
         </Link>
       </div>
-      <div className="relative z-[2] flex flex-1 flex-col gap-4 bg-card px-5 pt-4 pb-5">
+      <div
+        className={cn(
+          "relative z-[2] flex flex-1 flex-col gap-4 px-5 pt-4 pb-5",
+          cardContentClass(textured)
+        )}
+      >
         <div className="flex items-center justify-end gap-2">
           <WishlistToggle productSlug={product.slug} label={product.name} className="shadow-none" />
           <CompareToggle productSlug={product.slug} label={product.name} className="shadow-none" />

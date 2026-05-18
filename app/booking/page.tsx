@@ -3,6 +3,7 @@ import { Suspense } from "react";
 
 import { buildPageMetadata } from "@/lib/seo/page-metadata";
 
+import { MarketingPageShell } from "@/components/layout/marketing-page-shell";
 import { BookingForm } from "@/components/booking/booking-form";
 import { SectionHeading } from "@/components/marketing/section-heading";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -30,7 +31,7 @@ function BookingFallback() {
 
 export default function BookingPage() {
   return (
-    <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+    <MarketingPageShell background="tread">
       <SectionHeading
         titleAs="h1"
         align="center"
@@ -42,6 +43,6 @@ export default function BookingPage() {
       <Suspense fallback={<BookingFallback />}>
         <BookingForm />
       </Suspense>
-    </div>
+    </MarketingPageShell>
   );
 }

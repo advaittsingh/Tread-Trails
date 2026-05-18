@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { buildPageMetadata } from "@/lib/seo/page-metadata";
 import { listVehicles } from "@/lib/server/vehicle-catalog";
 
+import { MarketingPageShell } from "@/components/layout/marketing-page-shell";
 import { CarCard } from "@/components/marketing/car-card";
 import { SectionHeading } from "@/components/marketing/section-heading";
 
@@ -17,7 +18,7 @@ export default async function BuildsPage() {
   const cars = await listVehicles();
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+    <MarketingPageShell background="terrain">
       <SectionHeading
         titleAs="h1"
         eyebrow="Case studies"
@@ -30,6 +31,6 @@ export default async function BuildsPage() {
           <CarCard key={car.id} car={car} index={i} href={`/builds/${car.slug}`} />
         ))}
       </div>
-    </div>
+    </MarketingPageShell>
   );
 }

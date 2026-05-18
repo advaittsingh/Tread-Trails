@@ -7,6 +7,7 @@ import {
   listProducts,
 } from "@/lib/server/product-catalog";
 
+import { MarketingPageShell } from "@/components/layout/marketing-page-shell";
 import { ProductsExplorer } from "@/components/products/products-explorer";
 import { SectionHeading } from "@/components/marketing/section-heading";
 
@@ -36,7 +37,7 @@ export default async function ProductsPage({ searchParams }: Props) {
   ]);
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+    <MarketingPageShell background="mud">
       <SectionHeading
         titleAs="h1"
         eyebrow="Catalog"
@@ -51,6 +52,6 @@ export default async function ProductsPage({ searchParams }: Props) {
         initialQuery={raw}
         initialCategory={category}
       />
-    </div>
+    </MarketingPageShell>
   );
 }

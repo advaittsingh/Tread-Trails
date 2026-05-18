@@ -9,6 +9,7 @@ import { ArrowUpRight } from "lucide-react";
 import type { Car } from "@/data/types";
 
 import { Badge } from "@/components/ui/badge";
+import { cardShellClass } from "@/lib/card-surfaces";
 import { cn } from "@/lib/utils";
 
 type CarCardProps = {
@@ -18,6 +19,8 @@ type CarCardProps = {
   href?: string;
   /** Narrow card for horizontal strips (e.g. homepage). */
   variant?: "default" | "compact";
+  /** Cream surfaces for textured homepage sections. */
+  onTextureBg?: boolean;
   className?: string;
 };
 
@@ -26,6 +29,7 @@ export const CarCard = memo(function CarCard({
   index = 0,
   href,
   variant = "default",
+  onTextureBg = false,
   className,
 }: CarCardProps) {
   const dest = href ?? `/vehicle/${car.slug}`;
@@ -56,13 +60,15 @@ export const CarCard = memo(function CarCard({
       >
         <div
           className={cn(
-            "flex flex-col overflow-hidden rounded-xl border border-border/70 bg-card shadow-card transition-shadow duration-300 hover:shadow-card-hover",
+            "flex flex-col overflow-hidden rounded-xl transition-shadow duration-300 hover:shadow-card-hover",
+            cardShellClass(onTextureBg),
             compact && "rounded-lg shadow-sm hover:shadow-card"
           )}
         >
           <div
             className={cn(
-              "relative aspect-[4/3] bg-muted",
+              "relative aspect-[4/3]",
+              onTextureBg ? "bg-muted/80" : "bg-muted",
               compact && "aspect-[5/3]"
             )}
           >
@@ -83,7 +89,8 @@ export const CarCard = memo(function CarCard({
 
           <div
             className={cn(
-              "flex items-start gap-4 border-t border-border/60 px-4 py-4 sm:px-5 sm:py-5",
+              "flex items-start gap-4 border-t px-4 py-4 sm:px-5 sm:py-5",
+              onTextureBg ? "border-primary/15 bg-background/85" : "border-border/60",
               compact && "gap-3 px-3 py-3 sm:px-3.5 sm:py-3.5"
             )}
           >
@@ -91,7 +98,10 @@ export const CarCard = memo(function CarCard({
               <Badge
                 variant="secondary"
                 className={cn(
-                  "rounded-full border border-border/60 bg-muted/80 text-[10px] tracking-widest text-foreground uppercase",
+                  "rounded-full border text-[10px] tracking-widest text-foreground uppercase",
+                  onTextureBg
+                    ? "border-primary/15 bg-secondary/70"
+                    : "border-border/60 bg-muted/80",
                   compact && "text-[9px] tracking-[0.2em]"
                 )}
               >

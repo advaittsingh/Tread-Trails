@@ -12,6 +12,7 @@ import {
 import { absoluteUrl } from "@/lib/site";
 import { getBrandBySlug, listBrandSlugs } from "@/lib/server/brand-catalog";
 
+import { MarketingPageShell } from "@/components/layout/marketing-page-shell";
 import { ProductCard } from "@/components/marketing/product-card";
 import { SectionHeading } from "@/components/marketing/section-heading";
 
@@ -64,7 +65,7 @@ export default async function BrandProductsPage({ params }: Props) {
   const brandProducts = await listProductsForBrandSlug(params.slug);
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+    <MarketingPageShell background="mud">
       <nav className="mb-10 text-sm text-muted-foreground">
         <Link href="/brands" className="transition hover:text-primary">
           Brands
@@ -108,6 +109,6 @@ export default async function BrandProductsPage({ params }: Props) {
           ))}
         </div>
       )}
-    </div>
+    </MarketingPageShell>
   );
 }

@@ -7,18 +7,24 @@ import { motion, useReducedMotion } from "framer-motion";
 
 import type { Build } from "@/data/types";
 
+import { cardContentClass, cardShellClass } from "@/lib/card-surfaces";
+import { cn } from "@/lib/utils";
+
 import { Badge } from "@/components/ui/badge";
 
 type BuildCardProps = {
   build: Build;
   vehicleName?: string;
   index?: number;
+  /** Cream surfaces for textured homepage sections. */
+  onTextureBg?: boolean;
 };
 
 export const BuildCard = memo(function BuildCard({
   build,
   vehicleName,
   index = 0,
+  onTextureBg = false,
 }: BuildCardProps) {
   const reduceMotion = useReducedMotion();
 
@@ -33,10 +39,18 @@ export const BuildCard = memo(function BuildCard({
         ease: [0.22, 1, 0.36, 1],
       }}
       whileHover={reduceMotion ? undefined : { y: -4 }}
-      className="group overflow-hidden rounded-xl border border-border/70 bg-card shadow-card transition-shadow hover:shadow-card-hover"
+      className={cn(
+        "group overflow-hidden rounded-xl transition-shadow hover:shadow-card-hover",
+        cardShellClass(onTextureBg)
+      )}
     >
       <Link href={`/build/${build.slug}`} className="block outline-none focus-visible:ring-2 focus-visible:ring-ring">
-        <div className="grid grid-cols-2 gap-px bg-foreground/10">
+        <div
+          className={cn(
+            "grid grid-cols-2 gap-px",
+            onTextureBg ? "bg-primary/10" : "bg-foreground/10"
+          )}
+        >
           <div className="relative aspect-[5/4] overflow-hidden">
             <Image
               src={build.beforeImage}
@@ -46,7 +60,12 @@ export const BuildCard = memo(function BuildCard({
               sizes="(max-width: 768px) 50vw, 33vw"
               loading="lazy"
             />
-            <span className="absolute left-2 top-2 rounded-full bg-background/70 px-2 py-0.5 text-[10px] tracking-widest uppercase backdrop-blur">
+            <span
+              className={cn(
+                "absolute left-2 top-2 rounded-full px-2 py-0.5 text-[10px] tracking-widest uppercase backdrop-blur",
+                onTextureBg ? "bg-background/85" : "bg-background/70"
+              )}
+            >
               Before
             </span>
           </div>
@@ -64,14 +83,20 @@ export const BuildCard = memo(function BuildCard({
             </span>
           </div>
         </div>
-        <div className="space-y-3 p-5">
+        <div className={cn("space-y-3 p-5", cardContentClass(onTextureBg))}>
           <div className="flex flex-wrap items-center gap-2">
             {vehicleName ? (
               <Badge variant="secondary" className="rounded-full text-[10px] tracking-wide uppercase">
                 {vehicleName}
               </Badge>
             ) : null}
-            <Badge variant="outline" className="rounded-full border-white/15 text-[10px] tracking-wide uppercase">
+            <Badge
+              variant="outline"
+              className={cn(
+                "rounded-full text-[10px] tracking-wide uppercase",
+                onTextureBg ? "border-border/60" : "border-white/15"
+              )}
+            >
               Portfolio
             </Badge>
           </div>

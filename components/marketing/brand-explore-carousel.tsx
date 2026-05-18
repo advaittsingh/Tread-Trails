@@ -7,9 +7,13 @@ import { ExploreCarousel } from "@/components/marketing/explore-carousel";
 
 type BrandExploreCarouselProps = {
   brands: BrandEntry[];
+  onTextureBg?: boolean;
 };
 
-export function BrandExploreCarousel({ brands }: BrandExploreCarouselProps) {
+export function BrandExploreCarousel({
+  brands,
+  onTextureBg = false,
+}: BrandExploreCarouselProps) {
   return (
     <ExploreCarousel
       items={brands}
@@ -20,6 +24,7 @@ export function BrandExploreCarousel({ brands }: BrandExploreCarouselProps) {
           brand={brand}
           index={i}
           variant="compact"
+          onTextureBg={onTextureBg}
           className="h-full w-full"
         />
       )}

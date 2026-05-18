@@ -9,6 +9,7 @@ import {
 } from "@/lib/site-marketing";
 
 import { Separator } from "@/components/ui/separator";
+import { SITE_BACKGROUNDS } from "@/lib/site-backgrounds";
 
 const links = [
   { label: "About", href: "/about" },
@@ -73,8 +74,17 @@ export function Footer() {
     "flex h-[8.5rem] min-w-0 flex-1 flex-col justify-between text-sm leading-5";
 
   return (
-    <footer className="border-t border-border/80 bg-background/80">
-      <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+    <footer className="relative isolate overflow-hidden border-t border-border/80">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 bg-cover bg-center bg-no-repeat"
+        style={{ backgroundImage: `url(${SITE_BACKGROUNDS.tread})` }}
+      />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 bg-gradient-to-b from-background/92 via-background/88 to-background/94"
+      />
+      <div className="relative mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
         <div className="grid gap-12 md:grid-cols-[1.3fr_1fr_1fr]">
           <div className="space-y-4">
             <Link

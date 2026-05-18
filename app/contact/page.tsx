@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 
 import { buildPageMetadata } from "@/lib/seo/page-metadata";
 
+import { MarketingPageShell } from "@/components/layout/marketing-page-shell";
 import { ContactForm } from "@/components/contact/contact-form";
 import { SectionHeading } from "@/components/marketing/section-heading";
 
@@ -16,7 +17,7 @@ export const metadata: Metadata = buildPageMetadata({
 
 export default function ContactPage() {
   return (
-    <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+    <MarketingPageShell background="terrain">
       <SectionHeading
         titleAs="h1"
         align="center"
@@ -29,6 +30,6 @@ export default function ContactPage() {
       <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(280px,340px)] lg:items-start">
         <ContactForm />
       </div>
-    </div>
+    </MarketingPageShell>
   );
 }

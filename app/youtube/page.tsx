@@ -8,6 +8,7 @@ import {
   TREAD_TRAILS_YOUTUBE_CHANNEL_URL,
 } from "@/lib/youtube/tread-trails-feed";
 
+import { MarketingPageShell } from "@/components/layout/marketing-page-shell";
 import { SectionHeading } from "@/components/marketing/section-heading";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -36,7 +37,7 @@ export default async function YoutubePage() {
   const videos = await fetchTreadTrailsYoutubeFeed(15);
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+    <MarketingPageShell background="terrain">
       <SectionHeading
         titleAs="h1"
         align="center"
@@ -123,6 +124,6 @@ export default async function YoutubePage() {
           ))}
         </ul>
       )}
-    </div>
+    </MarketingPageShell>
   );
 }
