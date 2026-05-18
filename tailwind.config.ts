@@ -14,10 +14,16 @@ const config: Config = {
   theme: {
     extend: {
       fontFamily: {
-        sans: ["var(--font-body)", "system-ui", "sans-serif"],
+        sans: ["Satoshi", "system-ui", "sans-serif"],
         heading: ["var(--font-heading)", "system-ui", "sans-serif"],
       },
       colors: {
+        brand: {
+          maroon: "oklch(0.42 0.13 32)",
+          "maroon-light": "oklch(0.55 0.14 35)",
+          gold: "oklch(0.86 0.15 95)",
+          "gold-dark": "oklch(0.72 0.13 90)",
+        },
         background: "var(--background)",
         foreground: "var(--foreground)",
         card: {

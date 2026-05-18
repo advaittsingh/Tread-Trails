@@ -336,7 +336,7 @@ export function AdminLeadDetailPage({ leadId }: Props) {
                 type="button"
                 disabled={sendingEmail}
                 onClick={() => void sendEmail()}
-                className="bg-emerald-600 hover:bg-emerald-500"
+                className="bg-brand-maroon-light hover:bg-brand-maroon"
               >
                 {sendingEmail ? (
                   <Loader2 className="mr-2 size-4 animate-spin" />
@@ -380,7 +380,7 @@ export function AdminLeadDetailPage({ leadId }: Props) {
             <div className="space-y-3 text-sm">
               <a
                 href={`mailto:${lead.email}`}
-                className="flex items-center gap-2 text-emerald-400 hover:underline"
+                className="flex items-center gap-2 text-brand-gold-dark hover:underline"
               >
                 <Mail className="size-4" />
                 {lead.email}

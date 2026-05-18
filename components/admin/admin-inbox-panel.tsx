@@ -86,7 +86,7 @@ export function AdminInboxPanel() {
         </h1>
         <p className="mt-2 max-w-2xl text-sm text-zinc-400">
           Raw inbox archive. Manage pipeline status, assignment, and email from{" "}
-          <Link href="/admin/leads" className="text-emerald-400 hover:underline">
+          <Link href="/admin/leads" className="text-brand-gold-dark hover:underline">
             Leads
           </Link>
           .
@@ -139,12 +139,12 @@ export function AdminInboxPanel() {
                     }}
                     className={`w-full px-4 py-3 text-left transition hover:bg-zinc-800/50 ${
                       selected?.id === r.id ? "bg-zinc-800/60" : ""
-                    } ${!r.readAt ? "border-l-2 border-emerald-500" : ""}`}
+                    } ${!r.readAt ? "border-l-2 border-brand-maroon-light" : ""}`}
                   >
                     <p className="text-xs uppercase tracking-wide text-zinc-500">
                       {r.kind}
                       {!r.readAt ? (
-                        <span className="ml-2 text-emerald-400">new</span>
+                        <span className="ml-2 text-brand-gold-dark">new</span>
                       ) : null}
                     </p>
                     <p className="mt-1 text-sm font-medium text-zinc-100">
@@ -196,7 +196,7 @@ export function AdminInboxPanel() {
               {selected.lead?.id ? (
                 <Link
                   href={`/admin/leads/${selected.lead.id}`}
-                  className="mb-3 inline-flex text-sm text-emerald-400 hover:underline"
+                  className="mb-3 inline-flex text-sm text-brand-gold-dark hover:underline"
                 >
                   Open in lead pipeline →
                 </Link>

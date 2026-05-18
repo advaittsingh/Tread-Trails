@@ -139,7 +139,7 @@ export function AdminVehicleCompatPanel() {
     <div className="space-y-6">
       <p className="text-sm text-zinc-400">
         Link products to a platform variant. Changes write to{" "}
-        <code className="text-emerald-300/90">ProductVehicleCompatibility</code> and are audited.
+        <code className="text-brand-gold-dark/90">ProductVehicleCompatibility</code> and are audited.
       </p>
 
       <div className="flex flex-wrap gap-4">
@@ -174,7 +174,7 @@ export function AdminVehicleCompatPanel() {
 
       {currentVehicle ? (
         <p className="font-mono text-xs text-zinc-500">
-          Editing fitment for <span className="text-emerald-300/90">{currentVehicle.slug}</span>
+          Editing fitment for <span className="text-brand-gold-dark/90">{currentVehicle.slug}</span>
         </p>
       ) : null}
 
@@ -196,7 +196,7 @@ export function AdminVehicleCompatPanel() {
                     type="checkbox"
                     checked={selected.has(p.id)}
                     onChange={() => toggleProduct(p.id)}
-                    className="size-4 rounded border-zinc-600 bg-zinc-900 text-emerald-600"
+                    className="size-4 rounded border-zinc-600 bg-zinc-900 text-brand-maroon-light"
                   />
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-sm text-zinc-100">{p.name}</span>
@@ -216,7 +216,7 @@ export function AdminVehicleCompatPanel() {
           type="button"
           onClick={() => void save()}
           disabled={saving || !vehicleId}
-          className="bg-emerald-600 hover:bg-emerald-500"
+          className="bg-brand-maroon-light hover:bg-brand-maroon"
         >
           {saving ? "Saving…" : `Save fitment (${selected.size})`}
         </Button>

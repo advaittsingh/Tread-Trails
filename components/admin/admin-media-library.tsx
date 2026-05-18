@@ -228,7 +228,7 @@ export function AdminMediaLibrary() {
             <Button
               type="button"
               disabled={uploading}
-              className="bg-emerald-600 hover:bg-emerald-500"
+              className="bg-brand-maroon-light hover:bg-brand-maroon"
               onClick={() => fileRef.current?.click()}
             >
               {uploading ? (
@@ -320,7 +320,7 @@ export function AdminMediaLibrary() {
                   className={cn(
                     "relative aspect-square w-full overflow-hidden rounded-xl border bg-zinc-900 transition",
                     selected?.id === a.id
-                      ? "border-emerald-500 ring-2 ring-emerald-500/30"
+                      ? "border-brand-maroon-light ring-2 ring-brand-maroon-light/30"
                       : "border-zinc-800 hover:border-zinc-600"
                   )}
                 >
@@ -396,7 +396,7 @@ export function AdminMediaLibrary() {
                 type="button"
                 size="sm"
                 disabled={savingMeta}
-                className="bg-emerald-600 hover:bg-emerald-500"
+                className="bg-brand-maroon-light hover:bg-brand-maroon"
                 onClick={() => void saveMeta()}
               >
                 {savingMeta ? "Saving…" : "Save metadata"}

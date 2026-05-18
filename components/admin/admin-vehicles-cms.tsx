@@ -62,7 +62,7 @@ export function AdminVehiclesCms() {
             </Button>
             <Link
               href="/admin/vehicles/new"
-              className="inline-flex h-10 items-center justify-center rounded-md bg-emerald-600 px-4 text-sm font-medium text-white transition hover:bg-emerald-500"
+              className="inline-flex h-10 items-center justify-center rounded-md bg-brand-maroon-light px-4 text-sm font-medium text-white transition hover:bg-brand-maroon"
             >
               New variant
             </Link>
@@ -78,7 +78,7 @@ export function AdminVehiclesCms() {
             onClick={() => setTab(t.id)}
             className={`rounded-lg px-4 py-2 text-sm font-medium transition ${
               tab === t.id
-                ? "bg-emerald-600/20 text-emerald-300 ring-1 ring-emerald-500/40"
+                ? "bg-brand-maroon-light/20 text-brand-gold-dark ring-1 ring-brand-maroon-light/40"
                 : "text-zinc-400 hover:bg-zinc-800/60 hover:text-zinc-200"
             }`}
           >

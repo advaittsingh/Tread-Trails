@@ -1,5 +1,7 @@
 import { ImageResponse } from "next/og";
 
+import { brandColors } from "@/lib/brand-colors";
+
 export const runtime = "edge";
 
 export const alt = "Tread Trails — Premium Off-Road Lab";
@@ -22,8 +24,8 @@ export default function Image() {
           flexDirection: "column",
           justifyContent: "center",
           padding: 72,
-          background: "linear-gradient(145deg, #FAFAFA 0%, #FFFFFF 45%, #F3F6F4 100%)",
-          color: "#1a1f1c",
+          background: "linear-gradient(145deg, #FAF8F3 0%, #FFFFFF 45%, #FBF6E8 100%)",
+          color: "#2a1814",
         }}
       >
         <div
@@ -31,7 +33,7 @@ export default function Image() {
             fontSize: 18,
             letterSpacing: "0.35em",
             textTransform: "uppercase",
-            color: "#2d5a45",
+            color: brandColors.maroon,
             marginBottom: 24,
           }}
         >

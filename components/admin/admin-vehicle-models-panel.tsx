@@ -155,7 +155,7 @@ export function AdminVehicleModelsPanel() {
           type="button"
           onClick={() => void createModel()}
           disabled={saving}
-          className="bg-emerald-600 hover:bg-emerald-500"
+          className="bg-brand-maroon-light hover:bg-brand-maroon"
         >
           {saving ? "Saving…" : "Add model"}
         </Button>
@@ -211,7 +211,7 @@ export function AdminVehicleModelsPanel() {
               : rows.map((r) => (
                   <tr key={r.id} className="hover:bg-zinc-800/30">
                     <td className="px-4 py-3 text-zinc-400">{r.make.name}</td>
-                    <td className="px-4 py-3 font-mono text-xs text-emerald-300/90">{r.slug}</td>
+                    <td className="px-4 py-3 font-mono text-xs text-brand-gold-dark/90">{r.slug}</td>
                     <td className="px-4 py-3 text-zinc-100">{r.name}</td>
                     <td className="px-4 py-3 text-zinc-400">{r._count?.vehicles ?? 0}</td>
                     <td className="px-4 py-3">

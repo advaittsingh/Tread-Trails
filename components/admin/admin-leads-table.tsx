@@ -125,7 +125,7 @@ export function AdminLeadsTable() {
             className={cn(
               "rounded-full px-3 py-1.5 text-xs font-medium transition",
               status === tab.id
-                ? "bg-emerald-500/20 text-emerald-200 ring-1 ring-emerald-500/30"
+                ? "bg-brand-maroon-light/20 text-brand-gold ring-1 ring-brand-maroon-light/30"
                 : "bg-zinc-800/80 text-zinc-400 hover:text-zinc-200"
             )}
           >
@@ -249,7 +249,7 @@ export function AdminLeadsTable() {
                           className={buttonVariants({
                             variant: "ghost",
                             size: "sm",
-                            className: "text-emerald-400",
+                            className: "text-brand-gold-dark",
                           })}
                         >
                           Open

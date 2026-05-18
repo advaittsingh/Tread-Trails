@@ -166,7 +166,7 @@ export function AdminOrdersTable() {
               setStatus(e.target.value);
               setPage(1);
             }}
-            className="h-10 rounded-xl border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100 outline-none focus:ring-2 focus:ring-emerald-500/40"
+            className="h-10 rounded-xl border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100 outline-none focus:ring-2 focus:ring-brand-maroon-light/40"
           >
             <option value="">All</option>
             <option value="pending">Pending</option>
@@ -186,7 +186,7 @@ export function AdminOrdersTable() {
               setPayment(e.target.value);
               setPage(1);
             }}
-            className="h-10 rounded-xl border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100 outline-none focus:ring-2 focus:ring-emerald-500/40"
+            className="h-10 rounded-xl border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100 outline-none focus:ring-2 focus:ring-brand-maroon-light/40"
           >
             <option value="">All</option>
             <option value="stripe">Stripe</option>
@@ -236,7 +236,7 @@ export function AdminOrdersTable() {
                       <td className="px-4 py-4 font-mono text-xs">
                         <Link
                           href={`/admin/orders/${r.id}`}
-                          className="text-emerald-400/90 hover:text-emerald-300 hover:underline"
+                          className="text-brand-gold-dark/90 hover:text-brand-gold-dark hover:underline"
                         >
                           {r.id.slice(-10)}
                         </Link>
@@ -267,7 +267,7 @@ export function AdminOrdersTable() {
                             onChange={(e) =>
                               void onStatusChange(r.id, r.status, e.target.value)
                             }
-                            className="h-9 rounded-lg border border-zinc-700 bg-zinc-950 px-2 text-xs text-zinc-100 outline-none focus:ring-2 focus:ring-emerald-500/40 disabled:opacity-50"
+                            className="h-9 rounded-lg border border-zinc-700 bg-zinc-950 px-2 text-xs text-zinc-100 outline-none focus:ring-2 focus:ring-brand-maroon-light/40 disabled:opacity-50"
                           >
                             <option value="pending">Pending</option>
                             <option value="paid">Paid</option>
@@ -281,7 +281,7 @@ export function AdminOrdersTable() {
                               variant: "ghost",
                               size: "sm",
                               className:
-                                "h-9 text-xs text-zinc-400 hover:text-emerald-300",
+                                "h-9 text-xs text-zinc-400 hover:text-brand-gold-dark",
                             })}
                           >
                             Open

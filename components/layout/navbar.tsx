@@ -19,6 +19,7 @@ import {
 import { CartSheet } from "@/components/cart/cart-sheet";
 import { NavCatalogueMegaMenu } from "@/components/layout/nav-catalogue-mega-menu";
 import { NavbarSearch } from "@/components/layout/navbar-search";
+import { SiteLogo } from "@/components/layout/site-logo";
 import type { NavCatalogueData } from "@/lib/server/nav-catalogue-data";
 
 type NavEntry =
@@ -216,12 +217,10 @@ export function Navbar({ catalogue }: { catalogue: NavCatalogueData }) {
         <div className="flex min-w-0 shrink-0 items-center lg:justify-self-start">
           <Link
             href="/"
-            className="flex h-16 items-center gap-2 outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="flex h-16 items-center outline-none focus-visible:ring-2 focus-visible:ring-ring"
             aria-label="Tread Trails home"
           >
-            <span className="font-heading text-sm tracking-[0.28em] text-primary uppercase">
-              Tread Trails
-            </span>
+            <SiteLogo variant="header" priority />
           </Link>
         </div>
 

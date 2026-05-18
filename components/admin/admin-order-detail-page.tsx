@@ -48,7 +48,7 @@ type Props = { orderId: string };
 function timelineDotClass(kind: OrderTimelineEvent["kind"]) {
   switch (kind) {
     case "payment":
-      return "bg-emerald-500 ring-emerald-500/30";
+      return "bg-brand-maroon-light ring-brand-maroon-light/30";
     case "shipped":
       return "bg-sky-500 ring-sky-500/30";
     case "delivered":
@@ -251,7 +251,7 @@ export function AdminOrderDetailPage({ orderId }: Props) {
             {order.id}
             <button
               type="button"
-              className="ml-2 inline-flex align-middle text-zinc-600 hover:text-emerald-400"
+              className="ml-2 inline-flex align-middle text-zinc-600 hover:text-brand-gold-dark"
               aria-label="Copy order ID"
               onClick={() => {
                 void navigator.clipboard.writeText(order.id);
@@ -334,7 +334,7 @@ export function AdminOrderDetailPage({ orderId }: Props) {
                     <Link
                       href={`/product/${line.productSlug}`}
                       target="_blank"
-                      className="font-medium text-zinc-100 hover:text-emerald-300"
+                      className="font-medium text-zinc-100 hover:text-brand-gold-dark"
                     >
                       {line.name}
                     </Link>
@@ -413,7 +413,7 @@ export function AdminOrderDetailPage({ orderId }: Props) {
               size="sm"
               disabled={saving}
               onClick={() => void saveFulfilment()}
-              className="bg-emerald-600 hover:bg-emerald-500"
+              className="bg-brand-maroon-light hover:bg-brand-maroon"
             >
               {saving ? "Saving…" : "Save fulfilment"}
             </Button>
@@ -429,7 +429,7 @@ export function AdminOrderDetailPage({ orderId }: Props) {
               <p className="font-medium text-zinc-100">{order.customerName}</p>
               <a
                 href={`mailto:${order.customerEmail}`}
-                className="block text-emerald-400/90 hover:underline"
+                className="block text-brand-gold-dark/90 hover:underline"
               >
                 {order.customerEmail}
               </a>
@@ -499,7 +499,7 @@ export function AdminOrderDetailPage({ orderId }: Props) {
                 href={stripeDash}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="mt-3 inline-flex items-center gap-1 text-xs text-emerald-400 hover:underline"
+                className="mt-3 inline-flex items-center gap-1 text-xs text-brand-gold-dark hover:underline"
               >
                 Stripe Dashboard
                 <ExternalLink className="size-3" />

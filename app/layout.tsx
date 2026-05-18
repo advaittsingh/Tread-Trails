@@ -1,10 +1,8 @@
 import type { Metadata, Viewport } from "next";
 
 import "./globals.css";
-import { Inter, Playfair_Display } from "next/font/google";
-
 import { absoluteUrl, siteUrl } from "@/lib/site";
-import { cn } from "@/lib/utils";
+import { headingFont } from "@/lib/fonts";
 import { Suspense } from "react";
 
 import { getNavCatalogueData } from "@/lib/server/nav-catalogue-data";
@@ -13,30 +11,12 @@ import { AppProviders } from "@/components/providers/app-providers";
 import { SiteChrome } from "@/components/layout/site-chrome";
 import { SiteJsonLd } from "@/components/seo/site-json-ld";
 
-const playfair = Playfair_Display({
-  subsets: ["latin"],
-  variable: "--font-heading",
-  weight: ["400", "500", "600", "700"],
-  display: "swap",
-  adjustFontFallback: true,
-  preload: false,
-});
-
-const inter = Inter({
-  subsets: ["latin"],
-  variable: "--font-body",
-  weight: ["400", "500", "600"],
-  display: "swap",
-  adjustFontFallback: true,
-  preload: true,
-});
-
 /** Explicit viewport helps mobile audits (Lighthouse SEO / Best practices). */
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f7f6f3" },
+    { media: "(prefers-color-scheme: light)", color: "#faf8f3" },
     { media: "(prefers-color-scheme: dark)", color: "#171717" },
   ],
 };
@@ -94,7 +74,10 @@ export default async function RootLayout({
   ]);
 
   return (
-    <html lang="en" className={cn(playfair.variable, inter.variable)}>
+    <html lang="en" className={headingFont.variable}>
+      <head>
+        <link rel="preconnect" href="https://api.fontshare.com" crossOrigin="anonymous" />
+      </head>
       <body className="min-h-screen bg-background font-sans antialiased">
         <SiteJsonLd />
         <AppProviders catalogProducts={catalogProducts}>

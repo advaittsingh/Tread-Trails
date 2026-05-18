@@ -99,7 +99,7 @@ export const CarCard = memo(function CarCard({
               </Badge>
               <h3
                 className={cn(
-                  "font-heading text-xl leading-tight tracking-tight text-foreground sm:text-2xl",
+                  "font-heading text-xl font-semibold leading-tight tracking-tight text-foreground sm:text-2xl",
                   compact && "text-base sm:text-lg"
                 )}
               >

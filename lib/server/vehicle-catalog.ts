@@ -6,10 +6,19 @@ import {
 } from "@/data/vehicle";
 import type { Car } from "@/data/types";
 import {
+  buildStaticVehicleHierarchy,
   buildVehicleWhere,
+  filterExplorerTree,
+  getVehicleHierarchyTree,
+  listUnassignedVehicles,
   listVehiclesFromDb,
   mapVehicleRowToCar,
+  type VehicleHierarchyNode,
 } from "@/lib/catalog/vehicle-hierarchy";
+import {
+  isExplorerMakeExcluded,
+  isExplorerVehicleExcluded,
+} from "@/lib/vehicle-explorer";
 import { sortCarsByCategory } from "@/lib/vehicle-categories";
 import { listProductsForVehicleSlug } from "@/lib/server/product-catalog";
 import { VEHICLE_CATALOG_TAG } from "@/lib/server/revalidate-vehicle-catalog";
@@ -21,15 +30,19 @@ const cachedListVehicles = unstable_cache(
   { tags: [VEHICLE_CATALOG_TAG], revalidate: 120 }
 );
 
+function filterPublicVehicles(list: Car[]): Car[] {
+  return sortCarsByCategory(list.filter((c) => !isExplorerVehicleExcluded(c)));
+}
+
 /** Vehicles from DB when seeded; static catalog only when DB is empty/unreachable. */
 export async function listVehicles(): Promise<Car[]> {
   try {
     const rows = await cachedListVehicles();
-    if (rows.length > 0) return sortCarsByCategory(rows);
+    if (rows.length > 0) return filterPublicVehicles(rows);
   } catch {
     /* DATABASE_URL missing / unreachable */
   }
-  return sortCarsByCategory(staticCars);
+  return filterPublicVehicles(staticCars);
 }
 
 /** Single vehicle from DB when present; otherwise static catalog. */
@@ -68,6 +81,55 @@ export async function getVehicleBySlug(slug: string): Promise<Car | null> {
 }
 
 export { listProductsForVehicleSlug };
+
+const cachedExplorerTree = unstable_cache(
+  async () => loadVehicleExplorerTree(),
+  ["vehicle-explorer-tree"],
+  { tags: [VEHICLE_CATALOG_TAG], revalidate: 120 }
+);
+
+async function loadVehicleExplorerTree(): Promise<VehicleHierarchyNode[]> {
+  try {
+    const [tree, unassigned] = await Promise.all([
+      getVehicleHierarchyTree(),
+      listUnassignedVehicles(),
+    ]);
+
+    const hasLinked = tree.some((mk) =>
+      mk.models.some((m) => m.vehicles.length > 0)
+    );
+
+    if (hasLinked) {
+      const pruned = filterExplorerTree(tree);
+
+      const loose = unassigned.filter(
+        (v) => !v.makeSlug || !isExplorerMakeExcluded(v.makeSlug)
+      );
+      if (loose.length > 0) {
+        pruned.push({
+          make: { id: "other", slug: "other", name: "Other platforms" },
+          models: [
+            {
+              model: { id: "other-misc", slug: "misc", name: "Unassigned" },
+              vehicles: loose,
+            },
+          ],
+        });
+      }
+
+      return pruned;
+    }
+  } catch {
+    /* DATABASE_URL missing / unreachable */
+  }
+
+  return filterExplorerTree(buildStaticVehicleHierarchy(staticCars));
+}
+
+/** Brand → model line → variant tree for `/vehicles` explorer. */
+export async function getVehicleExplorerTree(): Promise<VehicleHierarchyNode[]> {
+  return cachedExplorerTree();
+}
 
 /** Vehicle slugs for static generation (DB preferred). */
 export async function listVehicleSlugs(): Promise<string[]> {

@@ -85,7 +85,7 @@ export function AdminCrmPanel() {
         </h1>
         <p className="mt-2 text-sm text-zinc-400">
           Pre-fill from abandoned carts via query{" "}
-          <code className="text-emerald-300">?email=</code>. Requires Resend env vars.
+          <code className="text-brand-gold-dark">?email=</code>. Requires Resend env vars.
         </p>
       </header>
 
@@ -125,7 +125,7 @@ export function AdminCrmPanel() {
             id="crm-template"
             value={template}
             onChange={(e) => setTemplate(e.target.value as TemplateId)}
-            className="h-11 w-full rounded-xl border border-zinc-700 bg-zinc-950 px-3 text-sm text-zinc-100 outline-none focus:ring-2 focus:ring-emerald-500/40"
+            className="h-11 w-full rounded-xl border border-zinc-700 bg-zinc-950 px-3 text-sm text-zinc-100 outline-none focus:ring-2 focus:ring-brand-maroon-light/40"
           >
             {TEMPLATES.map((t) => (
               <option key={t} value={t}>
@@ -144,7 +144,7 @@ export function AdminCrmPanel() {
         <Button
           type="submit"
           disabled={loading}
-          className="w-full bg-emerald-600 text-white hover:bg-emerald-500"
+          className="w-full bg-brand-maroon-light text-white hover:bg-brand-maroon"
         >
           {loading ? "Sending…" : "Send email"}
         </Button>

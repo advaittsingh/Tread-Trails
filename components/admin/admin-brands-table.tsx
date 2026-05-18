@@ -114,7 +114,7 @@ export function AdminBrandsTable() {
         title="Brands"
         description="Supplier logos and catalog grouping. Product counts update automatically from linked SKUs."
         action={
-          <Link href="/admin/brands/new" className="inline-flex h-10 items-center justify-center rounded-md bg-emerald-600 px-4 text-sm font-medium text-white transition hover:bg-emerald-500">New brand</Link>
+          <Link href="/admin/brands/new" className="inline-flex h-10 items-center justify-center rounded-md bg-brand-maroon-light px-4 text-sm font-medium text-white transition hover:bg-brand-maroon">New brand</Link>
         }
       />
 
@@ -159,7 +159,7 @@ export function AdminBrandsTable() {
                   ))
                 : rows.map((r) => (
                     <tr key={r.id} className="hover:bg-zinc-800/40">
-                      <td className="max-w-[160px] truncate px-4 py-4 font-mono text-xs text-emerald-300/90">
+                      <td className="max-w-[160px] truncate px-4 py-4 font-mono text-xs text-brand-gold-dark/90">
                         {r.slug}
                       </td>
                       <td className="max-w-[240px] truncate px-4 py-4 text-zinc-100">

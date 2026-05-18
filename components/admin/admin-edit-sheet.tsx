@@ -110,7 +110,7 @@ export function AdminSheetFooterButtons({
       <Button
         type="button"
         disabled={saving || saveDisabled}
-        className="min-w-[100px] bg-emerald-600 text-white hover:bg-emerald-500"
+        className="min-w-[100px] bg-brand-maroon-light text-white hover:bg-brand-maroon"
         onClick={onSave}
       >
         {saving ? "Saving…" : saveLabel}

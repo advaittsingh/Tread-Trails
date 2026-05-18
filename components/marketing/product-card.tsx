@@ -139,7 +139,7 @@ export const ProductCard = memo(function ProductCard({
         </div>
         {brandStrip}
         <div className="space-y-2">
-          <h3 className="font-heading text-lg leading-snug tracking-tight text-foreground">
+          <h3 className="font-heading text-lg font-semibold leading-snug tracking-tight text-foreground">
             {product.name}
           </h3>
           <p className="line-clamp-2 text-sm text-muted-foreground">{product.description}</p>

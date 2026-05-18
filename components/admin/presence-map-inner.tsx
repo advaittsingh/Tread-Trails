@@ -18,7 +18,7 @@ export type PresenceMarker = {
 };
 
 const pin = L.divIcon({
-  html: '<div class="h-3 w-3 rounded-full bg-emerald-400 shadow-lg ring-2 ring-white/80"></div>',
+  html: '<div class="h-3 w-3 rounded-full bg-brand-gold-dark shadow-lg ring-2 ring-white/80"></div>',
   className: "",
   iconSize: [12, 12],
 });

@@ -37,7 +37,7 @@ export default async function HomePage() {
         <SectionHeading
           eyebrow="Platforms"
           title="Explore by vehicle"
-          description="Each card opens that vehicle’s hub — compatible catalog SKUs and platform specs. Full fleet includes Fortuner generations, Land Cruiser & Prado series, armoured utility, and restoration programs on Vehicles."
+          description="Pick a brand, model line, and generation — then open a variant hub for compatible SKUs and platform specs. Browse the full fleet by OEM on Vehicles."
         />
         <VehicleExploreCarousel cars={cars} />
         <div className="flex justify-center pt-4">
@@ -45,7 +45,7 @@ export default async function HomePage() {
             href="/vehicles"
             className="rounded-sm text-sm tracking-wide text-muted-foreground underline-offset-4 outline-none transition-colors hover:text-[#128C7E] hover:underline focus-visible:text-[#128C7E] focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
           >
-            Browse all vehicle hubs
+            Browse by brand
           </Link>
         </div>
       </section>

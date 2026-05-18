@@ -181,7 +181,7 @@ export function AdminMediaPicker({
                   <li key={a.id}>
                     <button
                       type="button"
-                      className="group relative aspect-square w-full overflow-hidden rounded-lg border border-zinc-800 bg-zinc-900 ring-emerald-500/40 transition hover:ring-2"
+                      className="group relative aspect-square w-full overflow-hidden rounded-lg border border-zinc-800 bg-zinc-900 ring-brand-maroon-light/40 transition hover:ring-2"
                       onClick={() => {
                         onSelect(a.url, a);
                         onOpenChange(false);
@@ -199,7 +199,7 @@ export function AdminMediaPicker({
                         {a.filename}
                       </span>
                       <span className="absolute right-1 top-1 rounded bg-zinc-950/80 p-0.5 opacity-0 transition group-hover:opacity-100">
-                        <Check className="size-3 text-emerald-400" />
+                        <Check className="size-3 text-brand-gold-dark" />
                       </span>
                     </button>
                   </li>

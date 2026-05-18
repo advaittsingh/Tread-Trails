@@ -73,7 +73,7 @@ function NavBlock({
               className={cn(
                 "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition",
                 active
-                  ? "bg-emerald-500/15 text-emerald-100 ring-1 ring-emerald-500/25"
+                  ? "bg-brand-maroon-light/15 text-brand-gold ring-1 ring-brand-maroon-light/25"
                   : "text-zinc-400 hover:bg-zinc-800/80 hover:text-zinc-100"
               )}
             >
@@ -93,9 +93,9 @@ export function AdminSidebar() {
   return (
     <aside className="sticky top-0 flex h-screen w-60 shrink-0 flex-col border-r border-zinc-800 bg-zinc-950 px-3 py-8 lg:w-64">
       <div className="mb-10 flex items-center gap-2 px-3">
-        <Shield className="size-5 text-emerald-400" />
+        <Shield className="size-5 text-brand-gold-dark" />
         <div>
-          <p className="font-heading text-xs tracking-[0.35em] text-emerald-400 uppercase">
+          <p className="font-heading text-xs tracking-[0.35em] text-brand-gold-dark uppercase">
             Control
           </p>
           <p className="text-sm font-semibold tracking-tight text-zinc-100">

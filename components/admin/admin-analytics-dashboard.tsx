@@ -149,7 +149,7 @@ export function AdminAnalyticsDashboard() {
       <header className="border-b border-zinc-800 pb-6">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
-            <p className="text-[11px] font-medium tracking-[0.35em] text-emerald-400 uppercase">
+            <p className="text-[11px] font-medium tracking-[0.35em] text-brand-gold-dark uppercase">
               Business intelligence
             </p>
             <h1 className="mt-2 font-heading text-2xl tracking-tight text-white md:text-3xl">
@@ -193,7 +193,7 @@ export function AdminAnalyticsDashboard() {
               className={cn(
                 "rounded-lg px-3 py-1.5 text-xs font-medium transition",
                 presetDays === d
-                  ? "bg-emerald-500/20 text-emerald-200 ring-1 ring-emerald-500/30"
+                  ? "bg-brand-maroon-light/20 text-brand-gold ring-1 ring-brand-maroon-light/30"
                   : "bg-zinc-800 text-zinc-400 hover:text-zinc-200"
               )}
             >
@@ -296,7 +296,7 @@ export function AdminAnalyticsDashboard() {
                     type="monotone"
                     dataKey="revenue"
                     name="Revenue"
-                    stroke="#34d399"
+                    stroke="#8f3a2c"
                     strokeWidth={2}
                     dot={false}
                   />
@@ -416,7 +416,7 @@ export function AdminAnalyticsDashboard() {
                     type="monotone"
                     dataKey="sessions"
                     name="Sessions"
-                    stroke="#34d399"
+                    stroke="#8f3a2c"
                     strokeWidth={2}
                     dot={false}
                   />
@@ -440,7 +440,7 @@ export function AdminAnalyticsDashboard() {
                       ];
                     }}
                   />
-                  <Bar dataKey="value" fill="#34d399" radius={[6, 6, 0, 0]} />
+                  <Bar dataKey="value" fill="#f0d050" radius={[6, 6, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </ChartCard>
@@ -504,7 +504,7 @@ function MiniStat({
       className={cn(
         "rounded-2xl border p-5",
         accent
-          ? "border-emerald-500/25 bg-emerald-500/10"
+          ? "border-brand-maroon-light/25 bg-brand-maroon-light/10"
           : "border-zinc-800 bg-zinc-900/40"
       )}
     >
@@ -551,7 +551,7 @@ function RankList({
               <span className={cn("min-w-0 truncate", r.mono && "font-mono text-xs")}>
                 {r.primary}
                 {r.secondary ? (
-                  <span className="mt-0.5 block text-xs text-emerald-400/90">
+                  <span className="mt-0.5 block text-xs text-brand-gold-dark/90">
                     {r.secondary}
                   </span>
                 ) : null}

@@ -92,7 +92,7 @@ function RecoveryBadge({ recovery }: { recovery: RecoveryMeta }) {
   }
   if (recovery.sentAt) {
     return (
-      <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-medium text-emerald-300">
+      <span className="rounded-full bg-brand-maroon-light/15 px-2 py-0.5 text-[10px] font-medium text-brand-gold-dark">
         Emailed
       </span>
     );
@@ -370,7 +370,7 @@ export function AdminCartsPanel() {
                                 size="sm"
                                 variant="ghost"
                                 disabled={!r.userEmail || busy || r.recovery.converted}
-                                className="h-8 text-xs text-emerald-400"
+                                className="h-8 text-xs text-brand-gold-dark"
                                 onClick={() => void runRecover(r.sessionId, "email")}
                               >
                                 {busy ? (

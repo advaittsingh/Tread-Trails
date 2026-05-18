@@ -29,7 +29,7 @@ export function AboutHero() {
             initial={reduceMotion ? false : { opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.45 }}
-            className="font-heading text-xs tracking-[0.42em] text-primary uppercase"
+            className="font-sans text-[11px] font-medium tracking-[0.42em] text-primary uppercase"
           >
             About Tread Trails
           </motion.p>
@@ -37,7 +37,7 @@ export function AboutHero() {
             initial={reduceMotion ? false : { opacity: 0, y: 18 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.55, delay: 0.05 }}
-            className="font-heading text-balance text-4xl leading-[1.05] tracking-tight text-foreground sm:text-5xl md:text-6xl lg:text-7xl"
+            className="font-heading text-balance text-4xl font-semibold leading-[0.98] tracking-[-0.03em] text-foreground sm:text-5xl md:text-6xl lg:text-7xl"
           >
             Engineers,
             <span className="block text-muted-foreground">with studio craft.</span>

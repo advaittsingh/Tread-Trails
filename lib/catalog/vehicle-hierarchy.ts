@@ -1,5 +1,18 @@
 import type { Car } from "@/data/types";
+import {
+  parseVehicleSlug,
+  vehicleMakeDisplayName,
+  vehicleModelDisplayName,
+} from "@/lib/server/backfill-vehicle-hierarchy";
+import { isExplorerMakeExcluded } from "@/lib/vehicle-explorer";
 import { prisma } from "@/lib/prisma";
+
+function titleCase(s: string) {
+  return s
+    .split("-")
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(" ");
+}
 
 export type VehicleHierarchyNode = {
   make: { id: string; slug: string; name: string };
@@ -156,4 +169,119 @@ export async function listUnassignedVehicles(): Promise<Car[]> {
     orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
   });
   return rows.map(mapVehicleRowToCar);
+}
+
+/** Group fitment platforms under a model line by generation / year span. */
+export type VehicleGenerationGroup = {
+  id: string;
+  title: string;
+  subtitle?: string;
+  vehicles: Car[];
+};
+
+export function groupVehiclesByGeneration(vehicles: Car[]): VehicleGenerationGroup[] {
+  const groups = new Map<string, VehicleGenerationGroup>();
+
+  for (const v of vehicles) {
+    const id = v.generationKey ?? (v.modelYearsLabel || v.slug);
+    const existing = groups.get(id);
+    if (existing) {
+      existing.vehicles.push(v);
+      continue;
+    }
+    const title =
+      v.modelYearsLabel.trim() ||
+      (v.generationKey ? titleCase(v.generationKey.replace(/-/g, " ")) : v.name);
+    groups.set(id, {
+      id,
+      title,
+      subtitle: v.generationKey && v.modelYearsLabel ? v.name : undefined,
+      vehicles: [v],
+    });
+  }
+
+  return Array.from(groups.values()).sort((a, b) => a.title.localeCompare(b.title));
+}
+
+/** Build make → model → vehicle tree from flat catalog (static fallback). */
+export function buildStaticVehicleHierarchy(cars: Car[]): VehicleHierarchyNode[] {
+  type ModelAcc = {
+    model: { id: string; slug: string; name: string };
+    vehicles: Car[];
+  };
+  type MakeAcc = {
+    make: { id: string; slug: string; name: string };
+    models: Map<string, ModelAcc>;
+  };
+
+  const makes = new Map<string, MakeAcc>();
+
+  for (const car of cars) {
+    const parsed = parseVehicleSlug(car.slug);
+    const makeSlug = car.makeSlug ?? parsed?.makeSlug;
+    if (!makeSlug || isExplorerMakeExcluded(makeSlug)) continue;
+
+    const modelSlug = car.modelSlug ?? parsed?.modelSlug ?? "platform";
+    const makeName = car.makeName ?? vehicleMakeDisplayName(makeSlug);
+    const modelName = car.modelName ?? vehicleModelDisplayName(modelSlug);
+
+    let make = makes.get(makeSlug);
+    if (!make) {
+      make = {
+        make: { id: makeSlug, slug: makeSlug, name: makeName },
+        models: new Map(),
+      };
+      makes.set(makeSlug, make);
+    }
+
+    let model = make.models.get(modelSlug);
+    if (!model) {
+      model = {
+        model: { id: `${makeSlug}-${modelSlug}`, slug: modelSlug, name: modelName },
+        vehicles: [],
+      };
+      make.models.set(modelSlug, model);
+    }
+    model.vehicles.push(car);
+  }
+
+  const nodes: VehicleHierarchyNode[] = Array.from(makes.values())
+    .sort((a, b) => a.make.name.localeCompare(b.make.name))
+    .map((mk) => ({
+      make: mk.make,
+      models: Array.from(mk.models.values())
+        .sort((a, b) => a.model.name.localeCompare(b.model.name))
+        .map((m) => ({
+          model: m.model,
+          vehicles: m.vehicles.sort((a: Car, b: Car) => a.name.localeCompare(b.name)),
+        })),
+    }));
+
+  return nodes.filter((n) => !isExplorerMakeExcluded(n.make.slug));
+}
+
+export function filterExplorerTree(
+  tree: VehicleHierarchyNode[]
+): VehicleHierarchyNode[] {
+  return tree
+    .filter((n) => !isExplorerMakeExcluded(n.make.slug))
+    .map((mk) => ({
+      ...mk,
+      models: mk.models.filter((m) => m.vehicles.length > 0),
+    }))
+    .filter((mk) => mk.models.length > 0);
+}
+
+export function findMakeInTree(
+  tree: VehicleHierarchyNode[],
+  makeSlug: string
+): VehicleHierarchyNode | undefined {
+  return tree.find((n) => n.make.slug === makeSlug);
+}
+
+export function findModelInMake(
+  node: VehicleHierarchyNode,
+  modelSlug: string
+): VehicleHierarchyNode["models"][number] | undefined {
+  return node.models.find((m) => m.model.slug === modelSlug);
 }

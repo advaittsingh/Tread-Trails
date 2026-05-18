@@ -7,13 +7,13 @@ import { cn } from "@/lib/utils";
 import { Label } from "@/components/ui/label";
 
 export const adminInputClass =
-  "h-10 border-zinc-700/80 bg-zinc-900/80 text-zinc-100 placeholder:text-zinc-600 focus-visible:ring-emerald-500/35";
+  "h-10 border-zinc-700/80 bg-zinc-900/80 text-zinc-100 placeholder:text-zinc-600 focus-visible:ring-brand-maroon-light/35";
 
 export const adminSelectClass =
-  "h-10 w-full rounded-lg border border-zinc-700/80 bg-zinc-900/80 px-3 text-sm text-zinc-100 outline-none focus:ring-2 focus:ring-emerald-500/35";
+  "h-10 w-full rounded-lg border border-zinc-700/80 bg-zinc-900/80 px-3 text-sm text-zinc-100 outline-none focus:ring-2 focus:ring-brand-maroon-light/35";
 
 export const adminTextareaClass =
-  "w-full resize-y rounded-lg border border-zinc-700/80 bg-zinc-900/80 px-3 py-2.5 text-sm text-zinc-100 outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/35";
+  "w-full resize-y rounded-lg border border-zinc-700/80 bg-zinc-900/80 px-3 py-2.5 text-sm text-zinc-100 outline-none focus-visible:ring-2 focus-visible:ring-brand-maroon-light/35";
 
 export const adminSheetContentClass =
   "flex h-full w-full max-w-full flex-col gap-0 border-zinc-800 bg-zinc-950 p-0 text-zinc-100 sm:max-w-2xl lg:max-w-[44rem]";

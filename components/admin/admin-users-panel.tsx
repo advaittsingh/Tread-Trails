@@ -236,7 +236,7 @@ export function AdminUsersPanel() {
                           type="button"
                           variant="ghost"
                           size="sm"
-                          className="text-xs text-zinc-400 hover:text-emerald-300"
+                          className="text-xs text-zinc-400 hover:text-brand-gold-dark"
                           onClick={() => setDetailId(r.id)}
                         >
                           Details

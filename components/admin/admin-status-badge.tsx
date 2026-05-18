@@ -6,7 +6,7 @@ const map: Record<string, string> = {
     "border-amber-500/45 bg-amber-500/15 text-amber-100 ring-amber-500/25",
   pending:
     "border-amber-500/40 bg-amber-500/15 text-amber-200 ring-amber-500/20",
-  paid: "border-emerald-500/40 bg-emerald-500/15 text-emerald-200 ring-emerald-500/20",
+  paid: "border-brand-maroon-light/40 bg-brand-maroon-light/15 text-brand-gold ring-brand-maroon-light/20",
   shipped: "border-sky-500/40 bg-sky-500/15 text-sky-200 ring-sky-500/20",
   delivered:
     "border-violet-500/40 bg-violet-500/15 text-violet-200 ring-violet-500/20",
@@ -15,16 +15,16 @@ const map: Record<string, string> = {
   requested:
     "border-amber-500/40 bg-amber-500/15 text-amber-200 ring-amber-500/20",
   confirmed:
-    "border-emerald-500/40 bg-emerald-500/15 text-emerald-200 ring-emerald-500/20",
+    "border-brand-maroon-light/40 bg-brand-maroon-light/15 text-brand-gold ring-brand-maroon-light/20",
   completed:
     "border-violet-500/40 bg-violet-500/15 text-violet-200 ring-violet-500/20",
   new: "border-sky-500/40 bg-sky-500/15 text-sky-200 ring-sky-500/20",
   contacted:
-    "border-emerald-500/40 bg-emerald-500/15 text-emerald-200 ring-emerald-500/20",
+    "border-brand-maroon-light/40 bg-brand-maroon-light/15 text-brand-gold ring-brand-maroon-light/20",
   qualified:
     "border-violet-500/40 bg-violet-500/15 text-violet-200 ring-violet-500/20",
   converted:
-    "border-emerald-500/50 bg-emerald-500/20 text-emerald-100 ring-emerald-500/30",
+    "border-brand-maroon-light/50 bg-brand-maroon-light/20 text-brand-gold ring-brand-maroon-light/30",
   closed: "border-zinc-600/60 bg-zinc-800/90 text-zinc-300 ring-zinc-600/30",
   low: "border-zinc-600/50 bg-zinc-800/80 text-zinc-400 ring-zinc-600/20",
   normal:

@@ -110,7 +110,7 @@ export function AdminRecordPage({
             <Button
               type="button"
               disabled={saving}
-              className="min-w-[120px] bg-emerald-600 text-white hover:bg-emerald-500"
+              className="min-w-[120px] bg-brand-maroon-light text-white hover:bg-brand-maroon"
               onClick={onSave}
             >
               {saving ? "Saving…" : "Save"}

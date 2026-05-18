@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { SiteLogo } from "@/components/layout/site-logo";
 import type { SiteSocialProfile } from "@/lib/site-marketing";
 import {
   siteContactEmail,
@@ -76,9 +77,13 @@ export function Footer() {
       <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
         <div className="grid gap-12 md:grid-cols-[1.3fr_1fr_1fr]">
           <div className="space-y-4">
-            <p className="font-heading text-xl tracking-[0.2em] text-primary uppercase">
-              Tread Trails
-            </p>
+            <Link
+              href="/"
+              className="inline-flex rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+              aria-label="Tread Trails home"
+            >
+              <SiteLogo variant="footer" />
+            </Link>
             <p className="max-w-md text-sm leading-relaxed text-muted-foreground">
               Expedition-focused upgrades — suspension, armor, lighting, and curated accessories
               with studio-grade fitting. We work by appointment so every bay stays deliberate.

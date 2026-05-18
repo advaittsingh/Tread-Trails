@@ -86,7 +86,7 @@ export function AdminImageField({
             className="flex flex-col items-center gap-2 text-zinc-500 transition hover:text-zinc-300"
           >
             {uploading ? (
-              <Loader2 className="size-6 animate-spin text-emerald-400" />
+              <Loader2 className="size-6 animate-spin text-brand-gold-dark" />
             ) : (
               <ImagePlus className="size-6" />
             )}

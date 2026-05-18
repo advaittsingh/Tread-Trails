@@ -23,7 +23,7 @@ function wrap(body: string): string {
 <html><body style="margin:0;padding:24px;font-family:system-ui,sans-serif;background:#f3f4f6;">
 <table width="100%" style="max-width:560px;margin:0 auto;background:#fff;border-radius:12px;border:1px solid #e5e7eb;">
 <tr><td style="background:#0f172a;padding:20px 24px;">
-<p style="margin:0;color:#34d399;font-size:11px;letter-spacing:0.15em;text-transform:uppercase;">Tread Trails</p>
+<p style="margin:0;color:#8f3a2c;font-size:11px;letter-spacing:0.15em;text-transform:uppercase;">Tread Trails</p>
 </td></tr>
 <tr><td style="padding:24px;color:#374151;line-height:1.6;font-size:15px;">${body}</td></tr>
 <tr><td style="padding:16px 24px;background:#f9fafb;border-top:1px solid #e5e7eb;color:#6b7280;font-size:12px;">

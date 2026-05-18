@@ -195,7 +195,7 @@ export function AdminBookingsTable() {
             className={cn(
               "rounded-full border px-3 py-1.5 text-xs font-medium transition",
               view === tab.id
-                ? "border-emerald-500/50 bg-emerald-500/15 text-emerald-100"
+                ? "border-brand-maroon-light/50 bg-brand-maroon-light/15 text-brand-gold"
                 : "border-zinc-700 bg-zinc-900 text-zinc-400 hover:border-zinc-600 hover:text-zinc-200"
             )}
           >
@@ -245,7 +245,7 @@ export function AdminBookingsTable() {
                       <td className="px-4 py-4 font-mono text-xs">
                         <Link
                           href={`/admin/bookings/${r.id}`}
-                          className="text-emerald-400/90 hover:text-emerald-300 hover:underline"
+                          className="text-brand-gold-dark/90 hover:text-brand-gold-dark hover:underline"
                         >
                           {r.id.slice(-10)}
                         </Link>
@@ -278,7 +278,7 @@ export function AdminBookingsTable() {
                             onChange={(e) =>
                               void patchStatus(r.id, e.target.value, r.status)
                             }
-                            className="h-9 rounded-lg border border-zinc-700 bg-zinc-950 px-2 text-xs text-zinc-100 outline-none focus:ring-2 focus:ring-emerald-500/40 disabled:opacity-50"
+                            className="h-9 rounded-lg border border-zinc-700 bg-zinc-950 px-2 text-xs text-zinc-100 outline-none focus:ring-2 focus:ring-brand-maroon-light/40 disabled:opacity-50"
                           >
                             <option value="pending">Pending</option>
                             <option value="confirmed">Confirmed</option>
@@ -291,7 +291,7 @@ export function AdminBookingsTable() {
                               variant: "ghost",
                               size: "sm",
                               className:
-                                "h-9 text-xs text-zinc-400 hover:text-emerald-300",
+                                "h-9 text-xs text-zinc-400 hover:text-brand-gold-dark",
                             })}
                           >
                             Open

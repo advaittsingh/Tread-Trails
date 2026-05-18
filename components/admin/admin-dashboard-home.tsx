@@ -40,7 +40,7 @@ export function AdminDashboardHome() {
   return (
     <div className="space-y-10 p-6 lg:p-10">
       <header className="space-y-2 border-b border-zinc-800 pb-8">
-        <p className="text-[11px] font-medium tracking-[0.35em] text-emerald-400 uppercase">
+        <p className="text-[11px] font-medium tracking-[0.35em] text-brand-gold-dark uppercase">
           Phase 1 · Operations
         </p>
         <h1 className="font-heading text-3xl tracking-tight text-white md:text-4xl">
@@ -84,7 +84,7 @@ export function AdminDashboardHome() {
       <section className="grid gap-4 lg:grid-cols-3">
         <Link
           href="/admin/orders"
-          className="group flex items-center justify-between rounded-2xl border border-zinc-800 bg-zinc-900/40 px-6 py-5 transition hover:border-emerald-500/35 hover:bg-zinc-900/70"
+          className="group flex items-center justify-between rounded-2xl border border-zinc-800 bg-zinc-900/40 px-6 py-5 transition hover:border-brand-maroon-light/35 hover:bg-zinc-900/70"
         >
           <div>
             <p className="text-sm font-medium text-white">Manage orders</p>
@@ -92,11 +92,11 @@ export function AdminDashboardHome() {
               Pagination, status filters, fulfilment updates
             </p>
           </div>
-          <ArrowRight className="size-5 text-zinc-600 transition group-hover:text-emerald-400" />
+          <ArrowRight className="size-5 text-zinc-600 transition group-hover:text-brand-gold-dark" />
         </Link>
         <Link
           href="/admin/products"
-          className="group flex items-center justify-between rounded-2xl border border-zinc-800 bg-zinc-900/40 px-6 py-5 transition hover:border-emerald-500/35 hover:bg-zinc-900/70"
+          className="group flex items-center justify-between rounded-2xl border border-zinc-800 bg-zinc-900/40 px-6 py-5 transition hover:border-brand-maroon-light/35 hover:bg-zinc-900/70"
         >
           <div>
             <p className="text-sm font-medium text-white">Catalog · products</p>
@@ -104,11 +104,11 @@ export function AdminDashboardHome() {
               CRUD, vehicle compatibility, Neon-backed SKUs
             </p>
           </div>
-          <Layers className="size-5 text-zinc-600 transition group-hover:text-emerald-400" />
+          <Layers className="size-5 text-zinc-600 transition group-hover:text-brand-gold-dark" />
         </Link>
         <Link
           href="/admin/bookings"
-          className="group flex items-center justify-between rounded-2xl border border-zinc-800 bg-zinc-900/40 px-6 py-5 transition hover:border-emerald-500/35 hover:bg-zinc-900/70"
+          className="group flex items-center justify-between rounded-2xl border border-zinc-800 bg-zinc-900/40 px-6 py-5 transition hover:border-brand-maroon-light/35 hover:bg-zinc-900/70"
         >
           <div>
             <p className="text-sm font-medium text-white">Manage bookings</p>
@@ -116,7 +116,7 @@ export function AdminDashboardHome() {
               Customer bay calendar signals
             </p>
           </div>
-          <ArrowRight className="size-5 text-zinc-600 transition group-hover:text-emerald-400" />
+          <ArrowRight className="size-5 text-zinc-600 transition group-hover:text-brand-gold-dark" />
         </Link>
       </section>
 
@@ -149,7 +149,7 @@ function MetricCard({
   return (
     <div
       className={`rounded-2xl border border-zinc-800 bg-zinc-900/35 p-6 shadow-inner ${
-        accent ? "ring-1 ring-emerald-500/15" : ""
+        accent ? "ring-1 ring-brand-maroon-light/15" : ""
       }`}
     >
       <div className="flex items-start justify-between gap-3">
@@ -170,7 +170,7 @@ function MetricCard({
         </div>
         <div
           className={`rounded-xl border border-zinc-700/80 p-2.5 text-zinc-400 ${
-            accent ? "border-emerald-500/30 text-emerald-300" : ""
+            accent ? "border-brand-maroon-light/30 text-brand-gold-dark" : ""
           }`}
         >
           {icon}

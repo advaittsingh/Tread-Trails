@@ -135,7 +135,7 @@ export function AdminProductsTable() {
         title="Products"
         description="Catalog SKUs — pricing, fitment, specs, and checkout variants."
         action={
-          <Link href="/admin/products/new" className="inline-flex h-10 items-center justify-center rounded-md bg-emerald-600 px-4 text-sm font-medium text-white transition hover:bg-emerald-500">New product</Link>
+          <Link href="/admin/products/new" className="inline-flex h-10 items-center justify-center rounded-md bg-brand-maroon-light px-4 text-sm font-medium text-white transition hover:bg-brand-maroon">New product</Link>
         }
       />
 
@@ -206,7 +206,7 @@ export function AdminProductsTable() {
                   ))
                 : rows.map((r) => (
                     <tr key={r.id} className="hover:bg-zinc-800/40">
-                      <td className="max-w-[180px] truncate px-4 py-4 font-mono text-xs text-emerald-300/90">
+                      <td className="max-w-[180px] truncate px-4 py-4 font-mono text-xs text-brand-gold-dark/90">
                         {r.product.slug}
                       </td>
                       <td className="max-w-[220px] truncate px-4 py-4 text-zinc-100">

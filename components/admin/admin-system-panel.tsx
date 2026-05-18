@@ -63,7 +63,7 @@ export function AdminSystemPanel() {
         </h1>
         <p className="mt-2 max-w-2xl text-sm text-zinc-400">
           Env probes and admin audit. Full error log with filters at{" "}
-          <a href="/admin/system/errors" className="text-emerald-400 hover:underline">
+          <a href="/admin/system/errors" className="text-brand-gold-dark hover:underline">
             /admin/system/errors
           </a>
           .
@@ -131,7 +131,7 @@ export function AdminSystemPanel() {
           <p className="text-sm font-medium text-zinc-200">Recent captured errors</p>
           <a
             href="/admin/system/errors"
-            className="text-xs text-emerald-400 hover:underline"
+            className="text-xs text-brand-gold-dark hover:underline"
           >
             View all →
           </a>
@@ -175,7 +175,7 @@ export function AdminSystemPanel() {
             audit.map((l) => (
               <div key={l.id} className="px-5 py-3 text-sm">
                 <p className="text-zinc-200">
-                  <span className="text-emerald-400">{l.action}</span>{" "}
+                  <span className="text-brand-gold-dark">{l.action}</span>{" "}
                   <span className="text-zinc-500">{l.entity}</span>{" "}
                   <span className="font-mono text-xs text-zinc-600">
                     {l.entityId.slice(-8)}
@@ -208,7 +208,7 @@ function FlagCard({
         <p className="text-[11px] tracking-[0.2em] text-zinc-500 uppercase">{title}</p>
         <span
           className={`rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase ${
-            ok ? "bg-emerald-500/20 text-emerald-300" : "bg-rose-500/20 text-rose-300"
+            ok ? "bg-brand-maroon-light/20 text-brand-gold-dark" : "bg-rose-500/20 text-rose-300"
           }`}
         >
           {ok ? "Healthy" : "Missing"}

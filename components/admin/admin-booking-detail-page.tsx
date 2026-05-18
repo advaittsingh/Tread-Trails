@@ -41,7 +41,7 @@ type Props = { bookingId: string };
 function timelineDotClass(kind: BookingTimelineEvent["kind"]) {
   switch (kind) {
     case "confirmed":
-      return "bg-emerald-500 ring-emerald-500/30";
+      return "bg-brand-maroon-light ring-brand-maroon-light/30";
     case "completed":
       return "bg-violet-500 ring-violet-500/30";
     case "cancelled":
@@ -211,7 +211,7 @@ export function AdminBookingDetailPage({ bookingId }: Props) {
             {booking.service}
           </h1>
           <p className="flex flex-wrap items-center gap-2 text-sm text-zinc-300">
-            <CalendarClock className="size-4 text-emerald-500/80" />
+            <CalendarClock className="size-4 text-brand-gold-dark/80" />
             <span className="font-medium">
               {booking.date} · {formatBookingSlotLabel(booking.time)}
             </span>
@@ -221,7 +221,7 @@ export function AdminBookingDetailPage({ bookingId }: Props) {
             {booking.id}
             <button
               type="button"
-              className="ml-2 inline-flex align-middle text-zinc-600 hover:text-emerald-400"
+              className="ml-2 inline-flex align-middle text-zinc-600 hover:text-brand-gold-dark"
               aria-label="Copy booking ID"
               onClick={() => {
                 void navigator.clipboard.writeText(booking.id);
@@ -238,7 +238,7 @@ export function AdminBookingDetailPage({ bookingId }: Props) {
             type="button"
             size="sm"
             disabled={saving || !canConfirm}
-            className="bg-emerald-600 hover:bg-emerald-500"
+            className="bg-brand-maroon-light hover:bg-brand-maroon"
             onClick={() => void confirmStatus("confirmed", "Booking confirmed")}
           >
             <CheckCircle2 className="mr-1.5 size-4" />
@@ -332,7 +332,7 @@ export function AdminBookingDetailPage({ bookingId }: Props) {
               size="sm"
               disabled={saving}
               onClick={() => void saveNotes()}
-              className="bg-emerald-600 hover:bg-emerald-500"
+              className="bg-brand-maroon-light hover:bg-brand-maroon"
             >
               {saving ? "Saving…" : "Save notes"}
             </Button>
@@ -348,7 +348,7 @@ export function AdminBookingDetailPage({ bookingId }: Props) {
               <p className="font-medium text-zinc-100">{booking.contactName}</p>
               <a
                 href={`mailto:${booking.contactEmail}`}
-                className="flex items-center gap-2 text-emerald-400/90 hover:underline"
+                className="flex items-center gap-2 text-brand-gold-dark/90 hover:underline"
               >
                 <Mail className="size-4 shrink-0" />
                 {booking.contactEmail}
@@ -405,7 +405,7 @@ export function AdminBookingDetailPage({ bookingId }: Props) {
               onChange={(e) =>
                 void confirmStatus(e.target.value, "Status updated")
               }
-              className="mt-2 h-10 w-full rounded-lg border border-zinc-700/80 bg-zinc-900/80 px-3 text-sm text-zinc-100 outline-none focus:ring-2 focus:ring-emerald-500/35"
+              className="mt-2 h-10 w-full rounded-lg border border-zinc-700/80 bg-zinc-900/80 px-3 text-sm text-zinc-100 outline-none focus:ring-2 focus:ring-brand-maroon-light/35"
             >
               <option value="pending">Pending</option>
               <option value="confirmed">Confirmed</option>

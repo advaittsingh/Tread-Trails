@@ -115,7 +115,7 @@ export function AdminBuildsTable() {
         title="Portfolio builds"
         description="Case studies on the storefront — before/after gallery and linked catalog SKUs."
         action={
-          <Link href="/admin/builds/new" className="inline-flex h-10 items-center justify-center rounded-md bg-emerald-600 px-4 text-sm font-medium text-white transition hover:bg-emerald-500">New build</Link>
+          <Link href="/admin/builds/new" className="inline-flex h-10 items-center justify-center rounded-md bg-brand-maroon-light px-4 text-sm font-medium text-white transition hover:bg-brand-maroon">New build</Link>
         }
       />
 
@@ -147,7 +147,7 @@ export function AdminBuildsTable() {
               setVehicleFilter(e.target.value);
               setPage(1);
             }}
-            className="h-10 w-full rounded-xl border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100 outline-none focus:ring-2 focus:ring-emerald-500/40"
+            className="h-10 w-full rounded-xl border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100 outline-none focus:ring-2 focus:ring-brand-maroon-light/40"
           >
             <option value="">All platforms</option>
             {cars.map((c) => (
@@ -182,7 +182,7 @@ export function AdminBuildsTable() {
                   ))
                 : rows.map((r) => (
                     <tr key={r.id} className="hover:bg-zinc-800/40">
-                      <td className="max-w-[160px] truncate px-4 py-4 font-mono text-xs text-emerald-300/90">
+                      <td className="max-w-[160px] truncate px-4 py-4 font-mono text-xs text-brand-gold-dark/90">
                         {r.build.slug}
                       </td>
                       <td className="max-w-[240px] truncate px-4 py-4 text-zinc-100">

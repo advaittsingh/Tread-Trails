@@ -64,7 +64,7 @@ function layout(subject: string, body: string): { subject: string; html: string 
   <table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;margin:24px auto;background:#ffffff;border-radius:12px;overflow:hidden;border:1px solid #e5e7eb;">
     <tr>
       <td style="background:#0f172a;padding:24px 28px;">
-        <p style="margin:0;color:#34d399;font-size:11px;letter-spacing:0.2em;text-transform:uppercase;">Tread Trails</p>
+        <p style="margin:0;color:#8f3a2c;font-size:11px;letter-spacing:0.2em;text-transform:uppercase;">Tread Trails</p>
         <h1 style="margin:8px 0 0;color:#f9fafb;font-size:22px;font-weight:600;">${escapeHtml(subject)}</h1>
       </td>
     </tr>

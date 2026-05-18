@@ -194,7 +194,7 @@ export function AdminOrderDetailSheet({ orderId, onClose, onUpdated }: Props) {
                     href={stripeDash}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="mt-2 inline-block text-xs text-emerald-400 underline"
+                    className="mt-2 inline-block text-xs text-brand-gold-dark underline"
                   >
                     Open in Stripe Dashboard
                   </Link>
@@ -213,7 +213,7 @@ export function AdminOrderDetailSheet({ orderId, onClose, onUpdated }: Props) {
                   size="sm"
                   disabled={savingNotes}
                   onClick={() => void saveNotes()}
-                  className="bg-emerald-600 hover:bg-emerald-500"
+                  className="bg-brand-maroon-light hover:bg-brand-maroon"
                 >
                   {savingNotes ? "Saving…" : "Save notes"}
                 </Button>

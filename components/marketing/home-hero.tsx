@@ -32,7 +32,7 @@ export function HomeHero() {
             initial={reduceMotion ? false : { opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.45 }}
-            className="font-heading text-xs tracking-[0.45em] text-primary uppercase"
+            className="font-sans text-[11px] font-medium tracking-[0.42em] text-primary uppercase"
           >
             Expedition-grade builds
           </motion.p>
@@ -40,7 +40,7 @@ export function HomeHero() {
             initial={reduceMotion ? false : { opacity: 0, y: 18 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.55, delay: 0.05 }}
-            className="font-heading text-balance text-5xl leading-[0.95] tracking-tight text-foreground sm:text-6xl md:text-7xl lg:text-8xl"
+            className="font-heading text-balance text-5xl font-semibold leading-[0.98] tracking-[-0.03em] text-foreground sm:text-6xl md:text-7xl lg:text-[5.25rem]"
           >
             Terrain,
             <span className="block text-muted-foreground">refined.</span>
@@ -49,7 +49,7 @@ export function HomeHero() {
             initial={reduceMotion ? false : { opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.12 }}
-            className="max-w-xl text-lg leading-relaxed text-muted-foreground md:text-xl"
+            className="max-w-xl text-lg font-normal leading-relaxed text-muted-foreground md:text-xl"
           >
             Vehicle-native kits, armor, and lighting programs engineered with OEM discipline —
             delivered with boutique studio care.
