@@ -14,11 +14,6 @@ import { VehicleExploreCarousel } from "@/components/marketing/vehicle-explore-c
 import { HomeHero } from "@/components/marketing/home-hero";
 import { ProductCard } from "@/components/marketing/product-card";
 import { SectionHeading } from "@/components/marketing/section-heading";
-import {
-  PlainSection,
-  TextureBackgroundSection,
-} from "@/components/marketing/tread-texture-section";
-import { siteBackgroundUrl } from "@/lib/site-backgrounds";
 
 export const metadata: Metadata = buildPageMetadata({
   segmentTitle: "Home",
@@ -38,109 +33,112 @@ export default async function HomePage() {
     <>
       <HomeHero />
 
-      {/* Categories — tire tread */}
-      <TextureBackgroundSection
-        backgroundImage={siteBackgroundUrl("tread")}
-        className="py-20 lg:py-24"
-        innerClassName="mx-auto max-w-7xl space-y-14 overflow-x-hidden px-4 sm:px-6 lg:px-8"
-      >
-        <SectionHeading
-          tone="cinematic"
-          eyebrow="Platforms"
-          title="Engineered for terrain"
-          description="Pick a brand, model line, and generation — then open a variant hub for compatible SKUs and platform specs."
-        />
-        <VehicleExploreCarousel cars={cars} onTextureBg />
-        <div className="flex justify-center pt-2">
-          <Link
-            href="/vehicles"
-            className="text-xs font-medium tracking-[0.2em] text-muted-foreground uppercase underline-offset-4 transition-colors hover:text-primary hover:underline"
-          >
-            Browse by OEM
-          </Link>
+      <section className="py-20 lg:py-24">
+        <div className="mx-auto max-w-7xl space-y-14 overflow-x-hidden px-4 sm:px-6 lg:px-8">
+          <SectionHeading
+            tone="cinematic"
+            eyebrow="Platforms"
+            title="Engineered for terrain"
+            description="Pick a brand, model line, and generation — then open a variant hub for compatible SKUs and platform specs."
+          />
+          <VehicleExploreCarousel cars={cars} />
+          <div className="flex justify-center pt-2">
+            <Link
+              href="/vehicles"
+              className="text-xs font-medium tracking-[0.2em] text-muted-foreground uppercase underline-offset-4 transition-colors hover:text-primary hover:underline"
+            >
+              Browse by OEM
+            </Link>
+          </div>
         </div>
-      </TextureBackgroundSection>
+      </section>
 
-      {/* Categories — brands on plain warm white */}
-      <PlainSection innerClassName="space-y-14 overflow-x-hidden">
-        <SectionHeading
-          tone="cinematic"
-          eyebrow="Manufacturers"
-          title="Curated partner systems"
-          description="Each card opens that manufacturer’s brand hub — expedition-grade catalog filtered to their lineup."
-        />
-        <BrandExploreCarousel brands={featuredBrands} />
-        <div className="flex justify-center pt-2">
-          <Link
-            href="/brands"
-            className="text-xs font-medium tracking-[0.2em] text-muted-foreground uppercase underline-offset-4 transition-colors hover:text-primary hover:underline"
-          >
-            All partner brands
-          </Link>
+      <section className="border-t border-border/40 py-20 lg:py-24">
+        <div className="mx-auto max-w-7xl space-y-14 overflow-x-hidden px-4 sm:px-6 lg:px-8">
+          <SectionHeading
+            tone="cinematic"
+            eyebrow="Manufacturers"
+            title="Curated partner systems"
+            description="Each card opens that manufacturer’s brand hub — expedition-grade catalog filtered to their lineup."
+          />
+          <BrandExploreCarousel brands={featuredBrands} />
+          <div className="flex justify-center pt-2">
+            <Link
+              href="/brands"
+              className="text-xs font-medium tracking-[0.2em] text-muted-foreground uppercase underline-offset-4 transition-colors hover:text-primary hover:underline"
+            >
+              All partner brands
+            </Link>
+          </div>
         </div>
-      </PlainSection>
+      </section>
 
-      {/* Featured builds — plain warm white */}
-      <PlainSection innerClassName="space-y-14">
-        <SectionHeading
-          tone="cinematic"
-          eyebrow="Portfolio"
-          title="Built for the wild"
-          description="Real installs on real platforms — open a case study for the full narrative and parts traceability."
-        />
-        <div className="grid gap-10 lg:grid-cols-3">
-          {featuredBuilds.map((b, i) => {
-            const vehicleName = cars.find((c) => c.slug === b.vehicleSlug)?.name;
-            return (
-              <BuildCard key={b.id} build={b} vehicleName={vehicleName} index={i} />
-            );
-          })}
+      <section className="border-t border-border/40 py-20 lg:py-24">
+        <div className="mx-auto max-w-7xl space-y-14 px-4 sm:px-6 lg:px-8">
+          <SectionHeading
+            tone="cinematic"
+            eyebrow="Portfolio"
+            title="Built for the wild"
+            description="Real installs on real platforms — open a case study for the full narrative and parts traceability."
+          />
+          <div className="grid items-stretch gap-10 lg:grid-cols-3">
+            {featuredBuilds.map((b, i) => {
+              const vehicleName = cars.find((c) => c.slug === b.vehicleSlug)?.name;
+              return (
+                <BuildCard
+                  key={b.id}
+                  build={b}
+                  vehicleName={vehicleName}
+                  index={i}
+                  onTextureBg
+                  className="h-full"
+                />
+              );
+            })}
+          </div>
+          <div className="flex justify-center">
+            <Link
+              href="/builds"
+              className="text-xs font-medium tracking-[0.2em] text-muted-foreground uppercase underline-offset-4 transition-colors hover:text-primary hover:underline"
+            >
+              Explore builds by vehicle
+            </Link>
+          </div>
         </div>
-        <div className="flex justify-center">
-          <Link
-            href="/builds"
-            className="text-xs font-medium tracking-[0.2em] text-muted-foreground uppercase underline-offset-4 transition-colors hover:text-primary hover:underline"
-          >
-            Explore builds by vehicle
-          </Link>
-        </div>
-      </PlainSection>
+      </section>
 
-      {/* Services / catalog — mud texture */}
-      <TextureBackgroundSection
-        backgroundImage={siteBackgroundUrl("mud")}
-        className="border-y border-border/50 py-20 lg:py-24"
-        innerClassName="mx-auto max-w-7xl space-y-14 px-4 sm:px-6 lg:px-8"
-      >
-        <SectionHeading
-          tone="cinematic"
-          eyebrow="Catalog"
-          title="Expedition systems"
-          description="Modular upgrades with explicit vehicle compatibility — speak with our engineers before checkout."
-        />
-        <div className="grid gap-8 sm:grid-cols-2 xl:grid-cols-4">
-          {featuredProducts.map((p, i) => (
-            <ProductCard
-              key={p.id}
-              product={p}
-              index={i}
-              onTextureBg
-              emphasizeOverlay
-            />
-          ))}
+      <section className="border-t border-border/40 py-20 lg:py-24">
+        <div className="mx-auto max-w-7xl space-y-14 px-4 sm:px-6 lg:px-8">
+          <SectionHeading
+            tone="cinematic"
+            eyebrow="Catalog"
+            title="Expedition systems"
+            description="Modular upgrades with explicit vehicle compatibility — speak with our engineers before checkout."
+          />
+          <div className="grid items-stretch gap-8 sm:grid-cols-2 xl:grid-cols-4">
+            {featuredProducts.map((p, i) => (
+              <ProductCard
+                key={p.id}
+                product={p}
+                index={i}
+                onTextureBg
+                emphasizeOverlay
+                className="h-full"
+              />
+            ))}
+          </div>
+          <div className="flex justify-center">
+            <Link
+              href="/products"
+              className="text-xs font-medium tracking-[0.2em] text-foreground uppercase underline-offset-4 transition-colors hover:text-primary hover:underline"
+            >
+              Open full catalog
+            </Link>
+          </div>
         </div>
-        <div className="flex justify-center">
-          <Link
-            href="/products"
-            className="text-xs font-medium tracking-[0.2em] text-foreground uppercase underline-offset-4 transition-colors hover:text-primary hover:underline"
-          >
-            Open full catalog
-          </Link>
-        </div>
-      </TextureBackgroundSection>
+      </section>
 
-      {/* Concierge — clean */}
-      <section className="border-t border-border/50 bg-background py-24 lg:py-28">
+      <section className="border-t border-border/40 py-24 lg:py-28">
         <div className="mx-auto flex max-w-5xl flex-col items-center gap-10 px-4 text-center sm:px-6">
           <SectionHeading
             align="center"

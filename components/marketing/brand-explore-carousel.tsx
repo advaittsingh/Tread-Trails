@@ -4,6 +4,7 @@ import type { BrandEntry } from "@/data/index";
 
 import { BrandCard } from "@/components/marketing/brand-card";
 import { ExploreCarousel } from "@/components/marketing/explore-carousel";
+import { EXPLORE_CAROUSEL_SLIDE_CLASS } from "@/lib/explore-card-layout";
 
 type BrandExploreCarouselProps = {
   brands: BrandEntry[];
@@ -12,7 +13,7 @@ type BrandExploreCarouselProps = {
 
 export function BrandExploreCarousel({
   brands,
-  onTextureBg = false,
+  onTextureBg = true,
 }: BrandExploreCarouselProps) {
   return (
     <ExploreCarousel
@@ -25,7 +26,7 @@ export function BrandExploreCarousel({
           index={i}
           variant="compact"
           onTextureBg={onTextureBg}
-          className="h-full w-full"
+          className={EXPLORE_CAROUSEL_SLIDE_CLASS}
         />
       )}
     />

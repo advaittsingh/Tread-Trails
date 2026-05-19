@@ -9,7 +9,6 @@ import {
 } from "@/lib/site-marketing";
 
 import { Separator } from "@/components/ui/separator";
-import { SITE_BACKGROUNDS } from "@/lib/site-backgrounds";
 
 const links = [
   { label: "About", href: "/about" },
@@ -74,16 +73,7 @@ export function Footer() {
     "flex h-[8.5rem] min-w-0 flex-1 flex-col justify-between text-sm leading-5";
 
   return (
-    <footer className="relative isolate overflow-hidden border-t border-foreground/20 text-stone-200">
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 bg-cover bg-center bg-no-repeat"
-        style={{ backgroundImage: `url(${SITE_BACKGROUNDS.tread})` }}
-      />
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 bg-gradient-to-b from-foreground/94 via-foreground/90 to-foreground/96"
-      />
+    <footer className="relative border-t border-border/50">
       <div className="relative mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
         <div className="grid gap-12 md:grid-cols-[1.3fr_1fr_1fr]">
           <div className="space-y-4">
@@ -94,22 +84,22 @@ export function Footer() {
             >
               <SiteLogo variant="footer" />
             </Link>
-            <p className="max-w-md text-sm leading-relaxed text-stone-400">
+            <p className="max-w-md text-sm leading-relaxed text-muted-foreground">
               Expedition-focused upgrades — suspension, armor, lighting, and curated accessories
               with studio-grade fitting. We work by appointment so every bay stays deliberate.
             </p>
           </div>
           <div>
-            <p className="font-heading text-xs tracking-[0.35em] text-stone-100 uppercase">
+            <p className="font-heading text-xs tracking-[0.35em] text-foreground uppercase">
               Explore
             </p>
-            <div className="mt-4 flex gap-x-5 text-stone-400">
+            <div className="mt-4 flex gap-x-5 text-muted-foreground">
               <ul className={exploreColumnClass}>
                 {exploreColOne.map((item) => (
                   <li key={item.href}>
                     <Link
                       href={item.href}
-                      className="block rounded-sm outline-none transition hover:text-stone-50 focus-visible:text-stone-50 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-foreground"
+                      className="block rounded-sm outline-none transition hover:text-primary focus-visible:text-primary focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                     >
                       {item.label}
                     </Link>
@@ -121,7 +111,7 @@ export function Footer() {
                   <li key={item.href}>
                     <Link
                       href={item.href}
-                      className="block rounded-sm outline-none transition hover:text-stone-50 focus-visible:text-stone-50 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-foreground"
+                      className="block rounded-sm outline-none transition hover:text-primary focus-visible:text-primary focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                     >
                       {item.label}
                     </Link>
@@ -131,15 +121,15 @@ export function Footer() {
             </div>
           </div>
           <div>
-            <p className="font-heading text-xs tracking-[0.35em] text-stone-100 uppercase">
+            <p className="font-heading text-xs tracking-[0.35em] text-foreground uppercase">
               Studio
             </p>
-            <address className="mt-4 space-y-3 text-sm not-italic text-stone-400">
+            <address className="mt-4 space-y-3 text-sm not-italic text-muted-foreground">
               <p>{siteStudioLocationsLine()}</p>
               <p>
                 <a
                   href={`mailto:${email}`}
-                  className="rounded-sm text-stone-100 underline-offset-4 outline-none transition hover:text-white hover:underline focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-foreground"
+                  className="rounded-sm text-foreground underline-offset-4 outline-none transition hover:text-primary hover:underline focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                 >
                   {email}
                 </a>
@@ -153,7 +143,7 @@ export function Footer() {
                       href={s.href}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="rounded-full text-stone-400 outline-none transition hover:text-stone-50 focus-visible:text-stone-50 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-foreground"
+                      className="rounded-full text-muted-foreground outline-none transition hover:text-primary focus-visible:text-primary focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                       aria-label={`Tread Trails on ${s.label}`}
                     >
                       <SocialIcon label={s.label} />
@@ -164,8 +154,8 @@ export function Footer() {
             </address>
           </div>
         </div>
-        <Separator className="my-10 bg-stone-600/50" />
-        <p className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-center text-xs text-stone-500">
+        <Separator className="my-10 bg-border/60" />
+        <p className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-center text-xs text-muted-foreground">
           <span>
             © {new Date().getFullYear()} Tread Trails. All rights reserved.
           </span>
@@ -178,7 +168,7 @@ export function Footer() {
               href="https://www.curvvtech.com/"
               target="_blank"
               rel="noopener noreferrer"
-              className="rounded-sm text-stone-300 underline-offset-4 outline-none transition hover:text-stone-50 hover:underline focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-foreground"
+              className="rounded-sm text-foreground underline-offset-4 outline-none transition hover:text-primary hover:underline focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
             >
               Curvvtech
             </a>

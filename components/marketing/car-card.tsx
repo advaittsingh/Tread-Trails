@@ -10,6 +10,7 @@ import type { Car } from "@/data/types";
 
 import { Badge } from "@/components/ui/badge";
 import { cardShellClass } from "@/lib/card-surfaces";
+import { EXPLORE_CAROUSEL_CARD_H } from "@/lib/explore-card-layout";
 import { cn } from "@/lib/utils";
 
 type CarCardProps = {
@@ -19,7 +20,7 @@ type CarCardProps = {
   href?: string;
   /** Narrow card for horizontal strips (e.g. homepage). */
   variant?: "default" | "compact";
-  /** Cream surfaces for textured homepage sections. */
+  /** Glass panel on textured site background. */
   onTextureBg?: boolean;
   className?: string;
 };
@@ -48,28 +49,28 @@ export const CarCard = memo(function CarCard({
       }}
       whileHover={reduceMotion ? undefined : { y: -4 }}
       className={cn(
-        "group relative",
+        "group relative flex h-full flex-col",
         compact && !className && "w-[min(240px,78vw)] shrink-0 snap-start sm:w-[260px]",
         className
       )}
     >
       <Link
         href={dest}
-        className="block outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        className="flex h-full min-h-0 flex-1 flex-col outline-none focus-visible:ring-2 focus-visible:ring-ring"
         aria-label={`${car.name} — vehicle hub with compatible parts and portfolio builds`}
       >
         <div
           className={cn(
-            "flex flex-col overflow-hidden rounded-xl transition-shadow duration-300 hover:shadow-card-hover",
+            "flex h-full flex-col overflow-hidden rounded-xl transition-shadow duration-300 hover:shadow-card-hover",
             cardShellClass(onTextureBg),
-            compact && "rounded-lg shadow-sm hover:shadow-card"
+            compact && ["rounded-lg shadow-sm hover:shadow-card", "h-full", EXPLORE_CAROUSEL_CARD_H]
           )}
         >
           <div
             className={cn(
-              "relative aspect-[4/3]",
-              onTextureBg ? "bg-muted/80" : "bg-muted",
-              compact && "aspect-[5/3]"
+              "relative w-full shrink-0",
+              compact ? "aspect-[5/3]" : "aspect-[4/3]",
+              onTextureBg ? "bg-muted/80" : "bg-muted"
             )}
           >
             <Image
@@ -89,50 +90,59 @@ export const CarCard = memo(function CarCard({
 
           <div
             className={cn(
-              "flex items-start gap-4 border-t px-4 py-4 sm:px-5 sm:py-5",
+              "flex flex-1 flex-col border-t",
               onTextureBg ? "border-primary/15 bg-background/85" : "border-border/60",
-              compact && "gap-3 px-3 py-3 sm:px-3.5 sm:py-3.5"
+              compact ? "min-h-[8.75rem] px-3 py-3 sm:px-3.5 sm:py-3.5" : "px-4 py-4 sm:px-5 sm:py-5"
             )}
           >
-            <div className={cn("min-w-0 flex-1 space-y-2", compact && "space-y-1.5")}>
-              <Badge
-                variant="secondary"
+            <div className="flex min-h-0 flex-1 items-start gap-3 sm:gap-4">
+              <div
                 className={cn(
-                  "rounded-full border text-[10px] tracking-widest text-foreground uppercase",
-                  onTextureBg
-                    ? "border-primary/15 bg-secondary/70"
-                    : "border-border/60 bg-muted/80",
-                  compact && "text-[9px] tracking-[0.2em]"
+                  "flex min-w-0 flex-1 flex-col space-y-2",
+                  compact && "space-y-1.5"
                 )}
               >
-                {car.category}
-              </Badge>
-              <h3
+                <Badge
+                  variant="secondary"
+                  className={cn(
+                    "w-fit rounded-full border text-[10px] tracking-widest text-foreground uppercase",
+                    onTextureBg
+                      ? "border-primary/15 bg-secondary/70"
+                      : "border-border/60 bg-muted/80",
+                    compact && "text-[9px] tracking-[0.2em]"
+                  )}
+                >
+                  {car.category}
+                </Badge>
+                <h3
+                  className={cn(
+                    "font-heading line-clamp-2 font-semibold leading-tight tracking-tight text-foreground",
+                    compact
+                      ? "min-h-[2.75em] text-base sm:text-lg"
+                      : "text-xl sm:text-2xl"
+                  )}
+                >
+                  {car.name}
+                </h3>
+                <p
+                  className={cn(
+                    "line-clamp-2 text-sm leading-relaxed text-muted-foreground",
+                    compact ? "min-h-[2.5em] text-xs leading-snug" : ""
+                  )}
+                >
+                  {car.tagline}
+                </p>
+              </div>
+              <span
                 className={cn(
-                  "font-heading text-xl font-semibold leading-tight tracking-tight text-foreground sm:text-2xl",
-                  compact && "text-base sm:text-lg"
+                  "mt-0.5 flex size-10 shrink-0 items-center justify-center rounded-full border border-border/70 text-muted-foreground transition group-hover:border-primary/40 group-hover:text-primary",
+                  compact && "size-8"
                 )}
+                aria-hidden
               >
-                {car.name}
-              </h3>
-              <p
-                className={cn(
-                  "text-sm leading-relaxed text-muted-foreground",
-                  compact && "text-xs leading-snug line-clamp-2"
-                )}
-              >
-                {car.tagline}
-              </p>
+                <ArrowUpRight className={cn(compact ? "size-4" : "size-5")} />
+              </span>
             </div>
-            <span
-              className={cn(
-                "mt-0.5 flex size-10 shrink-0 items-center justify-center rounded-full border border-border/70 text-muted-foreground transition group-hover:border-primary/40 group-hover:text-primary",
-                compact && "size-8"
-              )}
-              aria-hidden
-            >
-              <ArrowUpRight className={cn(compact ? "size-4" : "size-5")} />
-            </span>
           </div>
         </div>
       </Link>

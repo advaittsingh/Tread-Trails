@@ -18,6 +18,7 @@ type BuildCardProps = {
   index?: number;
   /** Cream surfaces for textured homepage sections. */
   onTextureBg?: boolean;
+  className?: string;
 };
 
 export const BuildCard = memo(function BuildCard({
@@ -25,6 +26,7 @@ export const BuildCard = memo(function BuildCard({
   vehicleName,
   index = 0,
   onTextureBg = false,
+  className,
 }: BuildCardProps) {
   const reduceMotion = useReducedMotion();
 
@@ -40,11 +42,15 @@ export const BuildCard = memo(function BuildCard({
       }}
       whileHover={reduceMotion ? undefined : { y: -4 }}
       className={cn(
-        "group overflow-hidden rounded-xl transition-shadow hover:shadow-card-hover",
-        cardShellClass(onTextureBg)
+        "group flex h-full flex-col overflow-hidden rounded-xl transition-shadow hover:shadow-card-hover",
+        cardShellClass(onTextureBg),
+        className
       )}
     >
-      <Link href={`/build/${build.slug}`} className="block outline-none focus-visible:ring-2 focus-visible:ring-ring">
+      <Link
+        href={`/build/${build.slug}`}
+        className="flex h-full min-h-0 flex-1 flex-col outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      >
         <div
           className={cn(
             "grid grid-cols-2 gap-px",

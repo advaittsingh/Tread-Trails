@@ -9,6 +9,7 @@ import { ArrowUpRight } from "lucide-react";
 import type { BrandEntry } from "@/data/index";
 
 import { cardShellClass } from "@/lib/card-surfaces";
+import { EXPLORE_CAROUSEL_CARD_H } from "@/lib/explore-card-layout";
 import { cn } from "@/lib/utils";
 
 type BrandCardProps = {
@@ -43,7 +44,7 @@ export const BrandCard = memo(function BrandCard({
         ease: [0.22, 1, 0.36, 1],
       }}
       whileHover={reduceMotion ? undefined : { y: compact ? -4 : -5 }}
-      className={cn("group relative min-w-0", className)}
+      className={cn("group relative flex h-full min-w-0 flex-col", className)}
     >
       <Link
         href={`/brands/${brand.slug}`}
@@ -55,7 +56,7 @@ export const BrandCard = memo(function BrandCard({
             "flex h-full flex-col overflow-hidden rounded-xl transition-shadow duration-300 hover:shadow-card-hover",
             cardShellClass(onTextureBg),
             compact
-              ? "min-h-[220px] rounded-lg p-4 shadow-sm hover:shadow-card"
+              ? [EXPLORE_CAROUSEL_CARD_H, "h-full rounded-lg p-4 shadow-sm hover:shadow-card"]
               : "min-h-[280px] p-6"
           )}
         >

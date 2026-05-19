@@ -28,7 +28,7 @@ export function MarketingPageShell({
     return (
       <section
         className={cn(
-          "min-h-[calc(100dvh-3.5rem)] border-b border-border/50 bg-background",
+          "min-h-[calc(100dvh-3.5rem)] border-b border-border/50",
           className
         )}
       >

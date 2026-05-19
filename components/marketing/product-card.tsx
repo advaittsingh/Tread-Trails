@@ -32,6 +32,7 @@ type ProductCardProps = {
   onTextureBg?: boolean;
   /** Larger brand logo and price overlay (e.g. homepage featured row). */
   emphasizeOverlay?: boolean;
+  className?: string;
 };
 
 export const ProductCard = memo(function ProductCard({
@@ -39,6 +40,7 @@ export const ProductCard = memo(function ProductCard({
   index = 0,
   onTextureBg = false,
   emphasizeOverlay = false,
+  className,
 }: ProductCardProps) {
   const reduceMotion = useReducedMotion();
   const priceLabel = formatInr(product.price);
@@ -127,7 +129,8 @@ export const ProductCard = memo(function ProductCard({
       whileHover={reduceMotion ? undefined : { y: -4 }}
       className={cn(
         "group flex h-full flex-col overflow-hidden rounded-xl transition-shadow duration-300 hover:shadow-card-hover",
-        cardShellClass(textured)
+        cardShellClass(textured),
+        className
       )}
     >
       <div className={cn("relative aspect-square overflow-hidden", cardWellClass(textured))}>

@@ -14,11 +14,6 @@ import { buildPageMetadata } from "@/lib/seo/page-metadata";
 import { AboutHero } from "@/components/about/about-hero";
 import { PrimaryCta, WhatsAppCta } from "@/components/marketing/cta-buttons";
 import { SectionHeading } from "@/components/marketing/section-heading";
-import {
-  PlainSection,
-  TextureBackgroundSection,
-} from "@/components/marketing/tread-texture-section";
-import { siteBackgroundUrl } from "@/lib/site-backgrounds";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
@@ -103,11 +98,8 @@ export default function AboutPage() {
     <>
       <AboutHero />
 
-      <TextureBackgroundSection
-        backgroundImage={siteBackgroundUrl("bg3")}
-        className="border-b border-border/60 py-16 lg:py-24"
-        innerClassName="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8"
-      >
+      <section className="border-b border-border/40 py-16 lg:py-24">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Company overview */}
         <section className="mx-auto max-w-3xl text-center lg:max-w-4xl">
           <SectionHeading
@@ -169,9 +161,11 @@ export default function AboutPage() {
             </Card>
           </div>
         </section>
-      </TextureBackgroundSection>
+        </div>
+      </section>
 
-      <PlainSection innerClassName="space-y-0">
+      <section className="border-b border-border/40 py-16 lg:py-24">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Why choose us */}
         <section>
           <SectionHeading
@@ -200,13 +194,11 @@ export default function AboutPage() {
             ))}
           </ul>
         </section>
-      </PlainSection>
+        </div>
+      </section>
 
-      <TextureBackgroundSection
-        backgroundImage={siteBackgroundUrl("bg3")}
-        className="py-16 lg:py-24"
-        innerClassName="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8"
-      >
+      <section className="py-16 lg:py-24">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Process / timeline */}
         <section>
           <SectionHeading
@@ -285,7 +277,8 @@ export default function AboutPage() {
             </CardContent>
           </Card>
         </section>
-      </TextureBackgroundSection>
+        </div>
+      </section>
     </>
   );
 }

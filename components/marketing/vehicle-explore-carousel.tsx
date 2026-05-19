@@ -4,6 +4,7 @@ import type { Car } from "@/data/types";
 
 import { CarCard } from "@/components/marketing/car-card";
 import { ExploreCarousel } from "@/components/marketing/explore-carousel";
+import { EXPLORE_CAROUSEL_SLIDE_CLASS } from "@/lib/explore-card-layout";
 
 type VehicleExploreCarouselProps = {
   cars: Car[];
@@ -12,7 +13,7 @@ type VehicleExploreCarouselProps = {
 
 export function VehicleExploreCarousel({
   cars,
-  onTextureBg = false,
+  onTextureBg = true,
 }: VehicleExploreCarouselProps) {
   return (
     <ExploreCarousel
@@ -25,7 +26,7 @@ export function VehicleExploreCarousel({
           index={i}
           variant="compact"
           onTextureBg={onTextureBg}
-          className="w-full shrink-0"
+          className={EXPLORE_CAROUSEL_SLIDE_CLASS}
         />
       )}
     />

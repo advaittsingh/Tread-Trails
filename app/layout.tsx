@@ -78,7 +78,7 @@ export default async function RootLayout({
       <head>
         <link rel="preconnect" href="https://api.fontshare.com" crossOrigin="anonymous" />
       </head>
-      <body className="min-h-screen bg-background font-sans antialiased">
+      <body className="min-h-screen font-sans antialiased">
         <SiteJsonLd />
         <AppProviders catalogProducts={catalogProducts}>
           <Suspense fallback={null}>

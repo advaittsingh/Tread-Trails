@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState, type ReactNode } from "react"
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { EXPLORE_CAROUSEL_CARD_H } from "@/lib/explore-card-layout";
 import { cn } from "@/lib/utils";
 
 const GAP_PX = 16;
@@ -96,12 +97,15 @@ export function ExploreCarousel<T>({
       >
         <div
           ref={trackRef}
-          className="no-scrollbar flex gap-4 overflow-x-auto overflow-y-hidden scroll-smooth pb-1 pt-0.5"
+          className={cn(
+            "no-scrollbar flex items-stretch gap-4 overflow-x-auto overflow-y-hidden scroll-smooth pb-1 pt-0.5",
+            EXPLORE_CAROUSEL_CARD_H
+          )}
         >
           {items.map((item, i) => (
             <div
               key={getKey(item)}
-              className="flex shrink-0 flex-col"
+              className="flex h-full shrink-0 flex-col"
               style={slideWidth > 0 ? { width: slideWidth } : undefined}
             >
               {renderSlide(item, i)}

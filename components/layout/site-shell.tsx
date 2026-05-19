@@ -7,6 +7,7 @@ import { useCompare } from "@/contexts/compare-context";
 import { cn } from "@/lib/utils";
 
 import { Footer } from "@/components/layout/footer";
+import { SiteTextureBackdrop } from "@/components/layout/site-texture-backdrop";
 
 const ComparisonTray = dynamic(
   () =>
@@ -56,18 +57,11 @@ export function SiteShell({ children }: { children: React.ReactNode }) {
       >
         Skip to main content
       </a>
-      <div
-        aria-hidden
-        className="pointer-events-none fixed inset-0 -z-10 bg-[radial-gradient(ellipse_120%_80%_at_50%_-25%,oklch(0.34_0.078_155_/_0.06),transparent_55%)]"
-      />
-      <div
-        aria-hidden
-        className="pointer-events-none fixed inset-0 -z-10 bg-lux-grid bg-grid opacity-[0.18]"
-      />
+      <SiteTextureBackdrop />
       <main
         id="main-content"
         className={cn(
-          "min-h-[70vh] pt-14",
+          "relative z-10 min-h-[70vh] pt-14",
           compareTrayPad && "pb-24 sm:pb-[5.5rem]"
         )}
       >
