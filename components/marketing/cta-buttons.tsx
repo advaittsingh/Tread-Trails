@@ -43,7 +43,7 @@ export function WhatsAppCta({
       target="_blank"
       rel="noopener noreferrer"
       className={cn(
-        "inline-flex h-11 shrink-0 items-center justify-center gap-2 rounded-xl px-6 text-xs font-bold tracking-[0.04em] uppercase whitespace-nowrap transition-all focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
+        "inline-flex h-11 shrink-0 items-center justify-center gap-2 rounded-xl px-8 text-[11px] font-extrabold tracking-[0.12em] uppercase whitespace-nowrap transition-all duration-300 ease-tt-out focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
         variant === "solid" &&
           "bg-[#25D366] text-[#05301c] shadow-[0_4px_14px_-6px_rgba(37,211,102,0.55)] hover:bg-[#1ebe57]",
         variant === "outline" &&

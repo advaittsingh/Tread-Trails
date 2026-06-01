@@ -20,7 +20,7 @@ export function MarketingPageShell({
   innerClassName,
 }: MarketingPageShellProps) {
   const inner = cn(
-    "mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8",
+    "mx-auto max-w-7xl px-4 py-20 sm:px-6 sm:py-24 lg:px-8 lg:py-28",
     innerClassName
   );
 
@@ -28,7 +28,7 @@ export function MarketingPageShell({
     return (
       <section
         className={cn(
-          "min-h-[calc(100dvh-3.5rem)] border-b border-border/50",
+          "min-h-[calc(100dvh-4rem)] border-b border-border/40",
           className
         )}
       >
@@ -40,7 +40,7 @@ export function MarketingPageShell({
   return (
     <TextureBackgroundSection
       backgroundImage={siteBackgroundUrl(background)}
-      className={cn("min-h-[calc(100dvh-3.5rem)] border-y border-border/60", className)}
+      className={cn("min-h-[calc(100dvh-4rem)] border-y border-border/50", className)}
       innerClassName={inner}
     >
       {children}

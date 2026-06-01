@@ -79,10 +79,10 @@ function NavLink({
       onClick={onClick}
       aria-current={active ? "page" : undefined}
       className={cn(
-        "text-xs font-medium tracking-[0.14em] uppercase transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+        "text-[11px] font-medium tracking-[0.12em] uppercase transition-colors duration-300 ease-tt-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
         !stacked && [
-          "group/navlink inline-flex h-14 items-center rounded-md text-foreground/90",
-          "hover:text-black",
+          "group/navlink inline-flex h-16 items-center rounded-md text-foreground/88",
+          "hover:text-foreground",
           active && "font-medium",
         ],
         stacked && [
@@ -97,7 +97,7 @@ function NavLink({
         <span
           className={cn(
             "relative inline-block pb-0.5",
-            "after:pointer-events-none after:absolute after:inset-x-0 after:bottom-0 after:h-[2px] after:origin-left after:scale-x-0 after:rounded-full after:bg-[#25D366] after:transition-transform after:duration-200 after:ease-out",
+            "after:pointer-events-none after:absolute after:inset-x-0 after:bottom-0 after:h-px after:origin-left after:scale-x-0 after:bg-foreground/35 after:transition-transform after:duration-300 after:ease-tt-out",
             "group-hover/navlink:after:scale-x-100",
             active && "after:scale-x-100"
           )}
@@ -125,7 +125,7 @@ function NavCatalogueTrigger({
 
   return (
     <div
-      className="relative h-14"
+      className="relative h-16"
       onMouseEnter={() => setMenuOpen(true)}
       onFocus={() => setMenuOpen(true)}
       onBlur={(e) => {
@@ -139,15 +139,15 @@ function NavCatalogueTrigger({
         aria-haspopup="true"
         aria-expanded={menuOpen}
         className={cn(
-          "inline-flex h-14 items-center rounded-md text-xs font-medium tracking-[0.14em] text-foreground/90 uppercase transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
-          "hover:text-black",
+          "inline-flex h-16 items-center rounded-md text-[11px] font-medium tracking-[0.12em] text-foreground/88 uppercase transition-colors duration-300 ease-tt-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+          "hover:text-foreground",
           active && "font-medium"
         )}
       >
         <span
           className={cn(
             "relative inline-flex items-center gap-1 pb-0.5",
-            "after:pointer-events-none after:absolute after:inset-x-0 after:bottom-0 after:h-[2px] after:origin-left after:scale-x-0 after:rounded-full after:bg-[#25D366] after:transition-transform after:duration-200 after:ease-out",
+            "after:pointer-events-none after:absolute after:inset-x-0 after:bottom-0 after:h-px after:origin-left after:scale-x-0 after:bg-foreground/35 after:transition-transform after:duration-300 after:ease-tt-out",
             (menuOpen || active) && "after:scale-x-100"
           )}
         >
@@ -192,10 +192,10 @@ export function Navbar({ catalogue }: { catalogue: NavCatalogueData }) {
   return (
     <header
       className={cn(
-        "fixed inset-x-0 top-0 z-50 transition-[background-color,box-shadow,border-color] duration-300",
+        "fixed inset-x-0 top-0 z-50 transition-[background-color,box-shadow,backdrop-filter] duration-500 ease-tt-out",
         solid
-          ? "border-b border-primary/10 bg-background/70 shadow-card backdrop-blur-[6px]"
-          : "border-b border-transparent bg-background/55 backdrop-blur-[4px]"
+          ? "border-b border-foreground/[0.06] bg-background/72 shadow-nav-float backdrop-blur-xl"
+          : "border-b border-transparent bg-background/45 backdrop-blur-md"
       )}
     >
       {/*
@@ -208,7 +208,7 @@ export function Navbar({ catalogue }: { catalogue: NavCatalogueData }) {
       */}
       <div
         className={cn(
-          "mx-auto h-14 max-w-7xl px-4 sm:px-6 lg:px-8",
+          "mx-auto h-16 max-w-7xl px-4 sm:px-6 lg:px-8",
           "flex flex-nowrap items-center justify-between gap-3",
           "lg:grid lg:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] lg:items-center lg:gap-4"
         )}
@@ -216,7 +216,7 @@ export function Navbar({ catalogue }: { catalogue: NavCatalogueData }) {
         <div className="flex min-w-0 shrink-0 items-center lg:justify-self-start">
           <Link
             href="/"
-            className="flex h-14 items-center outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="flex h-16 items-center outline-none focus-visible:ring-2 focus-visible:ring-ring"
             aria-label="Tread Trails home"
           >
             <SiteLogo variant="header" priority />

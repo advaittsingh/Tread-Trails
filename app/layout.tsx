@@ -2,7 +2,8 @@ import type { Metadata, Viewport } from "next";
 
 import "./globals.css";
 import { absoluteUrl, siteUrl } from "@/lib/site";
-import { headingFont } from "@/lib/fonts";
+import { bodyFont, headingFont } from "@/lib/fonts";
+import { cn } from "@/lib/utils";
 import { Suspense } from "react";
 
 import { getNavCatalogueData } from "@/lib/server/nav-catalogue-data";
@@ -74,10 +75,8 @@ export default async function RootLayout({
   ]);
 
   return (
-    <html lang="en" className={headingFont.variable}>
-      <head>
-        <link rel="preconnect" href="https://api.fontshare.com" crossOrigin="anonymous" />
-      </head>
+    <html lang="en" className={cn(headingFont.variable, bodyFont.variable)}>
+      <head />
       <body className="min-h-screen font-sans antialiased">
         <SiteJsonLd />
         <AppProviders catalogProducts={catalogProducts}>

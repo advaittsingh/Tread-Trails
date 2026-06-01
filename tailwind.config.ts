@@ -14,8 +14,25 @@ const config: Config = {
   theme: {
     extend: {
       fontFamily: {
-        sans: ["Satoshi", "system-ui", "sans-serif"],
-        heading: ["var(--font-heading)", "system-ui", "sans-serif"],
+        sans: [
+          "var(--font-body)",
+          "Manrope",
+          "ui-sans-serif",
+          "system-ui",
+          "sans-serif",
+        ],
+        heading: [
+          "var(--font-heading)",
+          "var(--font-body)",
+          "Manrope",
+          "ui-sans-serif",
+          "system-ui",
+          "sans-serif",
+        ],
+      },
+      transitionTimingFunction: {
+        "tt-out": "cubic-bezier(0.22, 1, 0.36, 1)",
+        "tt-in-out": "cubic-bezier(0.45, 0, 0.55, 1)",
       },
       colors: {
         brand: {
@@ -65,9 +82,15 @@ const config: Config = {
       },
       boxShadow: {
         card:
-          "0 4px 24px -8px oklch(0 0 0 / 7%), 0 2px 8px -4px oklch(0 0 0 / 5%)",
+          "0 2px 20px -6px oklch(0 0 0 / 6%), 0 8px 28px -12px oklch(0 0 0 / 5%)",
         "card-hover":
-          "0 14px 40px -12px oklch(0 0 0 / 12%), 0 6px 16px -6px oklch(0 0 0 / 8%)",
+          "0 12px 40px -10px oklch(0 0 0 / 11%), 0 4px 16px -6px oklch(0 0 0 / 7%)",
+        "nav-float":
+          "0 1px 0 oklch(1 0 0 / 0.45) inset, 0 8px 32px -12px oklch(0.2 0.02 35 / 0.08)",
+        "btn-primary":
+          "0 4px 20px -4px oklch(0.42 0.13 32 / 0.38), 0 2px 8px -2px oklch(0.42 0.13 32 / 0.22)",
+        "btn-primary-hover":
+          "0 8px 28px -4px oklch(0.42 0.13 32 / 0.42), 0 4px 12px -2px oklch(0.42 0.13 32 / 0.25)",
       },
       backgroundImage: {
         "lux-grid":

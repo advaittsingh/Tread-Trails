@@ -1,5 +1,3 @@
-@import url("https://api.fontshare.com/v2/css?f[]=satoshi@400,500,600,700&display=swap");
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -9,25 +7,78 @@
     text-wrap: balance;
   }
   .glass-panel {
-    background: rgba(255, 255, 255, 0.65);
-    backdrop-filter: blur(6px);
-    -webkit-backdrop-filter: blur(6px);
+    background: rgba(255, 255, 255, 0.62);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
   }
   .glass-panel-dark {
     background: rgba(28, 24, 22, 0.72);
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
   }
-  .heading-cinematic {
-    @apply font-heading text-balance font-extrabold uppercase tracking-[0.06em];
+
+  /* Hero / display — Bricolage ExtraBold, Defender-adjacent discipline + motorsport edge */
+  .type-hero {
+    @apply font-heading text-balance font-extrabold uppercase tracking-[-0.03em] text-foreground;
     font-variation-settings: "opsz" 72, "wdth" 100;
+    line-height: 0.98;
   }
+
+  /* Section titles — cinematic, premium automotive */
+  .heading-cinematic {
+    @apply font-heading text-balance font-extrabold uppercase tracking-[0.04em] text-foreground;
+    font-variation-settings: "opsz" 72, "wdth" 100;
+    line-height: 1.05;
+    letter-spacing: 0.04em;
+  }
+
+  .type-eyebrow {
+    @apply font-sans text-[10px] font-medium uppercase text-primary sm:text-[11px];
+    letter-spacing: 0.42em;
+  }
+
+  .type-eyebrow-tight {
+    @apply font-sans text-[10px] font-medium uppercase text-primary sm:text-[11px];
+    letter-spacing: 0.36em;
+  }
+
+  /* Body lede — readable charcoal, generous rhythm */
+  .type-body-lede {
+    @apply font-sans text-base font-normal leading-[1.65] text-muted-foreground sm:text-lg md:text-xl;
+    letter-spacing: 0.01em;
+  }
+
+  .type-body-prose {
+    @apply font-sans text-sm font-normal leading-relaxed text-muted-foreground sm:text-base;
+    letter-spacing: 0.01em;
+  }
+
+  /* Navigation — smaller, medium, subtle tracking */
+  .type-nav {
+    @apply font-sans text-[11px] font-medium uppercase tracking-[0.12em] text-foreground/90;
+  }
+
+  /* Buttons / CTAs */
+  .type-button {
+    @apply font-sans text-[11px] font-extrabold uppercase tracking-[0.14em];
+  }
+
   .no-scrollbar {
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
   .no-scrollbar::-webkit-scrollbar {
     display: none;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .motion-image-zoom {
+      @apply scale-100 will-change-transform;
+      transition: transform 850ms cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    .group:hover .motion-image-zoom {
+      @apply scale-[1.045];
+    }
   }
 }
 
@@ -36,19 +87,18 @@
     --radius-md: var(--radius);
     --destructive-foreground: oklch(0.985 0 0);
     --background: oklch(0.99 0.008 95);
-    --foreground: oklch(0.22 0.02 35);
+    --foreground: oklch(0.2 0.022 38);
     --card: oklch(1 0 0);
-    --card-foreground: oklch(0.22 0.02 35);
+    --card-foreground: oklch(0.2 0.022 38);
     --popover: oklch(1 0 0);
-    --popover-foreground: oklch(0.22 0.02 35);
-    /* Logo maroon — buttons, links, focus rings */
+    --popover-foreground: oklch(0.2 0.022 38);
     --primary: oklch(0.42 0.13 32);
     --primary-foreground: oklch(0.99 0 0);
     --secondary: oklch(0.95 0.04 95);
     --secondary-foreground: oklch(0.32 0.08 35);
     --muted: oklch(0.955 0.018 95);
-    --muted-foreground: oklch(0.44 0.03 35);
-    /* Logo gold — highlights, soft fills */
+    /* Muted charcoal for body — premium editorial */
+    --muted-foreground: oklch(0.38 0.022 38);
     --accent: oklch(0.94 0.07 95);
     --accent-foreground: oklch(0.35 0.11 32);
     --destructive: oklch(0.55 0.2 25);
@@ -62,22 +112,27 @@
     --chart-5: oklch(0.35 0.06 35);
     --radius: 0.75rem;
     --sidebar: oklch(0.99 0.008 95);
-    --sidebar-foreground: oklch(0.22 0.02 35);
+    --sidebar-foreground: oklch(0.2 0.022 38);
     --sidebar-primary: oklch(0.42 0.13 32);
     --sidebar-primary-foreground: oklch(0.99 0 0);
     --sidebar-accent: oklch(0.94 0.07 95);
     --sidebar-accent-foreground: oklch(0.35 0.11 32);
     --sidebar-border: oklch(0.9 0.02 95);
     --sidebar-ring: oklch(0.42 0.13 32);
+
+    /* Section vertical rhythm */
+    --section-y: clamp(4.5rem, 10vw, 7.5rem);
+    --section-y-tight: clamp(3.5rem, 8vw, 5.5rem);
   }
   * {
     @apply border-border;
   }
   body {
-    @apply bg-transparent text-foreground antialiased;
+    @apply bg-transparent font-sans text-[15px] font-normal leading-relaxed text-foreground antialiased sm:text-base;
+    font-feature-settings: "kern" 1, "liga" 1;
   }
   html {
-    @apply font-sans scroll-smooth;
+    @apply scroll-smooth;
   }
   .font-heading {
     font-variation-settings: "opsz" 72, "wdth" 100;
@@ -85,7 +140,6 @@
   .font-heading-display {
     font-variation-settings: "opsz" 72, "wdth" 105;
   }
-  /* Upright “&” when headings use a swash italic ampersand */
   .plain-amp {
     font-family: Georgia, Cambria, "Times New Roman", Times, serif;
     font-style: normal;

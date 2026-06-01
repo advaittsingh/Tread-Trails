@@ -29,8 +29,8 @@ export function SectionHeading({
   return (
     <div
       className={cn(
-        "max-w-3xl space-y-3",
-        cinematic && "max-w-4xl space-y-4",
+        "max-w-3xl space-y-4",
+        cinematic && "max-w-4xl space-y-5",
         align === "center" && "mx-auto text-center",
         className
       )}
@@ -39,9 +39,7 @@ export function SectionHeading({
         <p
           className={cn(
             "font-sans font-medium text-primary uppercase",
-            cinematic
-              ? "text-[10px] tracking-[0.48em]"
-              : "text-[11px] tracking-[0.38em]"
+            cinematic ? "type-eyebrow" : "text-[11px] font-medium tracking-[0.32em] text-primary uppercase"
           )}
         >
           {eyebrow}
@@ -50,8 +48,8 @@ export function SectionHeading({
       <TitleTag
         className={cn(
           cinematic
-            ? "heading-cinematic font-heading-display text-3xl leading-[1.05] sm:text-4xl md:text-5xl lg:text-[3.25rem]"
-            : "font-heading text-balance text-3xl font-bold tracking-[-0.02em] text-foreground sm:text-4xl md:text-5xl"
+            ? "heading-cinematic font-heading-display text-[clamp(1.65rem,4.2vw,2.65rem)] sm:text-[clamp(1.85rem,3.8vw,3rem)] md:text-[clamp(2.1rem,3.2vw,3.25rem)] lg:text-[clamp(2.35rem,2.8vw,3.35rem)]"
+            : "font-heading text-balance text-3xl font-bold tracking-[-0.025em] text-foreground sm:text-4xl md:text-5xl"
         )}
       >
         {title}
@@ -59,8 +57,9 @@ export function SectionHeading({
       {description ? (
         <p
           className={cn(
-            "leading-relaxed text-muted-foreground",
-            cinematic ? "text-base md:text-lg" : "text-base md:text-lg"
+            "type-body-prose max-w-2xl leading-relaxed",
+            cinematic && "md:text-[1.0625rem] md:leading-relaxed",
+            align === "center" && "mx-auto"
           )}
         >
           {description}

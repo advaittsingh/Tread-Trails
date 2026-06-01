@@ -13,6 +13,7 @@ import { BrandExploreCarousel } from "@/components/marketing/brand-explore-carou
 import { VehicleExploreCarousel } from "@/components/marketing/vehicle-explore-carousel";
 import { HomeHero } from "@/components/marketing/home-hero";
 import { ProductCard } from "@/components/marketing/product-card";
+import { RevealSection } from "@/components/marketing/reveal-section";
 import { SectionHeading } from "@/components/marketing/section-heading";
 
 export const metadata: Metadata = buildPageMetadata({
@@ -21,6 +22,9 @@ export const metadata: Metadata = buildPageMetadata({
     "Expedition-grade suspension, armor, lighting, and accessories for Hilux, Fortuner, Land Cruiser, Thar, Wrangler, Jimny, Endeavour-class rigs and more — explore platforms, partner-brand catalog, portfolio builds, and book studio fitting.",
   path: "/",
 });
+
+const linkBarClass =
+  "text-[11px] font-medium tracking-[0.18em] text-muted-foreground uppercase underline-offset-4 transition-colors duration-300 ease-tt-out hover:text-primary hover:underline";
 
 export default async function HomePage() {
   const cars = await listVehicles();
@@ -33,8 +37,8 @@ export default async function HomePage() {
     <>
       <HomeHero />
 
-      <section className="py-20 lg:py-24">
-        <div className="mx-auto max-w-7xl space-y-14 overflow-x-hidden px-4 sm:px-6 lg:px-8">
+      <RevealSection className="py-24 lg:py-32">
+        <div className="mx-auto max-w-7xl space-y-16 overflow-x-hidden px-4 sm:px-6 lg:space-y-20 lg:px-8">
           <SectionHeading
             tone="cinematic"
             eyebrow="Platforms"
@@ -43,18 +47,15 @@ export default async function HomePage() {
           />
           <VehicleExploreCarousel cars={cars} />
           <div className="flex justify-center pt-2">
-            <Link
-              href="/vehicles"
-              className="text-xs font-medium tracking-[0.2em] text-muted-foreground uppercase underline-offset-4 transition-colors hover:text-primary hover:underline"
-            >
+            <Link href="/vehicles" className={linkBarClass}>
               Browse by OEM
             </Link>
           </div>
         </div>
-      </section>
+      </RevealSection>
 
-      <section className="border-t border-border/40 py-20 lg:py-24">
-        <div className="mx-auto max-w-7xl space-y-14 overflow-x-hidden px-4 sm:px-6 lg:px-8">
+      <RevealSection className="border-t border-border/30 py-24 lg:py-32" delay={0.04}>
+        <div className="mx-auto max-w-7xl space-y-16 overflow-x-hidden px-4 sm:px-6 lg:space-y-20 lg:px-8">
           <SectionHeading
             tone="cinematic"
             eyebrow="Manufacturers"
@@ -63,25 +64,22 @@ export default async function HomePage() {
           />
           <BrandExploreCarousel brands={featuredBrands} />
           <div className="flex justify-center pt-2">
-            <Link
-              href="/brands"
-              className="text-xs font-medium tracking-[0.2em] text-muted-foreground uppercase underline-offset-4 transition-colors hover:text-primary hover:underline"
-            >
+            <Link href="/brands" className={linkBarClass}>
               All partner brands
             </Link>
           </div>
         </div>
-      </section>
+      </RevealSection>
 
-      <section className="border-t border-border/40 py-20 lg:py-24">
-        <div className="mx-auto max-w-7xl space-y-14 px-4 sm:px-6 lg:px-8">
+      <RevealSection className="border-t border-border/30 py-24 lg:py-32" delay={0.06}>
+        <div className="mx-auto max-w-7xl space-y-16 px-4 sm:px-6 lg:space-y-20 lg:px-8">
           <SectionHeading
             tone="cinematic"
             eyebrow="Portfolio"
             title="Built for the wild"
             description="Real installs on real platforms — open a case study for the full narrative and parts traceability."
           />
-          <div className="grid items-stretch gap-10 lg:grid-cols-3">
+          <div className="grid items-stretch gap-12 lg:grid-cols-3 lg:gap-14">
             {featuredBuilds.map((b, i) => {
               const vehicleName = cars.find((c) => c.slug === b.vehicleSlug)?.name;
               return (
@@ -97,25 +95,22 @@ export default async function HomePage() {
             })}
           </div>
           <div className="flex justify-center">
-            <Link
-              href="/builds"
-              className="text-xs font-medium tracking-[0.2em] text-muted-foreground uppercase underline-offset-4 transition-colors hover:text-primary hover:underline"
-            >
+            <Link href="/builds" className={linkBarClass}>
               Explore builds by vehicle
             </Link>
           </div>
         </div>
-      </section>
+      </RevealSection>
 
-      <section className="border-t border-border/40 py-20 lg:py-24">
-        <div className="mx-auto max-w-7xl space-y-14 px-4 sm:px-6 lg:px-8">
+      <RevealSection className="border-t border-border/30 py-24 lg:py-32" delay={0.08}>
+        <div className="mx-auto max-w-7xl space-y-16 px-4 sm:px-6 lg:space-y-20 lg:px-8">
           <SectionHeading
             tone="cinematic"
             eyebrow="Catalog"
             title="Expedition systems"
             description="Modular upgrades with explicit vehicle compatibility — speak with our engineers before checkout."
           />
-          <div className="grid items-stretch gap-8 sm:grid-cols-2 xl:grid-cols-4">
+          <div className="grid items-stretch gap-10 sm:grid-cols-2 sm:gap-12 xl:grid-cols-4">
             {featuredProducts.map((p, i) => (
               <ProductCard
                 key={p.id}
@@ -128,18 +123,15 @@ export default async function HomePage() {
             ))}
           </div>
           <div className="flex justify-center">
-            <Link
-              href="/products"
-              className="text-xs font-medium tracking-[0.2em] text-foreground uppercase underline-offset-4 transition-colors hover:text-primary hover:underline"
-            >
+            <Link href="/products" className={linkBarClass}>
               Open full catalog
             </Link>
           </div>
         </div>
-      </section>
+      </RevealSection>
 
-      <section className="border-t border-border/40 py-24 lg:py-28">
-        <div className="mx-auto flex max-w-5xl flex-col items-center gap-10 px-4 text-center sm:px-6">
+      <RevealSection className="border-t border-border/30 py-28 lg:py-36" delay={0.1}>
+        <div className="mx-auto flex max-w-5xl flex-col items-center gap-12 px-4 text-center sm:px-6 lg:gap-14">
           <SectionHeading
             align="center"
             tone="cinematic"
@@ -147,7 +139,7 @@ export default async function HomePage() {
             title="Studio by appointment"
             description="Limited bay time — WhatsApp keeps your thread aligned with the technicians assigned to your chassis."
           />
-          <div className="flex flex-wrap justify-center gap-3">
+          <div className="flex flex-wrap justify-center gap-4">
             <PrimaryCta href="/booking">Schedule installation</PrimaryCta>
             <WhatsAppCta
               message="Hi — I'd like to book time with Tread Trails."
@@ -155,7 +147,7 @@ export default async function HomePage() {
             />
           </div>
         </div>
-      </section>
+      </RevealSection>
     </>
   );
 }

@@ -61,7 +61,7 @@ export function SiteShell({ children }: { children: React.ReactNode }) {
       <main
         id="main-content"
         className={cn(
-          "relative z-10 min-h-[70vh] pt-14",
+          "relative z-10 min-h-[70vh] pt-16",
           compareTrayPad && "pb-24 sm:pb-[5.5rem]"
         )}
       >
