@@ -2,6 +2,7 @@
 
 # dependencies
 /node_modules
+node_modules/
 /.pnp
 .pnp.js
 .yarn/install-state.gz
@@ -11,10 +12,12 @@
 
 # next.js
 /.next/
+**/.next/
 /out/
 
 # production
 /build
+dist/
 
 # misc
 .DS_Store
@@ -26,6 +29,8 @@ yarn-debug.log*
 yarn-error.log*
 
 # local env files
+.env
+.env.local
 .env*.local
 
 # vercel
@@ -34,3 +39,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# prisma dev
+.prisma/

@@ -1,0 +1,138 @@
+import type { Metadata } from "next";
+import Image from "next/image";
+import Link from "next/link";
+import { notFound } from "next/navigation";
+
+import { getBrandCms } from "@/lib/server/cms";
+import { getSeoBundle } from "@/lib/server/seo";
+import { listProductsForBrandSlug } from "@/lib/server/product-catalog";
+import { excerptPlain, getBrandJsonLd } from "@/lib/seo/json-ld-builders";
+import {
+  absoluteOgAsset,
+  defaultOgImage,
+} from "@/lib/seo/page-metadata";
+import { absoluteUrl } from "@/lib/site";
+import { getBrandBySlug, listBrandSlugs } from "@/lib/server/brand-catalog";
+
+import { MarketingPageShell } from "@/components/layout/marketing-page-shell";
+import { CmsContentBlocks } from "@/components/cms/cms-content-blocks";
+import { ProductCard } from "@/components/marketing/product-card";
+import { SectionHeading } from "@/components/marketing/section-heading";
+import { JsonLd } from "@/components/seo/json-ld";
+
+type Props = { params: { slug: string } };
+
+export async function generateStaticParams() {
+  const slugs = await listBrandSlugs();
+  return slugs.map((slug) => ({ slug }));
+}
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const entry = await getBrandBySlug(params.slug);
+  if (!entry) return { title: "Brand" };
+  const cms = await getBrandCms(params.slug);
+  const title = cms?.seoTitle || `${entry.name} parts`;
+  const rawDesc =
+    cms?.seoDescription ||
+    entry.tagline ||
+    `Shop ${entry.name} upgrades — expedition lighting, armor, suspension, and recovery from Tread Trails.`;
+  const description = excerptPlain(rawDesc, 165);
+  const canonical = absoluteUrl(`/brands/${entry.slug}`);
+  const logoUrl = absoluteOgAsset(entry.logoSrc);
+  const ogImages = logoUrl
+    ? [{ url: logoUrl, width: 1200, height: 630, alt: entry.name }]
+    : [defaultOgImage(entry.name)];
+  return {
+    title,
+    description,
+    alternates: { canonical },
+    openGraph: {
+      title: `${title} | Tread Trails`,
+      description,
+      url: canonical,
+      siteName: "Tread Trails",
+      locale: "en_IN",
+      type: "website",
+      images: ogImages,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `${title} | Tread Trails`,
+      description,
+      images: ogImages.map((i) => i.url),
+    },
+  };
+}
+
+export default async function BrandProductsPage({ params }: Props) {
+  const entry = await getBrandBySlug(params.slug);
+  if (!entry) notFound();
+
+  const brandProducts = await listProductsForBrandSlug(params.slug);
+  const cms = await getBrandCms(params.slug);
+  const seoBundle = await getSeoBundle();
+  const brandSchema = seoBundle?.settings.brandSchema;
+  const brandUrl = absoluteUrl(`/brands/${entry.slug}`);
+  const brandLd =
+    brandSchema?.enabled !== false
+      ? getBrandJsonLd(entry, brandUrl, brandSchema)
+      : null;
+
+  return (
+    <MarketingPageShell>
+      {brandLd ? <JsonLd data={brandLd} /> : null}
+      {cms?.bannerSrc ? (
+        <div className="relative mb-12 aspect-[21/7] overflow-hidden rounded-2xl">
+          <Image src={cms.bannerSrc} alt={`${entry.name} banner`} fill className="object-cover" priority />
+        </div>
+      ) : null}
+      <nav className="mb-10 text-sm text-muted-foreground">
+        <Link href="/brands" className="transition hover:text-primary">
+          Brands
+        </Link>
+        <span className="mx-2 text-border">/</span>
+        <span className="text-foreground">{entry.name}</span>
+      </nav>
+
+      <div className="mb-14 flex max-w-3xl flex-col gap-6 sm:flex-row sm:items-start sm:gap-10">
+        {entry.logoSrc ? (
+          <div className="flex shrink-0 justify-center sm:justify-start">
+            <Image
+              src={entry.logoSrc}
+              alt={`${entry.name} logo`}
+              width={220}
+              height={88}
+              className="h-20 w-auto max-w-[200px] object-contain sm:h-24"
+            />
+          </div>
+        ) : null}
+        <SectionHeading
+          titleAs="h1"
+          eyebrow="Catalog"
+          title={`${entry.name} — shop the line`}
+          description={
+            entry.tagline ??
+            "Compatible SKUs ship with explicit vehicle matrices — configure variants on each product page before checkout."
+          }
+          className="max-w-none flex-1"
+        />
+      </div>
+
+      {brandProducts.length === 0 ? (
+        <p className="rounded-2xl border border-dashed border-border/70 bg-muted/25 px-6 py-16 text-center text-sm text-muted-foreground">
+          No live listings for this brand yet.
+        </p>
+      ) : (
+        <div className="grid gap-8 sm:grid-cols-2 xl:grid-cols-3">
+          {brandProducts.map((p, i) => (
+            <ProductCard key={p.id} product={p} index={i} />
+          ))}
+        </div>
+      )}
+
+      {cms?.contentBlocks?.length ? (
+        <CmsContentBlocks blocks={cms.contentBlocks} />
+      ) : null}
+    </MarketingPageShell>
+  );
+}

@@ -1,0 +1,8 @@
+﻿python : Python was not found; run without arguments to install from the Microsoft Store, or disable this shortcut 
+from Settings > Apps > Advanced app settings > App execution aliases.
+At C:\Users\MY PC\AppData\Local\Temp\ps-script-b7d109ad-0b99-48d4-8de8-a42cc0556ac4.ps1:85 char:56
++ cd "c:\Users\MY PC\Desktop\tread trails\tread-trails"; python -c "
++                                                        ~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Python was not ...cution aliases.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 

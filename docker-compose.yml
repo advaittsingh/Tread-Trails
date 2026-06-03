@@ -1,0 +1,19 @@
+# Local Postgres for development (requires Docker Desktop)
+# Start:  docker compose up -d
+# Stop:   docker compose down
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: tread-trails-db
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: tread_trails
+    volumes:
+      - tread_trails_pg:/var/lib/postgresql/data
+
+volumes:
+  tread_trails_pg:
